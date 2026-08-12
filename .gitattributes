@@ -1,0 +1,8 @@
+# ⚠️ Line endings are enforced by git, not by anyone remembering.
+# Source: a "probe and restore" git operation once rewrote the line endings of an entire
+# working tree, including batch files the user was actively running — and cmd.exe is
+# unreliable with LF-only batch files.
+*.bat  text eol=crlf
+*.sh   text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf

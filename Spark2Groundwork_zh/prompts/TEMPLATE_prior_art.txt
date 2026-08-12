@@ -1,0 +1,30 @@
+Role: Senior researcher conducting a prior-art review.
+
+OBJECTIVE
+=========
+Determine whether the following claim has ALREADY BEEN TESTED, and with what result.
+
+  CLAIM UNDER TEST: <<<填空:一句話，且必須是可證偽的>>>
+
+<<<貼上區塊 B（列舉，不要摘要）>>>
+
+<<<貼上區塊 C（競爭解釋）>>>
+
+<<<貼上區塊 F（測量與可靠度）>>>
+
+<<<貼上區塊 E（雙語檢索）>>>
+
+<<<貼上區塊 D（來源標準）>>>
+
+<<<貼上區塊 A（幻覺護欄）>>>
+
+OUTPUT CONTRACT
+===============
+1. PRIOR ART VERDICT: FULLY-COVERED / PARTIALLY-COVERED / NOT-COVERED
+   ＋ 依區塊 B 之四部分格式列舉
+2. COMPETING ACCOUNTS
+3. SEARCH LOG（PASS A 與 PASS B 分開）
+4. FINDINGS
+5. EVIDENCE TABLE
+6. GAPS: what remains genuinely unknown after this search
+7. FULL REFERENCE LIST

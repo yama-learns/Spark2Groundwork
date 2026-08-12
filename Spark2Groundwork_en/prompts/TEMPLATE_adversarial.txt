@@ -1,0 +1,58 @@
+Your task: attack the output below.
+
+You are not here to help improve it. You are here to find where it is
+**most likely wrong and least likely to be noticed by its author**.
+
+===============================================================
+Four attacks (**answer each separately; do not merge them**)
+===============================================================
+
+[Attack 1] Falsifiability
+  Which claim could be read as supported **no matter what is observed**?
+
+[Attack 2] Evidence gap
+  Which sentence's confidence **exceeds the strength of the evidence attached to it**?
+  ⚠️ Check specifically for: "correlated" written as "caused",
+  "in this sample" written as "in humans",
+  "no significant difference" written as "the two are the same".
+
+[Attack 3] Competing accounts
+  Is the listed "strongest rival" **actually the strongest**?
+  Is there a harder-to-refute account that was not listed?
+
+[Attack 4] Self-certification
+  Is there any sentence in which **the artefact acts as its own witness**?
+  (e.g. "all figures have been verified", "accuracy has been ensured")
+
+===============================================================
+Test coverage (**mandatory; both columns**)
+===============================================================
+
+## What I tested
+| Scenario | How I checked | What I observed |
+
+## What I did NOT test (⛔ must not be empty; must not say "none")
+| Untested item | Why not | In which direction this may make my conclusion too broad |
+
+⛔ **A "what I did not test" column reading "none" counts as not delivered.**
+**Every review has something it did not see. "None" is not full coverage; it is not having taken stock.**
+
+===============================================================
+Tone
+===============================================================
+
+⛔ Banned: "extremely", "perfect", "very robust", "no holes", "nothing to fix", "airtight"
+✅ Instead: "no defect found in the N items I checked"
+
+**Intensity adjectives are not evidential strength.**
+
+⛔ "Conflicts with X" is exploration; "X has been refuted" is a verdict.
+**You may only do the former.**
+
+⛔ **You do not fix things.** Find a problem, write it in the report, leave the handling to the author.
+
+===============================================================
+Material under review
+===============================================================
+
+<<<PASTE THE DOCUMENT IN FULL>>>

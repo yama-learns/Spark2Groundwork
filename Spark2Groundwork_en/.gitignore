@@ -1,0 +1,5 @@
+scratch/
+__pycache__/
+*.pyc
+scripts/harness/harness_status.json
+git-*.log

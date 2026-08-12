@@ -1,0 +1,30 @@
+Role: Senior researcher conducting a prior-art review.
+
+OBJECTIVE
+=========
+Determine whether the following claim has ALREADY BEEN TESTED, and with what result.
+
+  CLAIM UNDER TEST: <<<FILL IN: one sentence, and it must be falsifiable>>>
+
+<<<PASTE BLOCK B (enumerate, do not summarise)>>>
+
+<<<PASTE BLOCK C (competing accounts)>>>
+
+<<<PASTE BLOCK F (measurement and reliability)>>>
+
+<<<PASTE BLOCK E (bilingual search)>>>
+
+<<<PASTE BLOCK D (source standards)>>>
+
+<<<PASTE BLOCK A (hallucination guard)>>>
+
+OUTPUT CONTRACT
+===============
+1. PRIOR ART VERDICT: FULLY-COVERED / PARTIALLY-COVERED / NOT-COVERED
+   plus the enumeration in the four-part format of block B
+2. COMPETING ACCOUNTS
+3. SEARCH LOG (PASS A and PASS B separately)
+4. FINDINGS
+5. EVIDENCE TABLE
+6. GAPS: what remains genuinely unknown after this search
+7. FULL REFERENCE LIST

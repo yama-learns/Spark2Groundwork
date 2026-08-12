@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: "Spark2Groundwork: a file-based governance framework for AI-assisted research ideation"
+message: "If you use this framework, please cite it."
+type: software
+authors:
+  - family-names: Lai
+    given-names: Yama
+repository-code: "https://github.com/yama-learns/Spark2Groundwork"
+license: MIT
+version: 1.0.0
+date-released: 2026-08-12
+keywords:
+  - research governance
+  - AI-assisted research
+  - evidence verification
+  - falsifiability
+  - human-in-the-loop

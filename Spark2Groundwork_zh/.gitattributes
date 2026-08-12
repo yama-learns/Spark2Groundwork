@@ -1,0 +1,7 @@
+# ⚠️ 行尾由 git 強制，不依賴任何人記得。
+# 來源：某次「探測後還原」的 git 操作把整個工作區的行尾從 CRLF 改成 LF，
+# 包含使用者正在使用的批次檔——而 cmd.exe 對僅含 LF 的批次檔行為不可靠。
+*.bat  text eol=crlf
+*.sh   text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf

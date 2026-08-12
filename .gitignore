@@ -1,0 +1,12 @@
+# Scratch and generated files
+**/scratch/
+**/__pycache__/
+*.pyc
+**/harness_status.json
+git-*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+部署到GitHub_教學.md
