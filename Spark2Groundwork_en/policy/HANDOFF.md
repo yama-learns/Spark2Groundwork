@@ -26,7 +26,7 @@ handoffs/<role>_<YYYY-MM-DD>_<two-digit seq>_<topic>.md
 
 ⚠️ **This table was added from the framework's own live test** — the tested agent had no
 value available and invented a category name.
-**That is the entry point of failure family ③ "required fields induce fabrication",
+**That is the entry point of the "required fields induce fabrication" family,
 except what gets fabricated is a category rather than a number.**
 
 ⚠️ The filename rule itself once lived in a document whose first line said "agents need not read this" —
@@ -52,12 +52,35 @@ except what gets fabricated is a category rather than a number.**
 | **What I only restated** | And **why it could only be restated** |
 | **My inference** | ⚠️ Marked explicitly, **never mixed into the same sentence as the other two** |
 
-⛔ **If section 5 says "none", state which directions you looked in and found nothing.**
-**"Found nothing" and "did not look" read identically on the page, and carry very different information.**
+⛔ **If section 5 says "none", state which directions you looked in and found nothing**
+(`governance/RULES.md` R-35 ②).
 
 ### 3.2 Section 3 must not say "everything complete"
 
-**Every round has something unfinished.** "None" is not full coverage; it is not having taken stock.
+**Every round has something unfinished** — ⛔ "none" counts as not delivered
+(`governance/RULES.md` R-35 ①).
+
+### 3.3 Section 4 must carry the raw output of `git diff --stat`
+
+⛔ **A prose list of what changed, on its own, counts as not delivered.**
+
+```
+git diff --stat                          # not yet committed
+git diff --stat <last checkpoint>..HEAD  # already committed
+```
+
+⚠️ **Reason: section 4 is the only part of this packet that can become a mechanical fact at
+zero cost.** The other four have to be read by a human; **this one does not — leaving it
+unmechanised wastes a free gate.**
+
+🔴 **What it blocks is not lying; it is under-reporting.** When a round touches dozens of files,
+**a list written from memory will be missing a few, and the missing ones look exactly like files
+that were never touched.**
+(The "fixed one layer, missed another" family: a prose list is a second copy of `git status`.)
+
+⚠️ ⛔ **Attaching `--stat` does not mean section 4 is finished.**
+`--stat` says **which files changed**; ⛔ it does not say **why** —
+**both are required, ⛔ neither replaces the other.**
 
 ## 4. Recipient's obligations
 

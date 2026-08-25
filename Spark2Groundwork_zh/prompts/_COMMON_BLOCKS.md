@@ -81,7 +81,7 @@ for that sub-question. Do not silently substitute an English-language study.
 ```
 
 ⚠️ **區塊 E 不是禮貌性的多元。** 只搜英文的實質效果是靜默排除整個語言區的文獻——
-**而那個排除不會出現在任何報告裡**（失效家族④）。
+**而那個排除不會出現在任何報告裡**（「靜默過濾」家族）。
 
 ## 區塊 F — 測量與可靠度
 

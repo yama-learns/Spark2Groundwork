@@ -1,6 +1,6 @@
 # Claim Ledger
 
-**Tier: T1 — data class. ⛔ AI must not write to this file directly.**
+**Tier: T1 — data class. ⚠️ By default the AI does not write here (constitution §6.3) — a default, ⛔ not a prohibition.**
 **Watcher:** `scripts/harness/sensor_claim_ledger.py`
 
 ---
@@ -51,19 +51,41 @@ is worse than none, because it makes you believe someone is watching.**
 | **Evidence type** | `source figure` / `source conclusion` / `project inference` / `⚠️ no source` |
 | **Verification status** | `✅ read the original` / `🟡 abstract only` / `🔴 unverified` |
 
-### 1.1 Four hard rules
+### 1.1 Five hard rules
 
 1. ⚠️ **`project inference` is a legitimate evidence type** — not every sentence needs an external source.
    **But it must be labelled, or downstream will read it as a literature finding.**
 2. **Anchors must be verbatim.** ⛔ No paraphrase, no added punctuation, no whitespace normalisation.
+   🔴 **Copied verbatim from the extract (`corpus_md/*.md`), ⛔ not from the PDF.
+   OCR artefacts and all.**
+   ⚠️ **Why: what gets compared is the extract, not the source — they are not the same object.**
+   **Measured case:** a headline result reads `d = 0.50, 95% CI = 0.45–0.54` in the PDF and
+   `d - 0.50, 95% confidence interval (CI) = 0.45-0.54` in the extract — **OCR turned the
+   equals sign into a hyphen.** An anchor copied from the PDF returns "not found in source",
+   ⛔ **and that looks exactly like fabrication.**
+   → Where no verbatim anchor is possible (e.g. the figure exists only inside a table the
+   extraction flattened), write `⚠️<reason>`. ⛔ **Never leave it blank** — blank and
+   "I checked" look identical in the output.
 3. ⛔ **An anchor's existence can be verified mechanically; whether it supports the claim cannot.**
    **The anchor's job is to make "did anyone look" a checkable fact — not to look for you.**
 4. **Before comparison, the anchor and the extraction must pass through the same normalisation** —
    **single home: `scripts/harness/anchor_norm.py`.**
-   ⚠️ **The order cannot be swapped: de-hyphenation must precede whitespace collapse.**
-   Otherwise `individ-\nual` becomes `individ- ual`, then `individ-ual`, **and can never be rejoined**.
-   ⛔ **Normalisation happens only at comparison time; never written back** — rewriting the
-   extraction breaks the hash defence.
+   ⚠️ **The order constraint (de-hyphenation before whitespace collapse), its reason, and
+   "normalise only at comparison time, never write back": see `governance/RULES.md` R-27
+   and R-28 — ⛔ this file does not restate them.**
+   ⛔ Consequence specific to this ledger: rewriting the extraction breaks the hash defence.
+5. 🔴 **An anchor ⛔ must not span a page break.**
+   ⚠️ **Two reasons, and the second is the real one:**
+   ① The page field above holds one page number — for an anchor that spans two pages,
+   every possible value of that field is wrong.
+   ② **The extract carries a `<!-- page: N -->` marker between pages, and anchors are matched
+   verbatim.** So a sentence running from the foot of one page into the head of the next
+   **is not a contiguous string in the extract at all, and will never hit.**
+   ⚠️ **Measured case:** 30 sentences sampled from a 9-page paper and looked up in itself
+   produced two misses — **both were page-spanning sentences**, and the first reaction was
+   "the extract is broken". **The sampling was what was broken.** (constitution §7.3, step 1)
+   → For a load-bearing sentence that spans a break: **take a complete clause from within one
+   page** as the anchor, and note the span in the statement field.
 
 ---
 

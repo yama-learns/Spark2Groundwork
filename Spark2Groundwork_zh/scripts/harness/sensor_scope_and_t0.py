@@ -8,7 +8,7 @@
     WRITE_OUT_OF_SCOPE       本輪變更落在宣告範圍之外                FAIL
 
 ⚠️ **T0 唯一性為什麼是 FAIL 而非 WARN：**
-**改一份漏其餘，而每一份單獨讀起來都正常。** 這是失效家族②最難察覺的形態。
+**改一份漏其餘，而每一份單獨讀起來都正常。** 這是「修一層漏另一層」家族最難察覺的形態。
 
 ⚠️ **單 agent 專案請把 `write_scopes` 留空**——感測器會明說「本項不適用」，
 **而不是靜默通過**。
@@ -76,11 +76,36 @@ def main():
                              f"{err}——**本項未檢查，這不等於通過**"))
         else:
             allowed = [a.rstrip("/") for v in scopes.values() for a in v]
+            # 🔴 **deny：無論任何角色都不得寫。**（憲章 §6 通則 2 第一次有機械對應物）
+            #    ⚠️ T0 兩份自 `t0_docs` 併入——⛔ 不在 `deny` 裡重寫一次（憲章 §3.2）。
+            denied = ([d.rstrip("/") for d in cfg.get("deny", [])]
+                      + [t.rstrip("/") for t in cfg["t0_docs"]])
+            # ⚠️ `_human` 不是角色，是例外。**它的代價寫在 framework_config 裡，
+            #    而這裡的責任是：⛔ 被豁免的筆數必須被印出來。**
+            #    靜默豁免與沒有豁免，在畫面上長得一樣（「靜默過濾」家族）。
+            human = [h.rstrip("/") for h in scopes.get("_human", [])]
+
+            def under(path, tops):
+                return any(path == a or path.startswith(a + "/") for a in tops)
+
+            exempted = 0
             for c in changed:
-                if not any(c == a or c.startswith(a + "/") for a in allowed):
+                if under(c, denied):
+                    if under(c, human):
+                        exempted += 1
+                        continue
+                    findings.append(("FAIL", "WRITE_TO_DENIED_PATH",
+                                     f"{c} 落在 deny 範圍內——**⛔ 任何 AI 角色皆不得寫**"
+                                     f"（憲章 §6 通則 2）"))
+                    continue
+                if not under(c, allowed):
                     findings.append(("FAIL", "WRITE_OUT_OF_SCOPE",
                                      f"{c} 不在任何角色的宣告範圍內"))
             stats["本輪變更"] = len(changed)
+            stats["deny 範圍"] = len(denied)
+            if exempted:
+                stats["⚠️ 經 _human 豁免的 deny 命中"] = (
+                    f"{exempted} 筆——**豁免不是沒有發生，只是判定為人做的**")
 
     return emit("範圍與 T0 感測器", findings, stats, as_json, name)
 

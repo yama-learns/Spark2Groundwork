@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
-# 人工檢查點（macOS／Linux）—— 與 記錄快照.bat 對稱
-# ⚠️ 兩側修改時必須同步：提交訊息格式、reviewed 標籤行為、鎖檔處理。
-set -u
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"; cd "$ROOT" || exit 1
-[[ -f governance/AGENTS.md ]] || { echo "[FAIL] 這不是專案根目錄，未寫入任何東西"; exit 1; }
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "建立版本控制…"; git init -q; }
-[[ -z "$(git rev-parse --show-prefix 2>/dev/null)" ]] || { echo "[FAIL] 此資料夾位於另一個 repo 之內"; exit 1; }
-find .git -name "*.lock" -delete 2>/dev/null
-GITQ=(git -c core.quotepath=false)
-"${GITQ[@]}" --no-pager diff --stat --summary HEAD 2>/dev/null | tail -20
-"${GITQ[@]}" add -A
-if git diff --cached --quiet 2>/dev/null; then echo "無變更"; else
-  git -c user.name="researcher" -c user.email="me@local" commit -q -m "snapshot $(date '+%Y-%m-%d %H:%M')"
-  echo "New checkpoint created."; fi
-git tag -f reviewed >/dev/null 2>&1
-echo "Done. Reviewed baseline moved to the latest checkpoint."
+# 人工檢查點 —— **薄殼，⛔ 這裡沒有邏輯**
+#
+# 全部邏輯在 scripts/harness/checkpoint.py，Windows 與 macOS 跑的是同一份程式碼。
+# ⛔ 不要把邏輯抄回這裡：**同一件事有兩份拷貝**，正是本框架自己
+#    「修一層漏另一層」事故的成因（見 governance/Incident_Log.md）。
+#
+# ⚠️ 保留這個檔名是因為 SETUP.md 與既有習慣都指向它。
+cd "$(dirname "$0")/../.." || exit 1
+PY=""; command -v python3 >/dev/null 2>&1 && PY=python3
+[ -z "$PY" ] && command -v python >/dev/null 2>&1 && PY=python
+[ -z "$PY" ] && { echo "[FAIL] 找不到 Python 3.9+"; exit 1; }
+exec "$PY" scripts/harness/checkpoint.py  "$@"

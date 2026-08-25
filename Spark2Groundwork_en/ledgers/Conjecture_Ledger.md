@@ -1,6 +1,6 @@
 # Conjecture Ledger
 
-**Tier: T1 — data class. ⛔ AI must not write to this file directly.**
+**Tier: T1 — data class. ⚠️ By default the AI does not write here (constitution §6.3) — a default, ⛔ not a prohibition.**
 **Authority: this ledger is the single source of truth for every theoretical claim.**
 Any load-bearing claim in any document must carry an ID from here.
 
@@ -57,6 +57,13 @@ filling a field is easier than splitting a claim, and deleting is easier than ei
 **Origin:**           Where this conjecture came from
 **Falsification:**    Which observable result would refute it. If you cannot say, write "—"
 **Falsification adjudicated:** `pending` / `adjudicated` — ⛔ only a human may set `adjudicated`
+**Why I could not fill this:** **Optional.** When Falsification is "-", say here why
+                      ⚠️ **Same wording as `prompts/TEMPLATE_decompose.txt` rule 3.**
+                      ⛔ Field names are rules too, and a rule has one home
+                      (`governance/WORKFLOW_CONSTITUTION.md` §3.2)
+                      ⚠️ Filling it makes the sensor report
+                      `FALSIFICATION_DECLARED_UNFALSIFIABLE` rather than "condition empty"
+                      — **because those are two different states**
 **Strongest rival:**  Name it specifically. ⛔ Not "some scholars disagree"
 **Rival's differing prediction:** What the rival predicts, and where the two diverge
 **Basis:**            🟢 name source and location; 🔴 name the refuting evidence

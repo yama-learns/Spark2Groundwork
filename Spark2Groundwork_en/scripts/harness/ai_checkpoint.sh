@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# AI checkpoint — tags auto: and does **not** move the reviewed tag
-# ⚠️ "What the AI saved is not what you reviewed" — the distinction is deliberate.
-set -u
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"; cd "$ROOT" || exit 1
-LABEL="${1:-unlabelled}"
-[[ -f governance/AGENTS.md ]] || { echo "[FAIL] not the project root"; exit 1; }
-[[ -z "$(git rev-parse --show-prefix 2>/dev/null)" ]] || { echo "[FAIL] sits inside another repository"; exit 1; }
-find .git -name "*.lock" -delete 2>/dev/null
-git -c core.quotepath=false add -A
-git diff --cached --quiet 2>/dev/null && { echo "no changes"; exit 0; }
-git -c user.name="AI agent" -c user.email="agent@local" commit -q \
-  -m "auto: $(date '+%Y-%m-%d %H:%M') [$LABEL] -- AI auto checkpoint, NOT human-reviewed"
-echo "  AI checkpoint created"
-echo "  reviewed tag NOT moved -- what the AI saved is not what you reviewed"
+# AI checkpoint — **a thin shell; ⛔ no logic lives here**
+#
+# All the logic is in scripts/harness/checkpoint.py, so Windows and macOS run
+# exactly the same code.
+# ⛔ Do not copy logic back into here: **two copies of one thing** is precisely
+#    how this framework's own "fixed one layer, missed another" incidents happened
+#    (see governance/Incident_Log.md).
+#
+# ⚠️ The filename is kept because SETUP.md and existing habits point at it.
+cd "$(dirname "$0")/../.." || exit 1
+PY=""; command -v python3 >/dev/null 2>&1 && PY=python3
+[ -z "$PY" ] && command -v python >/dev/null 2>&1 && PY=python
+[ -z "$PY" ] && { echo "[FAIL] Python 3.9+ not found"; exit 1; }
+exec "$PY" scripts/harness/checkpoint.py --mode ai "$@"

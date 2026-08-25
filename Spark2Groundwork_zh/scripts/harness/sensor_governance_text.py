@@ -5,7 +5,7 @@
 ## 四項檢查
 
     DUPLICATE_RULE_TEXT      跨檔完全相同的長句（同一規則有兩個家）      WARN
-    SECTION_REF_UNRESOLVED   `檔.md` §N 的引用無法唯一解析              WARN
+    SECTION_REF_UNRESOLVED   `<檔>.md` §N 的引用無法唯一解析              WARN
     STATE_IN_SPEC_DOC        規格類文件混入狀態（待辦／進度）           WARN
     SCAN_GLOB_MATCHES_NOTHING  掃描 glob 命中 0 檔                      WARN
 
@@ -37,7 +37,29 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import cli, emit, dead_glob_findings          # noqa: E402
 from framework_config import resolve_globs, excluded       # noqa: E402
 
-MIN_DUP = 24
+# 🔴 **門檻以「資訊長度」計，⛔ 不以字元數計。**
+#
+# ⚠️ **實測個案：兩版的門檻原本不一樣**（中文版 24–80、英文版 40–220），
+#    **而那個差異沒有任何地方登記為刻意分歧。**
+#    後果具體可量：同一句規則
+#      中文「順序不可調換：還原跨行斷字須在空白壓縮之前」→ 正規化後 **21 字元**
+#      英文 "The order cannot be swapped: de-hyphenation..." → **68 字元**
+#    **兩版都有這句重複，而只有英文版被抓到——中文版差 3 個字落在門檻外。**
+#
+# ⛔ **一個以字元數計的門檻，對中文的偵測力系統性地低於英文**，
+#    因為中文表達同樣的內容只需要約三分之一的字元。
+#    → 改以資訊長度計：**一個中日韓字元約當三個拉丁字元。**
+CJK = re.compile(r"[\u3400-\u9fff\uf900-\ufaff]")
+CJK_WEIGHT = 3
+
+
+def info_len(s):
+    """資訊長度——⛔ 不是 len()。見上方說明。"""
+    n = len(CJK.findall(s))
+    return (len(s) - n) + n * CJK_WEIGHT
+
+
+MIN_DUP, MAX_DUP = 40, 220
 # ⚠️ **判準是結構，不是關鍵字。**
 #    首版以「出現『待辦』二字」判定，於是**談論「不得含待辦」的規則文字本身被抓到**。
 #    關鍵字獵巫的代價，是對正確文本報警——而那會教人關掉感測器（R-19）。
@@ -47,18 +69,66 @@ STATE_WORDS = re.compile(r"^\s*[-*]\s*\[[ xX]\]|✅\s*\*\*已完成|\|\s*✅\s*�
 REF = re.compile(r"`([\w一-鿿_/.-]+\.md)`\s*(?:之\s*)?§(\d+(?:\.\d+[a-z]?)?)")
 
 
+# ── 檔頭標語不是規則 ────────────────────────────────────────────────
+# ⚠️ **實測個案：** `Claim_Ledger.md` 與 `Conjecture_Ledger.md` 的檔頭同樣寫著
+#    「T1 資料類。AI 不得直接寫入本檔。」，於是被判為「同一規則有兩個家」。
+#    **那一行是檔案的中繼資料，不是規則**——每個資料類檔案都必須各自寫上它，
+#    否則讀者不知道手上這一份是什麼。**要求它只出現一次，等於要求它不成立。**
+# ⛔ **這不是「因為誤報所以放寬判準」（R-20），是把判準的對象修正回規則本身。**
+#    → 判準仍是結構，不是關鍵字：**整行只有一個粗體段、且位在第一個 `## ` 之前**。
+#    章節內的重複規則文字不受影響——`gov_dup` 的「必須抓到」樣本守著這一點。
+# ⚠️ **斷句器一度只認 `。` 與換行**，於是英文版只能比對「整行相同」——
+#    `Audit_Protocol.md` 與 `HANDOFF.md` 共用的那句話，中文版抓到、英文版沒抓到，
+#    **而兩版的文字其實一樣重複。** 感測器強弱不同，會被誤讀成兩版品質不同。
+#    → 補上「句號（可帶收尾的 `**`、引號、括號）後接空白」為斷點；
+#    `3.2`、`.md` 不會被切開（且行內程式碼已先移除）。
+#    ⚠️ 收尾符號那一段是實測補的：`**...unfinished.** "None"...` 的句號後面是 `*` 不是空白，
+#    **只認「句號＋空白」時整句仍然接在一起，於是照樣抓不到。**
+SPLIT = re.compile(r"。|(?<=\.)[*_\"'’”)\]]*\s+|\n")
+
+
+# ── 指名了定義處的句子，不是「第二個定義處」──────────────────────
+# ⚠️ **實測個案：** 把一句重複的規則改成「見憲章 §3.4，⛔ 本處不重述」之後，
+#    **那句「引用」本身在兩個檔案裡逐字相同，於是又被判為重複。**
+# 🔴 **但那是反過來的：一句指名了定義處的話，⛔ 不可能是第二個定義處——
+#    它正是防止第二個定義處存在的那個機制。**
+# ⛔ **這不是「因為誤報所以放寬判準」（R-20），是把判準的對象修正回規則本身。**
+#    → 判準仍是結構：**句中出現 `§` 章節號或 `R-nn` 規則號**，即視為指標。
+#    ⚠️ 代價寫明：一條**同時指名了某個章節**的真重複規則會被漏掉。
+#    **本感測器選擇漏掉它，⛔ 而不是對每一個引用報警**（`R-19`）。
+POINTER = re.compile(r"§\s*\d|R-\d\d")
+
+
+BANNER = re.compile(r"^\*\*[^*]+\*\*$")
+
+
+def strip_banner(text):
+    """移除檔頭標語行（中繼資料），保留其餘全文。"""
+    out, in_header = [], True
+    for line in text.split("\n"):
+        if line.startswith("## "):
+            in_header = False
+        if in_header and BANNER.match(line.strip()):
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
 def sentences(text):
+    text = strip_banner(text)
     text = re.sub(r"`[^`]*`", "", text)
-    for raw in re.split(r"[。\n]", text):
+    for raw in re.split(SPLIT, text):
         s = re.sub(r"[*⚠️⛔🔴🟢🟡🟤📌>#|\-—\s]", "", raw)
-        if MIN_DUP <= len(s) <= 80:
+        if POINTER.search(raw):
+            continue          # ⛔ 指標，不是規則
+        if MIN_DUP <= info_len(s) <= MAX_DUP:
             yield s
 
 
 def main():
     root, cfg, as_json, name = cli("governance_text")
     files, dead = resolve_globs(cfg["governance_globs"], root, cfg)
-    findings = dead_glob_findings(dead, "governance_globs")
+    findings = dead_glob_findings(dead, "governance_globs", root)
     if not files:
         findings.append(("INCOMPLETE", "GOV_DOCS_ABSENT",
                          "找不到任何治理文件——**本輪未檢查，這不等於通過**"))

@@ -1,0 +1,8 @@
+Your task: review the document below.
+
+⛔ Where you are uncertain, say so rather than inventing anything.
+Answer each point separately; do not merge them.
+
+Output format: one per line.
+
+⛔ Do not write "pending", "see below", or similar in the field.

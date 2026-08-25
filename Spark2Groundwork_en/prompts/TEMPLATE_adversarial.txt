@@ -41,6 +41,12 @@ Test coverage (**mandatory; both columns**)
 Tone
 ===============================================================
 
+⛔ **Where you are uncertain, say "not found" or "I did not test this" — do not invent.**
+   An auditor fabricating a finding is worse than missing one: **it sends someone to fix a
+   problem that does not exist, and it spends the trust the next audit will need.**
+   ⛔ The correct output when you find no evidence is "I looked in X and Y and found nothing",
+   **not "there is no problem", and not a plausible-sounding guess.**
+
 ⛔ Banned: "extremely", "perfect", "very robust", "no holes", "nothing to fix", "airtight"
 ✅ Instead: "no defect found in the N items I checked"
 

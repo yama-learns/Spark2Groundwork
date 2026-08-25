@@ -6,7 +6,7 @@
 | Conjecture | unverified |
 ## 1. Conjectures
 
-### C-01 | Falsifiable | main line
+### C-01 | 🟡 Falsifiable | main line
 
 **Statement:** When A increases, B decreases.
 **Origin:** Paragraph 2

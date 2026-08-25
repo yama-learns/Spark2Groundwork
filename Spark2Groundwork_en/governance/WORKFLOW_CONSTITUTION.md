@@ -28,13 +28,17 @@ is, in this topology, not a design at all.**
 | ② **Exists** | Is that passage in the source | `sensor_claim_ledger.py` | **Computational, zero cost** |
 | ③ Fields | Are required fields filled | `sensor_conjecture_ledger.py` | Computational |
 | ④ Consistency | Do documents agree | `sensor_governance_text.py` | Computational |
-| ⑤ Authenticity | Does this reference exist | external lookup (optional) | Computational, needs network |
+| ⑤ Authenticity | Does this reference exist | **Authoritative bibliography file** (`policy/SOURCES.md` §3) | **Human** / ✅ approved tool |
 | ⑥ Support | Does the passage bear this claim | — | **Human / cross-model audit** |
 | ⑦ Generalisation | Can you go from that sample to here | — | **Human / cross-model audit** |
 
 ⚠️ **⑥ and ⑦ are deliberately not mechanised.** They are judgement, not a backlog item.
 **An attempt to mechanise them yields a sensor that fires on correct text,
 and that teaches people to ignore the whole system.**
+
+⚠️ **⑤ is different from ⑥ and ⑦: it is not unmechanisable, there is simply no trustworthy
+machine source for it by default.** The conditions under which a tool may take over this link
+are defined in `policy/SOURCES.md` §5 — ⛔ not restated here.
 
 ---
 
@@ -49,22 +53,24 @@ and that teaches people to ignore the whole system.**
 
 ### 3.1 ⛔ State belongs only in state-class documents
 
-⚠️ **Source: a predecessor project's dispatch document kept its to-do list in its own §5.
-Within three hours it contained two entries marked "✅ done" that were still sitting there.**
-
-> **A document with state mixed in inherits the update frequency of its fastest-changing part.**
-> **And the reader cannot tell which paragraph is stale — each one reads fine on its own.**
+**A document with state mixed in inherits the update frequency of its fastest-changing part,
+and the reader cannot tell which paragraph is stale — each one reads fine on its own.**
 
 ### 3.2 Every rule has exactly one home
 
 **Any rule, criterion, or table is defined in exactly one place project-wide;
 everywhere else cites it rather than restating it.**
 
-⚠️ **Measured: one project had 17 sentences appearing verbatim in more than one file.**
-**Duplication itself is harmless; divergence is fatal — and divergence is the
-inevitable end state of duplication, not an accident.**
+🔴 **Paths, directory names, filename patterns and field names are rules too,
+and they get exactly one home as well.**
 
-**Each rule's home is registered in `file_index.md` §0.**
+⚠️ **Duplication itself is harmless; divergence is fatal — and divergence is the inevitable
+end state of duplication, not an accident.**
+⛔ **An agent that follows one of three mutually contradictory specs has not misjudged;
+the three specs are what is wrong.**
+
+**The single home for paths is `scripts/harness/framework_config.py`; each rule's home is
+registered in `file_index.md` §0.**
 
 ### 3.3 Document proliferation defence
 
@@ -82,12 +88,14 @@ inevitable end state of duplication, not an accident.**
 | Case | Form |
 |---|---|
 | This file | §N |
-| Other files | `` `filename.md` `` §N |
+| Other files | `` `<filename>.md` `` §N |
 
 ⛔ **Do not use ambiguous short forms** (e.g. writing "the constitution §N" when the project has two constitutions).
+⛔ **Cite a failure family by name, never by number** — **the number is the table's ordinal;
+the name is the identifier.**
+🔴 **A citation that silently retargets is more dangerous than one that dangles, because it
+stays green** — and a sensor can only catch the latter.
 ⛔ **When citing another project's section numbers, name that project** —
-⚠️ a predecessor project inherited a failure-family table from another project
-**together with that project's section numbers; four dangling references went unnoticed for a long time.**
 **Inheriting a rule together with its citations is itself a form of "index as authority".**
 
 ---
@@ -101,7 +109,20 @@ inevitable end state of duplication, not an accident.**
 3. Read both T0 files
 4. First-time participants also read `Incident_Log.md`
 5. **Restate your own write scope** (§6)
-6. Run `run_all_sensors.py` and **confirm the exit code**
+6. Run `run_all_sensors.py`, **confirm the exit code, and handle it per the table below**
+
+#### 4.1.1 🔴 What to do when the exit code is not 0
+
+> ⚠️ **A ritual step with a check and no disposition is a step that does nothing.**
+
+| Exit code | Disposition |
+|---|---|
+| **0** | Start as normal |
+| **1 (FAIL), unrelated to this session's task** | ✅ Start, **but log it at the top of this session's output**: how many FAILs, why you judged them unrelated, who clears them |
+| **1 (FAIL), related to this session's task** | ⛔ **Fix first. Do not start.** |
+| **2 (INCOMPLETE)** | ⛔ **Stop and report.** "Could not check" ⛔ must not default to "unrelated" |
+
+⛔ **When you cannot tell which row applies, take the last one** (same as the last row of §4.3).
 
 ### 4.2 Session end
 
@@ -117,14 +138,9 @@ A predecessor project's governance role wrote only its own memo for a long time;
 
 ### 4.3 🔴 When an instruction conflicts with T0 (**the most commonly missing rule**)
 
-**A framework with only "decision requests" has a mechanism for proposing rule changes —
-it has none for "what do I do right now".**
+**"Decision requests" propose rule changes; they do not answer "what do I do right now".**
 
-⚠️ **Measured:** a tested agent received an instruction to write into the ledger,
-while four documents said AI must not write to the ledger.
-**It derived its own handling from the exemption clause and executed.**
-
-> **An agent deriving on its own that it may make an exception
+> ⚠️ **An agent deriving on its own that it may make an exception
 > is exactly what this framework should worry about most.**
 
 **→ Explicit handling, four cases, judged in order:**
@@ -187,9 +203,68 @@ chose not to overwrite it. **The file was left containing three spaces.**
 **Three general rules:**
 
 1. **A role writes only to its own output area ＋ `handoffs/`.**
-2. ⛔ **Ledgers are in no AI role's write scope.**
+2. **Ledgers are by default in no AI role's write scope** — ⚠️ **that is a default, ⛔ not a
+   prohibition. See §6.3.**
 3. **Every exception must have its cost written down.**
    ⚠️ One exemption is fine, but **an exemption should be visible rather than quiet**.
+
+
+### 6.2 Operational directories (**they are not output areas**)
+
+| Directory | What it is | Version-controlled | Scanned by sensors |
+|---|---|---|---|
+| `scratch/` | **Sandbox.** Things built to test a judgement: a small repo for reproduction, a throwaway script, a disposable specimen. Conventional path `scratch/<topic>_sandbox/` | ⛔ no | ⛔ no |
+| `archive/` | Retired versions kept **deliberately undeleted** | ✅ yes | ⛔ no |
+| `_to_delete/` | In an **environment where deletion is denied**, the holding place for things judged deletable | ⛔ no | ⛔ no |
+
+🔴 **The defining property of `scratch/`: nothing in it ⛔ may be cited.**
+**A sandbox exists to reach a conclusion, not to produce something others will cite.**
+⚠️ **It is not version-controlled, so by the time the next person opens your citation the file
+is gone** — **and a citation pointing at a file that does not exist reads exactly like a
+well-founded one.**
+→ **Move what you want to keep out of `scratch/` into your output area first, then cite it.**
+
+⚠️ **`_to_delete/` is a product of an environment limit (some filesystems deny `unlink`),
+⛔ not a wastebasket.**
+⛔ **After moving something there you must tell a human, who does the real deletion** —
+**a `_to_delete/` nobody knows about is identical to not having deleted anything.**
+
+⚠️ ⛔ **`excluded_dirs` lists them to save scanning cost, not to grant permission.**
+**"Not scanned" and "not writable" are different things** — see the comment on that key in
+`scripts/harness/framework_config.py`.
+
+
+### 6.3 🔴 Authorisation is the user's decision, ⛔ not the framework's
+
+**A user may authorise the AI to write anything in their project, ledgers included.**
+⛔ **This framework has no standing to forbid that** — **each project is the responsibility of
+its principal, and this framework takes no responsibility for any project's final product.**
+
+⚠️ **Reason: a prohibition the user cannot lift gets routed around entirely the moment they
+genuinely need it lifted, and routing around leaves no record. ⛔ A gate that can be switched
+off in a config is safer than a gate that gets bypassed.**
+
+**Mechanical counterpart:** `deny` in `governance_config.json`.
+**Empty it and authorisation is complete.**
+
+#### One thing worth knowing when you decide (⛔ information, not persuasion)
+
+| | After it breaks |
+|---|---|
+| **Framework documents** (`governance/` `policy/` `profiles/` `prompts/` `scripts/` …) | ✅ **Re-download from GitHub and overwrite** |
+| **`ledgers/` `corpus/` `corpus_md/` `handoffs/` `incidents/` `PROJECT.md`** | 🔴 **Nothing anywhere can restore them** |
+
+**The default `deny` blocks only the second kind, ⛔ never the first** — so a governance agent
+can fully maintain the governance documents, **which is the precondition for a user being able
+to keep this framework alive on their own.**
+
+#### ⚠️ Two things full authorisation does not change
+
+1. **The AI still declares "which files I wrote" in `handoffs/`** (`policy/HANDOFF.md` §3.3).
+   **Authorisation changes what may be written, ⛔ not whether it must be reported.**
+2. The **falsification-adjudicated column** in `ledgers/Conjecture_Ledger.md` is still ⛔
+   human-only. 🔴 **That column is the only record that a human adjudicated — if the AI can
+   fill it, adjudication is just a string.**
 
 ---
 
@@ -233,9 +308,8 @@ The response is always to fix the comparison logic **and add a "must not false-a
 | 1 | FAIL — **a definite defect** |
 | 2 | **INCOMPLETE — could not check. ⛔ This is not a pass** |
 
-⚠️ **A crash counts as INCOMPLETE, not FAIL.**
-Conflating them makes "the sensor is broken" look like "the document has a problem" —
-**and that sends someone to fix a document that was fine.**
+⚠️ **A crash counts as INCOMPLETE, not FAIL** — otherwise "the sensor is broken" looks like
+"the document has a problem", **and that sends someone to fix a document that was fine.**
 
 ### 7.5 Cross-layer checklist for governance changes
 
@@ -274,3 +348,46 @@ immediately collided with T0 uniqueness.
 - ⛔ It **does not guarantee the research is correct**
 - ⛔ It **does not guarantee that all-green sensors mean no problem** — green covers only what is mechanised
 - ⛔ It **cannot replace the principal's judgement**; it only gives that judgement something to stand on
+
+## 10. 🔴 The cost ceiling on governance (**this section governs the framework itself**)
+
+> **Governance is a cost of research, ⛔ not its purpose.**
+> ⚠️ **The moment governance work starts crowding out the time and compute that research
+> needs, governance has already failed** — **even if every governance document is individually
+> correct.**
+
+### 10.1 The user is the only auditor
+
+⛔ **A governance agent must not be required to run an adversarial audit on its own
+maintenance** — **it multiplies the overhead, and that compute was meant for the research.**
+
+⛔ **`governance/Audit_Protocol.md` governs the audit of research output, not the review of
+governance maintenance.**
+
+### 10.2 The review is three questions (⛔ no more)
+
+| # | Question |
+|---|---|
+| ① | For what changed this round, **can I see why it was changed?** |
+| ② | Did it touch **anything I cannot restore** (ledgers, corpus, handoffs, `PROJECT.md`)? |
+| ③ | **Are the sensors still green?** |
+
+🔴 **⛔ The reviewer must not be asked to judge whether a change is *correct*.**
+**That requires the same context the governance agent has, and requiring the user to hold that
+context is exactly where the crowding-out comes from.**
+
+⚠️ **All three are deliberately answerable in a few minutes.**
+**A review process that takes half an hour is, in practice, a review that does not happen.**
+
+### 10.3 The governance agent reports its cost every round
+
+**State in the handoff packet: how many files were touched, how many rounds of conversation.**
+⛔ **This is not for appraisal; it is to turn crowding-out into a visible number** —
+**a cost nobody measures is a cost nobody notices growing.**
+
+### 10.4 How this divides from §7
+
+§7 governs **the quality of changing a sensor** (its three gates stand);
+**this section governs whether the effort should be spent at all.**
+
+---

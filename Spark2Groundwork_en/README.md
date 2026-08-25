@@ -4,6 +4,19 @@
 
 ---
 
+## All you have to do is three things
+
+| What | Where |
+|---|---|
+| **Fill in one file** | `PROJECT.md` at the root — ⛔ every other governance document is AI-maintained |
+| **Press three buttons** | snapshot / review changes / check update (`.bat` on Windows, `.command` on macOS) |
+| **Adjudicate** | You are the only adjudicator. The AI asks; you decide |
+
+⚠️ **Framework folders can be replaced wholesale from GitHub, ⛔ and your ledgers, corpus and
+`PROJECT.md` are never touched.**
+
+---
+
 ## 0. What this is
 
 A **file-based governance framework** for developing research ideas with AI assistance.
@@ -39,6 +52,14 @@ a sensor that fires on correct text teaches you to ignore it, which is worse tha
 
 ## 2. Five-minute tour
 
+<p align="center">
+  <img src="docs/fig1_architecture.svg" alt="Architecture: what is the framework and what is yours" width="100%">
+</p>
+
+⚠️ **Above the red line is the framework — break it and you re-download it. Below the line is
+your data, and nothing anywhere can restore it.**
+
+
 ```
 SETUP.md              ← 🚩 Start here. Install, fill in, first run
 INITIALIZE_PROMPT.md  ← The prompt you paste to your AI
@@ -53,6 +74,11 @@ scripts/harness/      ← Sensors (mechanical checks)
 ---
 
 ## 3. Four core ideas
+
+<p align="center">
+  <img src="docs/fig2_workflow.svg" alt="Workflow: the evidence chain, who watches it, and the loop" width="100%">
+</p>
+
 
 ### 3.1 The evidence chain has links, not just "did you cite something"
 
@@ -104,8 +130,8 @@ Every sensor and every hard rule here carries the case that triggered it.
 ⛔ **Rules without a case do not get written in** — the framework has its own rule saying so.
 
 ⚠️ **But that rule has one exception, and it is the reason this framework exists:**
-the failure families marked `[inherited]` in `governance/Incident_Log.md`
-**have not happened in your project.** They are listed for honesty, not because they are in force —
+the failure families marked `[inherited]`, `[framework's own]` or `[predicted]` in
+`governance/Incident_Log.md` **have not happened in your project.** They are listed for honesty, not because they are in force —
 **you may defend against them, but do not claim immunity because of them.**
 
 ---
@@ -113,3 +139,14 @@ the failure families marked `[inherited]` in `governance/Incident_Log.md`
 ## 5. Next step
 
 👉 **Open `SETUP.md`.**
+
+---
+
+## Licence
+
+**This framework is released under the MIT licence**, from
+https://github.com/yama-learns/Spark2Groundwork
+
+⚠️ **That covers the framework files only.**
+**The research you produce with it is yours** — ⛔ this framework claims no rights over your
+final product, and takes no responsibility for it.

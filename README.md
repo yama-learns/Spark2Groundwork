@@ -1,9 +1,12 @@
-# Spark2Groundwork
+# 學術研究神器 · AI 論文發想框架 · Spark2Groundwork
+
+### The Researcher's Power Tool · An AI Framework for Paper Ideation
 
 **Turn a spark of an idea into a research proposal that holds up.**
 **把一個發想，變成一份站得住的研究提案。**
 
 [English](Spark2Groundwork_en/README.md) ｜ [繁體中文](Spark2Groundwork_zh/README.md)
+｜ [CHANGELOG](CHANGELOG.md)
 
 ---
 
@@ -55,6 +58,10 @@ cp -r Spark2Groundwork_zh  ~/我的研究專案             # 繁體中文
 
 ## What's inside / 內容
 
+<p align="center">
+  <img src="Spark2Groundwork_en/docs/fig1_architecture.svg" alt="Architecture: what is the framework and what is yours" width="100%">
+</p>
+
 ```
 Spark2Groundwork_en/     Full framework, English
 Spark2Groundwork_zh/     完整框架，繁體中文
@@ -71,14 +78,29 @@ Each edition contains 每個版本各自包含：
 | `policy/` | Model identity, handoff, sources, external tools |
 | `profiles/` | solo ／ multi-agent ／ chat-only ／ external-tools |
 | `prompts/` | Parts bin ＋ three templates |
-| `scripts/harness/` | 5 sensors ＋ 12 paired self-tests |
+| `PROJECT.md` | 🔴 **The only file you fill in ／ 你唯一需要親筆填的檔案** |
+| `scripts/harness/` | Sensors ＋ paired self-tests ／ 感測器與成對自測 |
+| Three buttons ／ 三個按鈕 | snapshot ／ review changes ／ check update （`.bat` ＋ `.command`） |
+
+⚠️ **The count is deliberately not written here.** A number in prose drifts the moment a
+sensor is added, and a stale number reads exactly like a current one (`R-16`).
+To see it: `python3 scripts/harness/run_all_sensors.py` and `run_selftest.py`.
+
+⚠️ **支數刻意不寫在這裡。** 散文裡的數字在下一次增修時就會過期，
+而過期的數字與正確的數字長得一模一樣（`R-16`）。查證方式：跑一次上面兩支程式。
 
 **The two editions are independent and equivalent.** Pick one; you do not need both.
 **兩個版本各自獨立且對等。** 選一個即可，不需要兩個都要。
 
 ---
 
-## The four ideas / 四個核心概念
+## How it works / 它怎麼運作
+
+<p align="center">
+  <img src="Spark2Groundwork_en/docs/fig2_workflow.svg" alt="Workflow: the evidence chain, who watches it, and the loop" width="100%">
+</p>
+
+### The four ideas / 四個核心概念
 
 1. **The evidence chain has links.** ② "is that passage actually in the source" is
    answerable by string comparison at zero cost, and it is the fulcrum of the whole design.
@@ -104,7 +126,8 @@ a version in a folder name breaks every path, bookmark, and clone command on eac
 **版本以 Git tag 標記，資料夾名不帶版本號**——
 資料夾名一改，所有路徑引用、書籤與 clone 指令都要跟著改。
 
-See [Releases](https://github.com/yama-learns/Spark2Groundwork/releases).
+See [CHANGELOG.md](CHANGELOG.md) and
+[Releases](https://github.com/yama-learns/Spark2Groundwork/releases).
 
 ---
 
@@ -112,11 +135,11 @@ See [Releases](https://github.com/yama-learns/Spark2Groundwork/releases).
 
 Distilled from **two research projects in actual use**, with forty-odd logged incidents between them.
 
-⚠️ **The `[inherited]` failure families in `governance/Incident_Log.md` have not happened in
-your project.** They are listed for honesty, not because they are in force —
+⚠️ **The `[inherited]`, `[framework's own]` and `[predicted]` failure families in
+`governance/Incident_Log.md` have not happened in your project.** They are listed for honesty, not because they are in force —
 **you may defend against them, but do not claim immunity because of them.**
 
-⚠️ **`governance/Incident_Log.md` 中標為 `[繼承]` 的失效家族，在你的專案裡尚未發生。**
+⚠️ **`governance/Incident_Log.md` 中標為 `[繼承]`、`[框架自身]`、`[預測]` 的失效家族，在你的專案裡尚未發生。**
 **它們列在那裡是為了誠實，不是為了生效。**
 
 ---

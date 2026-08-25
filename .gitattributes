@@ -2,7 +2,20 @@
 # Source: a "probe and restore" git operation once rewrote the line endings of an entire
 # working tree, including batch files the user was actively running — and cmd.exe is
 # unreliable with LF-only batch files.
+# 🔴 **Default: every text file is stored LF in the repository and checked out LF.**
+# ⚠️ Without this line, extensions not listed below (`.txt` / `.json` / `LICENSE` / this file
+#    itself…) fall back to git's default, so a Windows user sees a wall of
+#    "LF will be replaced by CRLF" warnings on every `git status` —
+#    **and the practical effect of too many warnings is that nobody reads warnings.**
+* text=auto eol=lf
+
 *.bat  text eol=crlf
 *.sh   text eol=lf
+# ⚠️ macOS double-click buttons. **Line endings must be LF** — a CRLF file gives the
+#    `#!/bin/bash` line a trailing \r, so the system cannot find the interpreter,
+#    and the error message says nothing about line endings.
+*.command text eol=lf
 *.py   text eol=lf
 *.md   text eol=lf
+
+# ⚠️ **`.bat` is the only exception; ⛔ it must be CRLF** — see the note above.

@@ -37,7 +37,7 @@ HEAD = re.compile(r"^###\s+(M-\d+)\s*$")
 FIELD = re.compile(r"^-\s*\*\*(.+?)[:：]\*\*\s*(.*)$")
 PLACEHOLDER = re.compile(r"^(—|-|<<<.*>>>|)$")
 # Surname pattern. The CJK range is intentional: author names are not always Latin,
-# and a sensor that silently skips non-Latin sources is failure family ④.
+# and a sensor that silently skips non-Latin sources is the "silent filtering" family.
 SURNAME = re.compile(r"^\s*\**([^\W\d_][\w'’-]+)", re.UNICODE)
 
 

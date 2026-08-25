@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700" font-family="Noto Sans CJK TC, Noto Sans TC, PingFang TC, Microsoft JhengHei, sans-serif">
+<rect x="0" y="0" width="980" height="700" fill="#ffffff"/>
+<defs>
+  <marker id="b" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3c4a56"/></marker>
+  <marker id="bg" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#2e7d5b"/></marker>
+  <marker id="by" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#b8802f"/></marker>
+</defs>
+
+<text x="490" y="28" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a2733">工作流 —— 證據鏈、誰在看、以及每一輪的迴圈</text>
+<text x="490" y="49" text-anchor="middle" font-size="12" fill="#4a5b6a">可信度取決於：<tspan font-weight="bold" fill="#1a2733">一句話回溯到原文要走幾步，而每一步有沒有留痕。</tspan></text>
+
+<!-- band 1 evidence chain -->
+<rect x="28" y="68" width="924" height="148" rx="7" fill="#eef4fa" stroke="#3d72a4" stroke-width="1.6"/>
+<text x="42" y="90" font-size="13" font-weight="bold" fill="#25547f">① 證據鏈</text>
+<text x="42" y="108" font-size="10.5" fill="#4a5b6a">東西怎麼流</text>
+
+<rect x="150" y="82" width="130" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="215" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">原文 PDF</text>
+<text x="215" y="117" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus/</text>
+
+<rect x="332" y="82" width="150" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="407" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">提取物</text>
+<text x="407" y="117" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus_md／⛔ 不可手改</text>
+
+<rect x="150" y="152" width="130" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="215" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">你的構想</text>
+<text x="215" y="187" text-anchor="middle" font-size="9.5" fill="#4a5b6a">PROJECT.md</text>
+
+<rect x="332" y="152" width="150" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="407" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">猜想台帳</text>
+<text x="407" y="187" text-anchor="middle" font-size="9.5" fill="#4a5b6a">每條附反證條件</text>
+
+<rect x="546" y="112" width="176" height="60" rx="5" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.8"/>
+<text x="634" y="134" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f6b4a">主張台帳</text>
+<text x="634" y="152" text-anchor="middle" font-size="10" fill="#2b2b2b">每一句都有逐字錨點</text>
+<text x="634" y="166" text-anchor="middle" font-size="10" fill="#2b2b2b">＋ 頁碼</text>
+
+<rect x="782" y="112" width="156" height="60" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="860" y="140" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">研究產出</text>
+<text x="860" y="158" text-anchor="middle" font-size="9.5" fill="#4a5b6a">提案／論文</text>
+
+<line x1="282" y1="105" x2="326" y2="105" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+<text x="304" y="97" text-anchor="middle" font-size="9.5" fill="#4a5b6a">程式化提取</text>
+<line x1="282" y1="175" x2="326" y2="175" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+<text x="304" y="167" text-anchor="middle" font-size="9.5" fill="#4a5b6a">拆解</text>
+<path d="M484,105 L514,105 L514,130 L540,130" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#bg)"/>
+<text x="514" y="97" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1f6b4a">逐字比對</text>
+<path d="M484,175 L514,175 L514,154 L540,154" fill="none" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+<text x="512" y="196" text-anchor="middle" font-size="9.5" fill="#4a5b6a">承重主張須帶編號</text>
+<line x1="724" y1="142" x2="776" y2="142" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+
+<!-- band 2 who watches -->
+<rect x="28" y="228" width="924" height="126" rx="7" fill="#fdf3e7" stroke="#b8802f" stroke-width="1.6"/>
+<text x="42" y="250" font-size="13" font-weight="bold" fill="#96661a">② 誰在看</text>
+<text x="42" y="268" font-size="10.5" fill="#4a5b6a">機器 vs 人</text>
+
+<rect x="150" y="240" width="390" height="102" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
+<text x="166" y="260" font-size="12" font-weight="bold" fill="#1a2733">機器查得動的 —— 7 支感測器，一個指令跑完</text>
+<text x="166" y="280" font-size="10" fill="#2b2b2b">錨點在不在原文　｜　欄位完不完整　｜　跨檔說法一不一致</text>
+<text x="166" y="297" font-size="10" fill="#2b2b2b">被引用的檔案存不存在　｜　產出物有沒有自我背書</text>
+<text x="166" y="317" font-size="10.5" font-weight="bold" fill="#96661a">退出碼　0 通過　｜　1 有缺陷　｜　2 查不了</text>
+<text x="166" y="333" font-size="10" fill="#8f2d2d" font-weight="bold">⛔ 2 不等於通過 —— 「查不了」與「查過沒事」必須分開</text>
+
+<rect x="556" y="240" width="382" height="102" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
+<text x="572" y="260" font-size="12" font-weight="bold" fill="#1a2733">刻意留給人的 —— ⛔ 不機械化</text>
+<text x="572" y="280" font-size="10" fill="#2b2b2b">那段話撐不撐得起這句話</text>
+<text x="572" y="297" font-size="10" fill="#2b2b2b">從那個樣本能不能外推到這裡</text>
+<text x="572" y="317" font-size="10.5" fill="#4a5b6a">那不是待辦事項，是判斷。</text>
+<text x="572" y="333" font-size="10" fill="#8f2d2d" font-weight="bold">⚠️ 硬要機械化，只會得到一支對正確文本報警的感測器</text>
+
+<path d="M634,224 L634,182" fill="none" stroke="#2e7d5b" stroke-width="1.6" marker-end="url(#bg)"/>
+
+<!-- band 3 loop -->
+<rect x="28" y="366" width="924" height="132" rx="7" fill="#eef7f1" stroke="#2e7d5b" stroke-width="1.6"/>
+<text x="42" y="388" font-size="13" font-weight="bold" fill="#1f6b4a">③ 每輪迴圈</text>
+<text x="42" y="406" font-size="10.5" fill="#4a5b6a">三個按鈕</text>
+<text x="42" y="422" font-size="10.5" fill="#4a5b6a">在根目錄</text>
+
+<rect x="150" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
+<text x="226" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">記錄快照</text>
+<text x="226" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">建立檢查點</text>
+
+<rect x="342" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
+<text x="418" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">AI 工作</text>
+<text x="418" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">收工交出封包</text>
+
+<rect x="534" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
+<text x="610" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">查看變更</text>
+<text x="610" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">它到底改了什麼</text>
+
+<rect x="726" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
+<text x="802" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">你裁決</text>
+<text x="802" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">唯一裁決者</text>
+
+<line x1="304" y1="408" x2="336" y2="408" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+<line x1="496" y1="408" x2="528" y2="408" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+<line x1="688" y1="408" x2="720" y2="408" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
+<path d="M880,408 L916,408 L916,460 L226,460 L226,440" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#bg)"/>
+<text x="571" y="478" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f6b4a">再按一次「記錄快照」＝「我看過了」：reviewed 標記前移，下一次的「改了什麼」從這裡算起</text>
+
+<!-- bottom -->
+<rect x="28" y="516" width="924" height="164" rx="7" fill="#fffbea" stroke="#c9a227" stroke-width="1.5"/>
+<text x="44" y="538" font-size="12.5" font-weight="bold" fill="#7d6209">這張圖真正要說的三件事</text>
+<text x="44" y="564" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">① 綠燈只涵蓋已機械化的環節。</tspan>　感測器全綠 <tspan font-weight="bold">⛔ 不代表研究是對的</tspan>——它代表「機器查得動的那幾件事沒問題」。</text>
+<text x="44" y="590" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">② 每一道防線都對應一次真實發生過的失效。</tspan>　⛔ 沒有實測個案，不建感測器——<tspan font-weight="bold">誤報會教人關掉整套系統。</tspan></text>
+<text x="44" y="616" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">③ 你是唯一裁決者，而且那是量出來的。</tspan>　在兩個先行專案中，使用者是全系統新型錯誤攔截率最高的一層，</text>
+<text x="58" y="638" font-size="11.5" fill="#2b2b2b">而最有效的攔截方式是<tspan font-weight="bold">提供一份 AI 手上沒有的外部資料。</tspan></text>
+<text x="44" y="664" font-size="11" fill="#4a5b6a">→ 因此：任何把使用者移出迴路的提案，都要先回答「誰來接這一層」。</text>
+</svg>

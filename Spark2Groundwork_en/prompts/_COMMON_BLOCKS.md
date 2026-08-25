@@ -81,7 +81,7 @@ for that sub-question. Do not silently substitute an English-language study.
 ```
 
 ⚠️ **Block E is not diversity for politeness.** Searching in English only silently excludes
-an entire language region's literature — **and that exclusion appears in no report** (failure family ④).
+an entire language region's literature — **and that exclusion appears in no report** (the "silent filtering" family).
 
 ## Block F — Measurement and reliability
 

@@ -47,10 +47,12 @@ Open a terminal (Windows: search `cmd` in the Start menu) and type:
 
 ```
 git --version
-python --version
+python3 --version
 ```
 
-**Both must print a version number.** If `python` does nothing, try `python3`.
+**Both must print a version number.**
+⚠️ On **Windows**, if `python3` does nothing, try `python`.
+On **macOS** there is only `python3` (if it is missing, run `xcode-select --install`).
 
 ---
 
@@ -80,14 +82,13 @@ Copy the whole framework to wherever your project will live, and rename it to yo
 
 ### 3.2 Fill in the blanks
 
-**These files contain `<<<FILL IN:...>>>` markers. All of them need filling:**
+🔴 **There is exactly one file you fill in: `PROJECT.md` at the root.**
+**Every other governance document is maintained by the AI; you never need to open them.**
 
-```
-governance/AGENTS.md          ← what the project is, your academic bottom lines, your ethical red lines
-ledgers/Conjecture_Ledger.md  ← your first batch of conjectures
-```
+(Your first batch of conjectures goes in `ledgers/Conjecture_Ledger.md` —
+⚠️ the AI can do that part for you; see step 5.)
 
-⚠️ **The three questions in `governance/AGENTS.md` §1.1 must be in your own hand. ⛔ The AI must not answer them:**
+⚠️ **The three questions in `PROJECT.md` §1.1 must be in your own hand. ⛔ The AI must not answer them:**
 
 > **① If this question gets answered, which existing claim stops standing?**
 > (Not "advance understanding" or "fill a gap". **Name a specific casualty.**)
@@ -104,16 +105,23 @@ the question the AI finds easy, not the question you wanted.
 ### 3.3 Start version control
 
 **Windows:** double-click `snapshot.bat`
-**macOS/Linux:** run `bash scripts/harness/human_checkpoint.sh` in the project folder
+**macOS:** double-click `snapshot.command`
 
 `New checkpoint created.` means it worked.
+
+⚠️ **If double-clicking does nothing on macOS**, run this once in Terminal:
+```
+chmod +x *.command
+xattr -dr com.apple.quarantine .
+```
+(The second line is only needed if you downloaded a `.zip` rather than using `git clone`.)
 
 ---
 
 ## Step 4: First sensor run (~2 min)
 
 ```
-python scripts/harness/run_selftest.py
+python3 scripts/harness/run_selftest.py
 ```
 
 **You should see "all self-tests passed".**
@@ -126,7 +134,7 @@ not your documents. Give the full output to your AI and say explicitly:
 Then:
 
 ```
-python scripts/harness/run_all_sensors.py
+python3 scripts/harness/run_all_sensors.py
 ```
 
 **A fresh project will produce a batch of WARNs on the first run. That is normal** —
@@ -163,23 +171,31 @@ every paper you read afterwards is evidence for the wrong thing.
 ## Step 6: The loop from here on
 
 ```
-      ┌────────────────────────────────────────────────────┐
-      │  ① Before dispatch: snapshot.bat (create checkpoint) │
-      │  ② Run run_all_sensors.py, confirm green            │
-      │  ③ Hand the task to the AI                          │
-      │  ④ AI finishes, produces a handoff packet           │
-      │  ⑤ review_changes.bat (see what it changed)         │
-      │  ⑥ You adjudicate → update the ledgers              │
-      │  ⑦ Press snapshot.bat again (= "I have reviewed")   │
-      └────────────────────────────────────────────────────┘
+      ┌──────────────────────────────────────────────┐
+      │  ① Press "snapshot"       create a checkpoint │
+      │  ② Run run_all_sensors.py confirm green       │
+      │  ③ Hand the task to the AI                    │
+      │  ④ AI finishes, produces a handoff packet     │
+      │  ⑤ Press "review changes" see what it changed │
+      │  ⑥ You adjudicate → update the ledgers        │
+      │  ⑦ Press "snapshot" again = "I reviewed this" │
+      └──────────────────────────────────────────────┘
 ```
+
+**The three buttons sit in the project root** (`.bat` on Windows, `.command` on macOS):
+
+| Button | When to press it |
+|---|---|
+| **snapshot** | before dispatch, and after you have reviewed |
+| **review_changes** | after the AI finishes |
+| **check_update** | occasionally — see whether the framework has a new version (step 8) |
 
 ⚠️ **Step ⑦ is not a formality.** It moves a marker called `reviewed`;
 **the next "what changed" is measured from there.** Skip it and you will re-read the same diffs.
 
 ---
 
-## Step 7: Three things you will run into. Better to hear them now
+## Step 7: Things you will run into. Better to hear them now
 
 ### 7.1 Sensors will produce false alarms
 
@@ -202,6 +218,56 @@ not the least confident ones.**
 
 ⚠️ **And that is exactly the point: filling in the page number forces you to actually open that page —
 and once you are on that page, you see that it does not say what you thought it said.**
+
+---
+
+### 7.4 The DOIs and page numbers the AI gives you will be wrong, and they will look right
+
+⚠️ **Measured (`policy/SOURCES.md` §2):** one model's eight references were
+**all canonical papers in the field, but at least three had wrong identifiers** (wrong DOI, wrong pages).
+
+> **It can answer "are these good papers." It cannot answer "is this DOI correct" —**
+> **and the two answers read with exactly the same confidence.**
+
+**→ The one thing to do:**
+
+1. Manage your literature in **Zotero** (or EndNote)
+2. Export a bibliography from it and **put that file in the workspace**
+3. Record the filename in `governance/AGENTS.md` §1
+4. **From then on, every citation defers to that file**, not to what the AI says
+
+⛔ **Do not ask the AI to "fill in the DOIs for me."** It will, and they will look right.
+✅ **What you can ask it to do:** check its own citations against your bibliography file
+and **list the ones that do not match.**
+
+⚠️ If your AI can already integrate with Zotero/EndNote directly, that integration may take this
+over — **but it has to pass the three tests in `policy/SOURCES.md` §5 first.**
+
+## Step 8: Upgrading when a new version ships
+
+**Press the `check_update` button.** It tells you which version you have and what the latest
+release is.
+
+**To upgrade, three steps:**
+
+1. Download the new version from GitHub and unpack it into `_upgrade/` inside your project
+2. Press `check_update` again — it lists which packages differ from yours
+3. Replace one package at a time:
+   ```
+   python3 scripts/harness/upgrade.py apply governance
+   ```
+
+🔴 **It only ever replaces framework folders** (`governance` `policy` `profiles` `prompts`
+`scripts`, and `README` / `SETUP` / `file_index`).
+
+⛔ **Your own files are never touched:** `PROJECT.md`, `ledgers/`, `corpus/`, `handoffs/`,
+`incidents/`, `NEXT_SESSION_MEMO.md`, `governance_config.json`.
+
+⚠️ **It makes a checkpoint before overwriting**, so if you had hand-edited something in that
+package, **press "review changes" to get it back.**
+
+⛔ **There is no "replace everything" option** — it would leave you unable to tell which
+package caused a problem.
 
 ---
 

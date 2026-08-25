@@ -1,7 +1,18 @@
 # ⚠️ 行尾由 git 強制，不依賴任何人記得。
 # 來源：某次「探測後還原」的 git 操作把整個工作區的行尾從 CRLF 改成 LF，
 # 包含使用者正在使用的批次檔——而 cmd.exe 對僅含 LF 的批次檔行為不可靠。
+# 🔴 **預設：所有文字檔在倉庫內一律以 LF 儲存，簽出時也是 LF。**
+# ⚠️ 沒有這一行時，未被下方明列的副檔名（`.txt`／`.json`／`LICENSE`／本檔自己…）
+#    會落回 git 的預設行為，於是 Windows 使用者每次 `git status` 都看到一整片
+#    「LF will be replaced by CRLF」警告——**而警告太多的實際效果是沒有人看警告。**
+* text=auto eol=lf
+
 *.bat  text eol=crlf
 *.sh   text eol=lf
+# ⚠️ macOS 的雙擊按鈕。**行尾必須是 LF**——CRLF 會讓 `#!/bin/bash` 那一行
+#    帶著一個 \r，於是系統找不到直譯器，而錯誤訊息不會提到行尾。
+*.command text eol=lf
 *.py   text eol=lf
 *.md   text eol=lf
+
+# ⚠️ **`.bat` 是唯一的例外，⛔ 它必須是 CRLF**——見上方說明。

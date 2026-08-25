@@ -9,7 +9,7 @@
 
 ⚠️ **Why T0 uniqueness is FAIL rather than WARN:**
 **You change one and miss the others, and each one reads fine on its own.**
-This is the hardest-to-notice form of failure family ②.
+This is the hardest-to-notice form of the "fixed one layer, missed another" family.
 
 ⚠️ **Solo projects should leave `write_scopes` empty** — the sensor will say
 "not applicable" explicitly, **rather than passing silently**.
@@ -79,11 +79,40 @@ def main():
                              f"{err} — **not checked, and that is not a pass**"))
         else:
             allowed = [a.rstrip("/") for v in scopes.values() for a in v]
+            # 🔴 **deny: no role may write here.** The first mechanical counterpart to
+            #    constitution §6, general rule 2.
+            #    ⚠️ The two T0 files are folded in from `t0_docs` — ⛔ never restated in
+            #    `deny` itself (constitution §3.2).
+            denied = ([d.rstrip("/") for d in cfg.get("deny", [])]
+                      + [t.rstrip("/") for t in cfg["t0_docs"]])
+            # ⚠️ `_human` is not a role, it is an exception. **Its cost is written down in
+            #    framework_config; the duty here is that ⛔ the number of exempted hits must
+            #    be printed.** A silent exemption and no exemption look the same on screen
+            #    (the "silent filtering" family).
+            human = [h.rstrip("/") for h in scopes.get("_human", [])]
+
+            def under(path, tops):
+                return any(path == a or path.startswith(a + "/") for a in tops)
+
+            exempted = 0
             for c in changed:
-                if not any(c == a or c.startswith(a + "/") for a in allowed):
+                if under(c, denied):
+                    if under(c, human):
+                        exempted += 1
+                        continue
+                    findings.append(("FAIL", "WRITE_TO_DENIED_PATH",
+                                     f"{c} falls inside the deny scope — **⛔ no AI role may "
+                                     f"write here** (constitution §6, general rule 2)"))
+                    continue
+                if not under(c, allowed):
                     findings.append(("FAIL", "WRITE_OUT_OF_SCOPE",
                                      f"{c} is not in any role's declared scope"))
             stats["changes this round"] = len(changed)
+            stats["deny entries"] = len(denied)
+            if exempted:
+                stats["⚠️ deny hits exempted by _human"] = (
+                    f"{exempted} — **an exemption is not an absence; it is a judgement that "
+                    f"a human made the change**")
 
     return emit("Scope and T0 sensor", findings, stats, as_json, name)
 

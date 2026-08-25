@@ -1,9 +1,12 @@
-部署到GitHub_教學.md
+# ⚠️ 本檔會被上傳到 GitHub，任何人都看得到。
+# ⛔ 個人的、只跟你這台機器有關的排除項，寫在 .git/info/exclude（那份不會上傳）。
 # Scratch and generated files
 **/scratch/
 **/__pycache__/
 *.pyc
 **/harness_status.json
+**/_upgrade/
+**/_to_delete/
 git-*.log
 
 # OS junk

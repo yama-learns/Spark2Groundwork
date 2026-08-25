@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""感測器：產出物自我背書（失效家族⑦）
+"""感測器：產出物自我背書（「產出物自我背書」家族）
 
 ## 觸發個案
 
@@ -38,21 +38,43 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import cli, emit, dead_glob_findings          # noqa: E402
 from framework_config import resolve_globs                 # noqa: E402
 
+# ⚠️ **`SELF` 曾漏掉審計報告最常用的自我指涉詞。** `[實測個案]`
+#    一份真實的跨模型審計報告，結論寫「本專案目前的 Git 封裝腳本具備**極高的強健性**」、
+#    「目前的腳本設計已經**堵死**了多數邊緣失效」、「**無待修復**的重大漏洞」——
+#    **三個詞都在 `governance/Audit_Protocol.md` §3 的禁用清單裡，而本感測器判 PASS。**
+#    根因不是 APPRAISAL 沒抓到（極高／堵死／無待修復三個都在裡面），
+#    是 **SELF 不含「本輪」「本次」「本專案」（無「已」）**，於是共現條件不成立。
+#    ⛔ **少報比誤報危險**——一個誤報會被追查，一個少報不會。
 SELF = re.compile(r"本文件|本檔|本報告|本摘要|本清單|本版|文中所有|文中每|本工作流|"
                   r"本專案已|我已(?:全數|完整|逐一)|this (?:document|file|report|summary)")
+
+# 🔴 **兩個自我指涉的範圍刻意不同，⛔ 不要把它們合併。**
+#
+#    `SELF`（窄）給 **FAIL 分支**用：判定「這份文件宣稱自己已查證無誤」。
+#    ⚠️ 放寬它會誤報——實測：「本輪未完成的項目**全部**列在 §3，其中兩項尚未**查證**」
+#    會同時命中 SELF(本輪)＋SCOPE(全部)＋OBJECT(查證)，**而那是一句誠實的揭露，不是背書。**
+#    ⛔ 誤報一條誠實揭露，正是 `R-19` 要擋的：它會教人不要寫「我沒做完什麼」。
+#
+#    `SELF_WIDE`（寬）只給 **WARN 分支**用：判定「這份文件在稱讚它所談的東西」。
+#    那種句子本來就會用「本輪」「本專案」「本次審計」當主詞。
+SELF_WIDE = re.compile(SELF.pattern + r"|本輪|本次|本審計|本專案|"
+                       r"this (?:round|audit|project)|the audit")
 SCOPE = re.compile(r"所有|全部|全數|皆[經已無]|均[經已無]|無一|完全|一律|\ball\b|\bevery\b|\bzero\b")
 OBJECT = re.compile(r"核實|查證|檢核|核對|驗證|無誤|零捏造|無捏造|確保.{0,6}效度|"
                     r"verified|cross-?checked|no fabricat")
 MODAL = re.compile(r"不得|必須|應[當須]?|須要?|禁止|如果|若|除非|建議|should|must|shall|\bif\b")
 TOOLPROOF = re.compile(r"`[^`]*\.(py|sh|md|json)`|scripts/|sensor_|run_[a-z_]+|[0-9a-f]{7,40}")
-APPRAISAL = re.compile(r"(極高|非常(?:穩健|完善|嚴謹)|已達到.{0,8}(?:水準|品質)|"
+# ⚠️ **本清單的單一定義處是 `governance/Audit_Protocol.md` §3**（禁用：極高／完美／
+#    非常強健／堵死／無漏洞／無待修復）。⛔ 本處只得「涵蓋它並可再多」，不得少於它。
+#    實測個案：舊版寫 `非常(?:穩健|完善|嚴謹)`，**獨漏 §3 明文列出的「非常強健」**。
+APPRAISAL = re.compile(r"(極高|非常(?:穩健|完善|嚴謹|強健)|已達到.{0,8}(?:水準|品質)|"
                        r"堪稱|無懈可擊|完美|堵死|無漏洞|無待修復)")
 
 
 def main():
     root, cfg, as_json, name = cli("self_certification")
     files, dead = resolve_globs(cfg["artifact_globs"], root, cfg)
-    findings = dead_glob_findings(dead, "artifact_globs")
+    findings = dead_glob_findings(dead, "artifact_globs", root)
 
     for p in files:
         try:
@@ -73,7 +95,7 @@ def main():
         for para in text.split("\n\n"):
             if TOOLPROOF.search(para):
                 continue
-            if APPRAISAL.search(para) and SELF.search(para):
+            if APPRAISAL.search(para) and SELF_WIDE.search(para):
                 findings.append(("WARN", "UNSUPPORTED_GLOBAL_APPRAISAL",
                                  f"{p.relative_to(root)}：整體性好評而無可複核憑據"))
                 break

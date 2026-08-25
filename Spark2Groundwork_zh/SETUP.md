@@ -46,10 +46,12 @@
 
 ```
 git --version
-python --version
+python3 --version
 ```
 
-**兩行都要印出版本號。** 若 `python` 沒反應，試 `python3`。
+**兩行都要印出版本號。**
+⚠️ **Windows** 上若 `python3` 沒反應，試 `python`；
+**macOS** 上只有 `python3`（若沒有，執行 `xcode-select --install`）。
 
 ---
 
@@ -75,18 +77,17 @@ python --version
 
 ### 3.1 複製資料夾
 
-把整個 `研究治理框架_v1/` 複製到你要放專案的地方，改成你的專案名稱。
+把整個 `Spark2Groundwork_zh/` 複製到你要放專案的地方，改成你的專案名稱。
 
 ### 3.2 填空
 
-**以下檔案含 `<<<填空:...>>>` 標記，全部要填：**
+🔴 **你只需要填一個檔案：根目錄的 `PROJECT.md`。**
+**其餘所有治理文件都由 AI 維護，你不需要打開它們。**
 
-```
-governance/AGENTS.md          ← 專案是什麼、你的學術底線、你的倫理紅線
-ledgers/Conjecture_Ledger.md  ← 你的第一批猜想
-```
+（另外把你的第一批構想寫進 `ledgers/Conjecture_Ledger.md`——
+⚠️ 那一步可以請 AI 幫你做，見步驟 5。）
 
-⚠️ **`governance/AGENTS.md` 的三個問題必須你親筆，⛔ 不得由 AI 代答：**
+⚠️ **`PROJECT.md` §1.1 的三個問題必須你親筆，⛔ 不得由 AI 代答：**
 
 > **① 如果這個問題得到答案，哪一個既有的說法會因此站不住？**
 > （不得答「增進理解」「填補空白」。**須指名一個具體的受害者。**）
@@ -102,16 +103,23 @@ ledgers/Conjecture_Ledger.md  ← 你的第一批猜想
 ### 3.3 建立版本控制
 
 **Windows：** 雙擊 `記錄快照.bat`
-**macOS／Linux：** 在專案資料夾執行 `bash scripts/harness/human_checkpoint.sh`
+**macOS：** 雙擊 `記錄快照.command`
 
-看到 `New checkpoint created.` 就成功了。
+看到「已建立新的檢查點」就成功了。
+
+⚠️ **macOS 第一次雙擊若沒有反應**，在終端機執行一次：
+```
+chmod +x *.command
+xattr -dr com.apple.quarantine .
+```
+（第二行只有在你是下載 `.zip` 而不是 `git clone` 時才需要。）
 
 ---
 
 ## 步驟 4：第一次執行感測器（約 2 分鐘）
 
 ```
-python scripts/harness/run_selftest.py
+python3 scripts/harness/run_selftest.py
 ```
 
 **應該看到「自測全數通過」。**
@@ -123,7 +131,7 @@ python scripts/harness/run_selftest.py
 接著：
 
 ```
-python scripts/harness/run_all_sensors.py
+python3 scripts/harness/run_all_sensors.py
 ```
 
 **新專案第一次跑，會出現一批 WARN，那是正常的**——
@@ -159,23 +167,31 @@ python scripts/harness/run_all_sensors.py
 ## 步驟 6：之後每一輪怎麼跑
 
 ```
-      ┌─────────────────────────────────────────┐
-      │  ① 派工前：記錄快照.bat（建立檢查點）      │
-      │  ② 跑 run_all_sensors.py 確認全綠         │
-      │  ③ 把任務交給 AI                          │
-      │  ④ AI 收工，交出交接封包                   │
-      │  ⑤ 查看變更.bat（看它改了什麼）            │
-      │  ⑥ 你裁決 → 更新台帳                      │
-      │  ⑦ 再按一次 記錄快照.bat（＝我看過了）     │
-      └─────────────────────────────────────────┘
+      ┌────────────────────────────────────────────┐
+      │  ① 按「記錄快照」        建立檢查點          │
+      │  ② 跑 run_all_sensors.py  確認全綠           │
+      │  ③ 把任務交給 AI                             │
+      │  ④ AI 收工，交出交接封包                      │
+      │  ⑤ 按「查看變更」        看它改了什麼         │
+      │  ⑥ 你裁決 → 更新台帳                         │
+      │  ⑦ 再按一次「記錄快照」  ＝ 我看過了          │
+      └────────────────────────────────────────────┘
 ```
+
+**三個按鈕就在專案根目錄**（Windows 用 `.bat`，macOS 用 `.command`）：
+
+| 按鈕 | 什麼時候按 |
+|---|---|
+| **記錄快照** | 派工前、看完之後 |
+| **查看變更** | AI 收工之後 |
+| **檢查更新** | 偶爾——看框架有沒有新版（步驟 8） |
 
 ⚠️ **第 ⑦ 步不是形式。** 它移動一個叫 `reviewed` 的標記，
 **下一次的「改了什麼」是從這裡開始算的。** 不按，你就會重複看同樣的東西。
 
 ---
 
-## 步驟 7：你會遇到的三件事，先講
+## 步驟 7：你會遇到的事，先講
 
 ### 7.1 感測器會誤報
 
@@ -196,6 +212,53 @@ python scripts/harness/run_all_sensors.py
 
 ⚠️ **而那正是它的作用：填頁碼會逼你真的去翻那一頁——
 而翻到那一頁，你就會看見它跟你以為的不一樣。**
+
+---
+
+### 7.4 AI 給的 DOI 與頁碼會錯，而且錯得很像對的
+
+⚠️ **實測（`policy/SOURCES.md` §2）：** 某模型的八筆參考文獻
+**全部是該領域的正典文獻，但至少三筆識別碼有誤**（DOI 錯、頁碼錯）。
+
+> **「這些是不是好文獻」它答得出來，「這個 DOI 對不對」它答不出來——**
+> **而這兩種回答讀起來一樣有把握。**
+
+**→ 你要做的一件事：**
+
+1. 用 **Zotero**（或 EndNote）管理你的文獻
+2. 從它匯出一份書目檔，**放進工作區**
+3. 在 `governance/AGENTS.md` §1 寫下那個檔名
+4. **從此一切引用格式以那份檔案為準**，不以 AI 說的為準
+
+⛔ **不要請 AI「幫你補上 DOI」。** 它會補，而且補得很像對的。
+✅ **可以請 AI 做的是：** 拿你的書目檔去對它自己寫的引用，**把對不上的列出來。**
+
+⚠️ 若你的 AI 已經能直接介接 Zotero／EndNote，那份介接可以接手這件事——
+**但要先過 `policy/SOURCES.md` §5 的三條判準。**
+
+## 步驟 8：框架有新版時怎麼升級
+
+**按「檢查更新」按鈕**，它會告訴你手上是哪一版、GitHub 上最新是哪一版。
+
+**要升級時，三步：**
+
+1. 到 GitHub 下載新版，解壓到專案裡的 `_upgrade/` 資料夾
+2. 再按一次「檢查更新」——它會列出哪幾包和你的不一樣
+3. 一次換一包：
+   ```
+   python3 scripts/harness/upgrade.py apply governance
+   ```
+
+🔴 **它只會換框架的資料夾**（`governance` `policy` `profiles` `prompts` `scripts`
+與 `README`／`SETUP`／`file_index`）。
+
+⛔ **你的東西一律不碰：** `PROJECT.md`、`ledgers/`、`corpus/`、`handoffs/`、
+`incidents/`、`NEXT_SESSION_MEMO.md`、`governance_config.json`。
+
+⚠️ **覆蓋前它會自動幫你建立檢查點**，所以萬一你手動改過那一包裡的檔案，
+**按「查看變更」就能把改動找回來。**
+
+⛔ **沒有「全部一次換掉」這個選項**——那會讓你在出問題時分不出是哪一包造成的。
 
 ---
 
