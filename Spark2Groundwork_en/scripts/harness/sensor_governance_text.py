@@ -5,7 +5,9 @@
 ## Four checks
 
     DUPLICATE_RULE_TEXT      A long sentence identical across files (one rule, two homes)   WARN
-    SECTION_REF_UNRESOLVED   A `<file>.md` §N citation does not resolve uniquely              WARN
+    SECTION_REF_UNRESOLVED   A section citation does not resolve uniquely — long form
+                             `<file>.md` §N **and** short form "constitution §N"          WARN
+    ALIAS_TARGET_MISSING     A configured short-form target is not in this tree      INCOMPLETE
     STATE_IN_SPEC_DOC        A spec-class document contains state (to-dos / progress)       WARN
     SCAN_GLOB_MATCHES_NOTHING  A scan glob matched zero files                                 WARN
 
@@ -119,6 +121,24 @@ SPLIT = re.compile(r"。|(?<=\.)[*_\"'’”)\]]*\s+|\n")
 POINTER = re.compile(r"§\s*\d|R-\d\d")
 
 
+# -- A `## 3.` inside a fenced block is not a section --------------------------
+# 🔴 **Measured, on the first run after the scope was widened:** `HANDOFF.md` was reported as
+#    having two `## 3.` headings. **One of them is a line inside the fenced template showing
+#    the five required sections** — ⛔ it is sample text, not a heading.
+# ⚠️ **The defect was already in the original long-form check**; it never fired only because
+#    nothing inside `governance_globs` happened to cite `HANDOFF.md §3`.
+#    **Widening the scope did not create it — it made it visible.**
+# ⛔ **Not fixed with an exemption list (R-20/R-21): fenced blocks are stripped, which
+#    corrects what the criterion is applied to.**
+#    ⚠️ Stated cost: a real heading placed inside a fenced block becomes invisible.
+#    **That is not a thing anyone writes.**
+FENCE = re.compile(r"^```.*?^```", re.M | re.S)
+
+
+def strip_fences(text):
+    return FENCE.sub("", text)
+
+
 BANNER = re.compile(r"^\*\*[^*]+\*\*$")
 
 
@@ -175,21 +195,70 @@ def main():
 
     # (2) Section citations resolve
     #     ⚠️ Indexed by **filename**; scans the whole tree but excludes on relative paths (R-18)
+    # 🔴 **Two forms, one defect.** The long form `` `<file>.md` §N `` was the only one checked.
+    #    ⚠️ **The angle brackets here are load-bearing** — ⛔ written as a real filename, this very
+    #    comment becomes a dangling file reference (`sensor_reference_integrity` caught me doing
+    #    exactly that, ⛔ I did not spot it myself).
+    #    ⛔ **The short form ("constitution §N") is what the framework actually writes most of
+    #    the time — 58 places in this edition — and nothing was checking it.**
+    #    ⚠️ **Measured, found by hand at release time, ⛔ not by this sensor:**
+    #      `§5.11` in a sensor header (a defect description that instantiated the defect it
+    #      described), `§8.1` in `Audit_Protocol.md` (`## 8.` has no `### 8.1`),
+    #      `§5.8` pointing at a section a T0 rewrite had removed.
+    # ⛔ **The anchor words are configuration** (`section_ref_aliases`), not a hard-coded list:
+    #    a downstream project's short name will differ, and `R-21` forbids a whitelist as scope.
+    #     ⚠️ **Scope is the code scope, not the governance scope.** `sensor_reference_integrity`
+    #     exists because `.py` headers were never scanned — ⛔ but it only fixed *file*
+    #     references. **The same hole was still open for *section* references, and the half
+    #     that was fixed made it look closed.**
+    ref_globs = (cfg.get("code_globs", ["scripts/**/*.py", "scripts/**/*.sh"])
+                 + cfg.get("launcher_globs", [])
+                 + cfg["governance_globs"])
+    # ⛔ **The dead-glob report for this exact glob set has one home: `sensor_reference_integrity`.**
+    #    Emitting it here too would double the noise for zero information — **and a finding with
+    #    two homes is the thing this sensor exists to catch.**
+    #    ⚠️ Measured: re-emitting it took the self-test's tolerated-WARN count from 81 to 148.
+    ref_files, _ref_dead = resolve_globs(ref_globs, root, cfg)
+
     all_md = {q.name: q for q in root.rglob("*.md") if not excluded(q, root, cfg)}
-    seen = set()
-    for p, t in texts.items():
-        for m in REF.finditer(t):
-            fn, sec = pathlib.Path(m.group(1)).name, m.group(2)
+    aliases = cfg.get("section_ref_aliases", {})
+    alias_res = [(a, re.compile(re.escape(a) + r"\s*§\s*(\d+(?:\.\d+[a-z]?)?)",
+                                re.UNICODE | re.IGNORECASE), tgt)
+                 for a, tgt in aliases.items()]
+
+    def resolve(body, sec):
+        # §9 matches '## 9.' but not '### 9.1'
+        return len(re.findall(rf"^#+\s*{re.escape(sec)}(?=[ .、（(])(?!\.\d)", body, re.M))
+
+    seen, checked = set(), 0
+    for p in ref_files:
+        try:
+            t = p.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        pairs = [(pathlib.Path(m.group(1)).name, m.group(2), None) for m in REF.finditer(t)]
+        for anchor, rx, tgt_rel in alias_res:
+            pairs += [(pathlib.Path(tgt_rel).name, m.group(1), anchor) for m in rx.finditer(t)]
+        for fn, sec, anchor in pairs:
+            checked += 1
             tgt = all_md.get(fn)
-            if tgt is None or (p.name, fn, sec) in seen:
+            if tgt is None:
+                if anchor is not None and (p.name, fn, "TARGET") not in seen:
+                    # ⛔ An alias nobody can resolve is not "nothing to do" (R-33).
+                    seen.add((p.name, fn, "TARGET"))
+                    findings.append(("INCOMPLETE", "ALIAS_TARGET_MISSING",
+                                     f"{p.name} cites “{anchor} §{sec}”, but the configured target "
+                                     f"{fn} is not in this tree — **not checked is not a pass**"))
                 continue
-            body = tgt.read_text(encoding="utf-8", errors="replace")
-            # §9 matches '## 9.' but not '### 9.1'
-            hits = len(re.findall(rf"^#+\s*{re.escape(sec)}(?=[ .、（(])(?!\.\d)", body, re.M))
+            if (p.name, fn, sec) in seen:
+                continue
+            hits = resolve(strip_fences(tgt.read_text(encoding="utf-8", errors="replace")), sec)
             if hits != 1:
                 seen.add((p.name, fn, sec))
+                cite = f"“{anchor} §{sec}”" if anchor else f"{fn} §{sec}"
                 findings.append(("WARN", "SECTION_REF_UNRESOLVED",
-                                 f"{p.name} cites {fn} §{sec}，matched {hits}  time(s) — {'does not exist' if hits == 0 else 'not unique'}"))
+                                 f"{p.name} cites {cite}，matched {hits}  time(s) — "
+                                 f"{'does not exist' if hits == 0 else 'not unique'}"))
 
     # (3) Spec-class documents must not contain state
     #    ⚠️ **Exempt the rule text itself.** The paragraph defining "must not contain to-dos"
@@ -204,7 +273,7 @@ def main():
                              f"{p.name} contains to-do or progress markers（{len(hits)}  paragraph(s)) — "
                              "**a document with state inherits the update frequency of its fastest-changing part**"))
 
-    code = emit("Governance-text sensor", findings, {"governance documents scanned": len(texts)}, as_json, name)
+    code = emit("Governance-text sensor", findings, {"governance documents scanned": len(texts), "section citations checked": checked}, as_json, name)
     if not as_json:
         print("      ⚠️ Literal comparison only; semantically identical but differently worded text is not caught")
     return code

@@ -135,6 +135,14 @@ expect("連字與跨行斷字不誤報", 0, "sensor_claim_ledger.py", "claim_lig
        forbid=("ANCHOR_NOT_IN_SOURCE", "ANCHOR_EMPTY"))
 expect("正確錨點不誤報", 0, "sensor_claim_ledger.py", "claim_clean",
        forbid=("ANCHOR_NOT_IN_SOURCE", "ANCHOR_EMPTY"))
+# 🔴 **有三種狀態，不是兩種。** 框架開始隨附一個空的 `corpus_md/`，讓新使用者看得到提取物放哪裡——
+#    **於是每一個新專案第一次執行都報 INCOMPLETE。**
+#    ⛔ 一開始就狼來了的輸出，正是教會人忽略它的方式。
+expect("空的提取資料夾不算「查不了」", 0, "sensor_claim_ledger.py",
+       "corpus_empty", "CORPUS_EMPTY", forbid=("CORPUS_MANIFEST_MISSING",))
+# ⚠️ 成對的另一半：有提取物卻沒有 manifest，仍然是 INCOMPLETE。
+expect("有提取物但無 manifest 仍是 INCOMPLETE", 2, "sensor_claim_ledger.py",
+       "corpus_unmanifested", "CORPUS_MANIFEST_MISSING")
 
 # 自我背書
 expect("自我背書須抓到", 1, "sensor_self_certification.py", "selfcert_bad")
@@ -155,7 +163,21 @@ expect("跨檔重複長句須告警", 0, "sensor_governance_text.py", "gov_dup",
 #    fixture 刻意只種這一種缺陷——`gov_dup` 抓得到的那種在這裡不存在。
 expect("句中結束的重複長句須告警", 0, "sensor_governance_text.py", "gov_dup_midline",
        "DUPLICATE_RULE_TEXT")
-expect("懸空章節引用須告警", 0, "sensor_governance_text.py", "gov_badref", "SECTION_REF_UNRESOLVED")
+expect("懸空章節引用會告警", 0, "sensor_governance_text.py", "gov_badref", "SECTION_REF_UNRESOLVED")
+# 🔴 **短式。** 原本只查長式 `` `<檔名>.md` §N ``，而框架有 68 處寫的是「憲章 §N」——
+#    **三筆懸空引用就一直住在那裡，直到發布前用手查出來。**
+expect("懸空的短式引用會告警", 0, "sensor_governance_text.py",
+       "secref_alias_bad", "SECTION_REF_UNRESOLVED")
+expect("可解析的短式引用不誤報", 0, "sensor_governance_text.py",
+       "secref_alias_ok", forbid=("SECTION_REF_UNRESOLVED", "ALIAS_TARGET_MISSING"))
+# ⚠️ **這一則測的是範圍不是形式：** 引用住在 `.py` 檔頭裡。
+#    `sensor_reference_integrity` 就是因為「`.py` 檔頭沒被掃過」而生——⛔ 但它只補了「檔案」引用。
+expect("住在 .py 檔頭的短式引用會告警", 0, "sensor_governance_text.py",
+       "secref_py", "SECTION_REF_UNRESOLVED")
+# ⚠️ **圍籬修正的成對樣本。** `HANDOFF.md` 曾被報成有兩個 `## 3.`，其中一個是圍籬範本裡的一行。
+#    ⛔ 範例文字不是標題。
+expect("圍籬區塊內的標題不計入", 0, "sensor_governance_text.py",
+       "secref_fence", forbid=("SECTION_REF_UNRESOLVED",))
 expect("治理文本乾淨不誤報", 0, "sensor_governance_text.py", "gov_clean",
        forbid=("DUPLICATE_RULE_TEXT", "SECTION_REF_UNRESOLVED", "STATE_IN_SPEC_DOC"))
 
@@ -362,6 +384,54 @@ def crash_case():
 
 
 crash_case()
+
+
+# ── 升級工具⛔ 絕不能碰它不認得的資料夾 ──────────────────────
+# 🔴 **使用者真正依賴的保證，⛔ 不是那份「你的資料」清單。**
+#    ⚠️ 使用者會自己開資料夾——筆記、圖表、投稿版本。
+#    ⛔ 那些名字不可能事先列進任何清單，而工具仍然必須放過它們。
+#    **做到這件事的是「可替換清單」，不是「保護清單」**：目標只要不是框架項目，一律拒絕。
+# **這個測試的存在，是為了讓那句保證變成量得出來的事實，⛔ 而不是說明書裡的一句話。**
+def upgrade_case():
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_upg_"))
+    try:
+        root = tmp / "project"
+        (root / "governance").mkdir(parents=True)
+        (root / "governance" / "AGENTS.md").write_text("# A\n", encoding="utf-8")
+        shutil.copy(HERE / "checkpoint.py", root / "scripts_stub.py")  # 只要存在即可
+        (root / "scripts" / "harness").mkdir(parents=True)
+        shutil.copy(HERE / "checkpoint.py", root / "scripts" / "harness" / "checkpoint.py")
+        # 使用者自己開的資料夾，工具從來沒聽過它
+        mine = root / "my notes"
+        mine.mkdir()
+        (mine / "keep.md").write_text("do not lose me\n", encoding="utf-8")
+        before = (mine / "keep.md").read_text(encoding="utf-8")
+        # 升級來源裡剛好有一個同名資料夾
+        (tmp / "project" / "_upgrade" / "my notes").mkdir(parents=True)
+        (tmp / "project" / "_upgrade" / "my notes" / "keep.md").write_text(
+            "REPLACED\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "upgrade.py"), "apply", "my notes",
+                            "--root", str(root)],
+                           capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env=env)
+        after = (mine / "keep.md").read_text(encoding="utf-8")
+        refused = r.returncode == 1
+        intact = after == before
+        if refused and intact:
+            print("  ✅ 工具不認得的資料夾會被拒絕，且原封不動")
+            ok += 1
+        else:
+            print("  ❌ 不認得的資料夾必須被拒絕且原封不動 "
+                  f"（exit {r.returncode}，內容{'未變' if intact else '被覆蓋'}）")
+            bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+upgrade_case()
 
 print("\n" + "=" * 48)
 print(f"  通過 {ok} 項｜失敗 {bad} 項")

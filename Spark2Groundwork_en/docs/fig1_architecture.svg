@@ -15,7 +15,7 @@
 <rect x="160" y="80" width="248" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
 <text x="284" y="101" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a2733">governance/AGENTS.md</text>
 <text x="284" y="120" text-anchor="middle" font-size="10" fill="#4a5b6a">verification | academic bottom line | decision rights</text>
-<rect x="424" y="80" width="278" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
+<rect x="416" y="80" width="294" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
 <text x="563" y="101" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a2733">governance/WORKFLOW_CONSTITUTION.md</text>
 <text x="563" y="120" text-anchor="middle" font-size="10" fill="#4a5b6a">topology | evidence chain | rituals | write scope | cost ceiling</text>
 <rect x="742" y="92" width="196" height="32" rx="16" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.3"/>
@@ -31,16 +31,16 @@
 <text x="246" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">R-01 &#8211; R-35 | ids permanent</text>
 <rect x="348" y="172" width="172" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
 <text x="434" y="188" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Incident_Log.md</text>
-<text x="434" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">8 failure families + mechanisms</text>
+<text x="434" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">failure families and their mechanisms</text>
 <rect x="536" y="172" width="172" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
 <text x="622" y="188" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Audit_Protocol.md</text>
 <text x="622" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">adversarial audit protocol</text>
 <rect x="160" y="216" width="264" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="292" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">policy/ &#215; 4</text>
+<text x="292" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">policy/</text>
 <text x="292" y="247" text-anchor="middle" font-size="9.5" fill="#4a5b6a">sources | model identity | handoff | external tools</text>
 <rect x="440" y="216" width="268" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="574" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">profiles/ &#215; 4  +  prompts/</text>
-<text x="574" y="247" text-anchor="middle" font-size="9.5" fill="#4a5b6a">pick one setting  +  parts bin and three templates</text>
+<text x="574" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">profiles/  +  prompts/</text>
+<text x="574" y="247" text-anchor="middle" font-size="9.5" fill="#4a5b6a">pick one setting  +  parts bin and templates</text>
 <rect x="742" y="196" width="196" height="32" rx="16" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.3"/>
 <text x="840" y="216" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f6b4a">&#10003; replaceable from GitHub</text>
 
@@ -50,7 +50,7 @@
 <text x="42" y="316" font-size="10.5" fill="#4a5b6a">scripts/</text>
 <text x="42" y="332" font-size="10.5" fill="#4a5b6a">harness/</text>
 <rect x="160" y="288" width="264" height="58" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>
-<text x="292" y="306" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">7 sensors</text>
+<text x="292" y="306" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">sensor suite</text>
 <text x="292" y="322" text-anchor="middle" font-size="9.5" fill="#4a5b6a">one command; exit 0 / 1 / 2</text>
 <text x="292" y="337" text-anchor="middle" font-size="9" fill="#25547f" font-family="monospace">run_all_sensors.py ｜ run_selftest.py</text>
 <rect x="440" y="288" width="268" height="58" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>
@@ -62,7 +62,7 @@
 
 <!-- divider -->
 <line x1="28" y1="374" x2="952" y2="374" stroke="#b03a3a" stroke-width="1.6" stroke-dasharray="6 4"/>
-<rect x="360" y="362" width="260" height="24" rx="12" fill="#fdeeee" stroke="#b03a3a" stroke-width="1.3"/>
+<rect x="320" y="362" width="340" height="24" rx="12" fill="#fdeeee" stroke="#b03a3a" stroke-width="1.3"/>
 <text x="490" y="379" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#8f2d2d">Below this line is yours &#8212; never touched by an upgrade</text>
 
 <!-- L3 user -->

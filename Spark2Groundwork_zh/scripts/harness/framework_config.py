@@ -74,6 +74,13 @@ DEFAULTS = {
 
     # 🔴 **程式碼的掃描範圍**（`sensor_reference_integrity.py`）。
     # ⚠️ `.py` 與 `.sh` 的**檔頭註解**是規則引用的重災區，而在此之前從未被掃過。
+    # 🔴 **短式章節引用的錨定詞 → 它指向哪一份檔案。**
+    #    `sensor_governance_text` 只解析 `` `<檔名>.md` §N `` 這個長式；
+    #    ⛔ **而框架自己有 68 處寫的是短式「憲章 §N」，那些引用沒有任何感測器在查。**
+    #    ⚠️ **實測：三筆懸空引用就是這樣活下來的**（`§5.11`／`§8.1`／`§5.8`）。
+    #    ⛔ 錨定詞寫在設定裡，不硬編進感測器——**下游專案的簡稱不會跟這裡一樣。**
+    "section_ref_aliases": {"憲章": "governance/WORKFLOW_CONSTITUTION.md"},
+
     "code_globs": ["scripts/**/*.py", "scripts/**/*.sh"],
 
     # 🔴 **啟動器腳本**（`sensor_reference_integrity.py`）。

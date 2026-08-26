@@ -1035,3 +1035,136 @@ PYTHONIOENCODING=cp950 python3 scripts/harness/run_selftest.py
 **the whole system was green in my environment for twenty-odd work sessions, and it had never
 once started on the user's machine.**
 **⛔ "It works here" and "it works there" look identical on my screen.**
+
+## #15 | 2026-08-26 | 🔴 Short-form section citations were checked by nobody
+
+### 1. Triggering cases (**three, ⛔ all found by hand**)
+
+| Citation | Where | Shape |
+|---|---|---|
+| `constitution §5.11` | both editions' `sensor_model_attribution.py` header | 🔴 **a defect description that instantiated the defect it described** — ⚠️ two lines above, the same comment explains why the filenames were deliberately not written out |
+| `constitution §8.1` | both editions' `Audit_Protocol.md` | the constitution's `## 8.` has ⛔ no `### 8.1`; the citer added a subsection number from memory |
+| `constitution §5.8` | Chinese `MODEL_IDENTITY.md` | a T0 rewrite removed constitution §5, ⛔ and nobody went back to the file citing it |
+
+🔴 **What the three share is not carelessness. It is that this written form was checked by nobody.**
+
+### 2. Why nothing caught them (**two independent holes**)
+
+| Hole | Detail |
+|---|---|
+| **Form** | `REF` only parses the long `` `<file>.md` §N `` form. ⛔ The framework itself writes the short form "constitution §N" in **58 places** |
+| **Scope** | This sensor only scanned `governance_globs`. ⛔ **`scripts/harness/*.py` was entirely outside it** — and the `§5.11` case lived in a `.py` header |
+
+⚠️ **`sensor_reference_integrity` exists precisely because `.py` headers were never scanned.**
+🔴 **⛔ It fixed *file* references and not *section* references. The same hole was half-fixed,
+and the half that was fixed made it look closed.**
+
+### 3. What changed
+
+1. **New config key `section_ref_aliases`**: `{anchor word: target file}`. ⛔ **Not hard-coded** —
+   `R-21` forbids a whitelist as the definition of scan scope, and a downstream project's short
+   name will not be this one's.
+2. **The section-citation check now runs over `code_globs + launcher_globs + governance_globs`**
+   (the same scope as `sensor_reference_integrity`).
+3. **An anchor is configured but its target file is absent → `ALIAS_TARGET_MISSING` (INCOMPLETE)**,
+   ⛔ not a silent skip (`R-33`).
+4. **A "section citations checked" statistic was added** — ⛔ silence is not a pass.
+
+### 4. 🔴 The first version of the criterion was too broad — and it caught that itself
+
+**On the first run after the scope was widened, `HANDOFF.md` was reported as having two `## 3.`
+headings.** One of them is a line inside the fenced block showing what the five required sections
+look like — ⛔ **sample text is not a heading.**
+
+⚠️ **The defect was already in the long-form check**; it never fired only because nothing inside
+`governance_globs` happened to cite `HANDOFF.md §3`.
+**Widening the scope ⛔ did not create it — it made it visible.**
+
+**Fix: fenced blocks are stripped. ⛔ Not an exemption list (`R-20` / `R-21`)** — this corrects
+what the criterion is applied to.
+**Stated cost: a real heading placed inside a fenced block becomes invisible. ⛔ Nobody writes that.**
+
+### 5. ⚠️ The sensors caught the maintainer twice, on the spot
+
+**Writing the new comments, the long form was spelled with a real filename as an example**, so:
+`[FAIL] DANGLING_FILE_REF: … references `<file>.md`, which is not in the project` — **four places.**
+🔴 **The "instantiate the defect while describing it" family again — ⛔ inside the very paragraph
+explaining that family.** All four were changed to the angle-bracket placeholder form.
+
+### 6. Paired fixtures (four; ⛔ two of them are the "must not false-alarm" half)
+
+| fixture | Expected |
+|---|---|
+| `secref_alias_bad/` | dangling short form → **WARN** |
+| `secref_alias_ok/` | resolvable short form → ⛔ **must not false-alarm** |
+| `secref_py/` | the citation lives in a `.py` header → **WARN** (proves the scope reaches code) |
+| `secref_fence/` | a fake heading inside a fenced block → ⛔ **must not false-alarm** (the paired sample for this fix) |
+
+**Self-tests 50 → 54. Both editions: `run_all_sensors.py` exit 0, `run_selftest.py` 54/54.**
+
+### 7. ⛔ What this entry does not claim
+
+- ⛔ **It does not claim other short names are checked.** Only one anchor ("constitution") is
+  configured. **`R-35`: that is the result of taking stock — ⚠️ and I did not take stock of
+  whether a third citation form exists in the framework.**
+- ⛔ **It does not claim the citation points at the right content.** It answers only
+  "that section exists and is unique".
+
+---
+
+---
+
+## #16 | 2026-08-26 | An empty `corpus_md/` was reported as "could not check"
+
+### 1. Triggering case
+
+**The framework began shipping an empty `corpus_md/` folder** so that a new user can see where
+extractions are meant to go.
+🔴 **Every fresh project then printed INCOMPLETE on its very first `run_all_sensors.py`.**
+
+⚠️ **⛔ A first run that cries wolf is exactly what teaches people to ignore the output.**
+
+### 2. Why this is the criterion's fault, ⛔ not the folder's
+
+**The old criterion knew two states:**
+
+```
+no directory                → not applicable, skip silently
+directory but no manifest   → INCOMPLETE
+```
+
+**⛔ It had no third state: a directory that holds no extractions yet.**
+**With nothing to protect, there is no such thing as "could not protect it".**
+
+⚠️ **The same shape as an earlier defect**: `tool_pdf_to_md.py` created its output directory
+before checking whether there were any PDFs to put in it — **both report "not applicable"
+as "at risk".**
+
+### 3. The fix
+
+**The criterion now keys on whether extractions exist, ⛔ not on whether the directory does:**
+
+| State | Disposition |
+|---|---|
+| No directory | Not applicable, skip silently |
+| **Directory, no extractions** | **WARN `CORPUS_EMPTY`** (new) |
+| Extractions, no manifest | INCOMPLETE (unchanged) |
+
+⛔ **A structural correction, not an exemption list (`R-20` / `R-21`).**
+⚠️ **`CORPUS_EMPTY` is a WARN rather than silence**: nothing of the user's has been checked yet,
+**and that is worth saying — it just should not turn the whole run INCOMPLETE.**
+
+### 4. Related: why the note file in there is a `.txt`
+
+**Every `.md` in `corpus_md/` is treated as text extracted from a PDF.**
+⛔ **So a `.md` note placed there would be reported as an untracked extraction.**
+**The shipped note is therefore a `.txt`, ⛔ with the reason written inside it.**
+
+### 5. Paired fixtures
+
+| fixture | Expected |
+|---|---|
+| `corpus_empty/` | empty extraction folder → **WARN**, ⛔ **`CORPUS_MANIFEST_MISSING` must not appear** |
+| `corpus_unmanifested/` | extractions but no manifest → **INCOMPLETE** (proves the old behaviour survived) |
+
+**Self-tests 54 → 56.**

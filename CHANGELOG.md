@@ -17,6 +17,144 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ｜ Versioning:
 
 ---
 
+## [1.3.0] — 2026-08-26
+
+### 🔴 The change / 這一版的主要變更
+
+**Short-form section citations are now checked.** `sensor_governance_text.py` resolved only the
+long `` `<file>.md` §N `` form, while the framework itself writes **"constitution §N" in 68 places
+(Chinese) and 58 (English)** — and its scan never reached `scripts/**/*.py` at all.
+**Three dangling citations had been living there**, found by hand at v1.2.0 release time.
+**短式章節引用現在查得到了。**
+
+### Added / 新增
+
+- 🔴 **`corpus/` and `corpus_md/` now ship with the framework**, each with a short note inside
+  saying what belongs there. **`corpus/` also contains a blank `BIBLIOGRAPHY.docx`** —
+  export your references from Zotero or EndNote into it, and **from then on every citation in
+  the project follows that file, ⛔ not what the AI says.**
+  ⚠️ **Why:** a model will get DOIs, page numbers and years wrong, and **a wrong one reads
+  exactly like a right one.** A bibliography you maintain yourself is something to check against.
+- **`CORPUS_EMPTY` (WARN)** — the extraction folder exists but holds nothing yet.
+  ⛔ **Not the same as "could not check"** (see Fixed).
+- **Config key `section_ref_aliases`** — `{anchor word: target file}`. ⛔ **Not hard-coded**:
+  `R-21` forbids a whitelist as the definition of scan scope, and a downstream project's short
+  name for its constitution will not be this one's. Absent key → the check simply does not run
+  for that project, ⛔ and the statistic says so.
+- **`ALIAS_TARGET_MISSING` (INCOMPLETE)** — an anchor is configured but its target file is not in
+  the tree. ⛔ **Not a silent skip** (`R-33`).
+- **A "section citations checked" statistic.** ⛔ Silence is not a pass.
+- **Four paired fixtures**, ⛔ two of them the "must not false-alarm" half:
+  `secref_alias_bad` / `secref_alias_ok` / `secref_py` (the citation lives in a `.py` header) /
+  `secref_fence`. **Self-tests 50 → 54.**
+
+### Changed / 變更
+
+- **The section-citation check now runs over `code_globs + launcher_globs + governance_globs`** —
+  the same scope as `sensor_reference_integrity`. ⚠️ **That sensor exists because `.py` headers
+  were never scanned; ⛔ it fixed *file* references and not *section* references.
+  The same hole was half-fixed, and the half that was fixed made it look closed.**
+
+### Fixed / 修正
+
+- **Three dangling constitution citations** — already fixed in the v1.2.0 release commit;
+  this version is what stops the next one.
+- 🔴 **A heading inside a fenced block was counted as a heading.** The first run after the scope
+  widened reported `HANDOFF.md` as having two `## 3.` sections; one was a line inside the fenced
+  template. ⚠️ **The defect was already in the long-form check** and had simply never been
+  reached. ⛔ **Fixed by stripping fenced blocks, not by an exemption list** (`R-20`/`R-21`).
+  **Stated cost: a real heading inside a fenced block becomes invisible. ⛔ Nobody writes that.**
+- 🔴 **"Which folders does an upgrade touch" is now a measured fact, not a sentence in a guide.**
+  ⚠️ **The behaviour was already right** — the tool recognises five framework folders and four
+  framework files and refuses every other target, so **a folder a user invented was never a
+  candidate.** ⛔ **The documentation was what read backwards**: it described protection as a
+  *list of protected items*, **and a list reads as "only these are safe".**
+  **Rewritten everywhere to state the guarantee the other way round**, and
+  **`upgrade_case()` in the self-test now proves it**: a folder the tool has never heard of is
+  refused and left byte-identical, **even when the upgrade source contains one by the same
+  name.** ⛔ The "your data" list is documented as what it is — **a better error message, not
+  the defence.** **Self-tests 56 → 57.**
+- **Constitution §6.2 gained a clause on folders the user creates**, saying plainly that
+  ⛔ **no registration is required**, and naming the two mechanical reasons they are safe.
+- **`profiles/PROFILE_external_tools.md` corrected**: it said `external/` was "not on the
+  protected list", which ⚠️ **was true and read as a warning about something that was never at
+  risk.**
+- 🔴 **A brand-new project reported INCOMPLETE on its very first run.** Shipping an empty
+  `corpus_md/` tripped a check that knew only two states — *no directory* and *directory
+  without a manifest*. **It had no third state for "a directory with nothing in it yet".**
+  ⚠️ **With nothing to protect, there is no "could not protect it"** — and ⛔ **a first run
+  that cries wolf is what teaches people to ignore the output.**
+  ⛔ **Fixed structurally, not with an exemption**: the criterion now keys on whether
+  extractions exist. **Self-tests 54 → 56.**
+- 🔴 **The figures overflowed and collided — in both editions.** The divider pill in
+  `fig1_architecture.svg` carried `width="260"`, **identical in both files**: the Chinese
+  sentence fits, the English one is 306px wide, **so the dashed line ran straight through the
+  text.** ⚠️ **The same shape as the sentence-length constant in `SENSOR_CHANGELOG` pre-history
+  #2 — a constant tuned for Chinese, ported unchanged — ⛔ this time in SVG coordinates.**
+  Seven overflows and collisions were found and fixed across the four figures.
+  ⚠️ **Found by rendering each SVG and reading every element's `getBBox()`, ⛔ not by eye:**
+  the Chinese constitution box was 1.5px inside its padding — **invisible to a reader,
+  and still wrong.**
+- **Drifting counts removed from the figures** (`7 sensors`, `8 failure families`,
+  `policy/ × 4`, `profiles/ × 4`, `three templates`). ⚠️ **All five were correct at the time.**
+  🔴 **The README deliberately carries no counts (`R-16`) while the figures did — and a figure
+  is read as authority more often than the README is.** `R-01`–`R-35` is kept: that is an id
+  range, ⛔ not a count. Exit codes and "three buttons" are kept: design constants.
+
+### Changed: the three guides / 三份說明文件
+
+🔴 **`README.md` at the root, and `README.md` + `SETUP.md` in both editions, were rewritten for
+readers with no programming background.**
+
+- ⛔ **`git clone` is gone.** Getting started is now: **Download ZIP → unzip → copy the folder
+  for your language → rename it to your project.** ⚠️ Anyone who prefers `git clone` already
+  knows how, and did not need the instruction.
+- **A new section on pointing your AI at the folder**, with the actual steps for
+  **Claude (Cowork)**, **Gemini (Antigravity)** and **ChatGPT (Projects)**.
+  ⚠️ **Stated plainly: a ChatGPT project has a file limit and cannot see your folder** —
+  `profiles/PROFILE_chat_only.md` is written for that case.
+- **The root README is now written in English throughout** (the two opening lines stay in
+  Chinese), because both editions are linked at the top. ⚠️ **Two languages interleaved in one
+  document made it harder to read in either.**
+- **Plainer wording, and notes written for the AI rather than the reader were removed.**
+  These are documents for people.
+- 🔴 **A section on the framework growing with you**, in all three READMEs:
+  *there is no perfect framework — only one that gets better as you use it.*
+  **You say "log that" when something goes wrong; the AI finds the repeating pattern;
+  ⛔ you decide whether it becomes a rule.** After a while your copy stops looking like anyone
+  else's, **and that is the point.**
+- **`profiles/` rewritten, all four, in both editions.** Each now says how the framework keeps
+  improving *in that particular setup* — ⚠️ **including the chat-only one, where the growth
+  goes into the text you paste at the start of every conversation.**
+  Arguments are self-contained rather than pointing at rule numbers, and the file lists match
+  the v1.3.0 layout (`corpus/`, `corpus_md/`, `incidents/`).
+- **ChatGPT is now documented as Work mode in the desktop app**, which links a live local
+  folder and is the equivalent of the other two. ⚠️ **Web ChatGPT is described separately**,
+  since it holds uploaded copies with a file limit.
+  **Claude Code and Codex are named as working too** — ⛔ **without steps, because they have
+  not been tested here**, and with the warning that a coding agent will not pause for the
+  snapshot habit on your behalf.
+
+### ⚠️ Upgrade notes / 升級注意
+
+- **A project that was green on v1.2.0 can go WARN on v1.3.0.** That is the point.
+  Set `section_ref_aliases` to your own short name, or leave it unset and the check does not run.
+- ⛔ **No rule IDs changed.** `R-01`–`R-35` are unchanged.
+
+### ⛔ What this release does not claim / 這一版不宣稱什麼
+
+- ⛔ **It does not claim every citation form is now checked.** One anchor is configured.
+  **`R-35`: that is the result of taking stock — ⚠️ and nobody has taken stock of whether a
+  third form exists.**
+- ⛔ **It does not claim a citation points at the right content** — only that the section exists
+  and is unique.
+- ⛔ **Nothing compares the two editions.** Still true, and still done by hand.
+- ⛔ **Nothing checks the figures.** No sensor reads `.svg`. The layout defects above were
+  reported by a human and measured with a throwaway script that is ⛔ **deliberately not
+  shipped** — **a known and accepted gap, not an overlooked one.**
+
+---
+
 ## [1.2.0] — 2026-08-26
 
 ### 🔴 The headline changes / 這一版最重要的三件事
@@ -223,5 +361,6 @@ Initial public release: bilingual file-based governance framework, two independe
 two ledgers, five sensors, twelve paired self-tests.
 首次公開釋出：雙語檔案化治理框架，兩個獨立版本、兩本台帳、五支感測器、十二組成對自測。
 
+[1.3.0]: https://github.com/yama-learns/Spark2Groundwork/releases/tag/v1.3.0
 [1.2.0]: https://github.com/yama-learns/Spark2Groundwork/releases/tag/v1.2.0
 [1.0.0]: https://github.com/yama-learns/Spark2Groundwork/releases/tag/v1.0.0

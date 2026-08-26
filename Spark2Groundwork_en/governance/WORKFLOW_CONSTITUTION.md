@@ -234,6 +234,23 @@ well-founded one.**
 `scripts/harness/framework_config.py`.
 
 
+#### Folders the user creates
+
+🔴 **A user may create any folder in the project, ⛔ without registering it with the framework.**
+
+**Two mechanisms guarantee those folders are safe, and both are mechanical:**
+
+1. **The upgrade tool recognises nine names of its own** (five folders plus four files) and
+   ⛔ **refuses every other target.**
+   ⚠️ **Paired sample: `upgrade_case()` in `run_selftest.py`.**
+2. **A sensor's scan scope is defined by globs**, ⛔ not by "scan everything".
+
+⚠️ **This clause exists because of a place that is easy to read backwards:**
+**what protects the user's material is the list of replaceable items, ⛔ not a list of
+protected ones.**
+🔴 **The latter exists only to produce a clearer error message** —
+**⛔ treated as the primary defence, it makes any folder not on it look unprotected.**
+
 ### 6.3 🔴 Authorisation is the user's decision, ⛔ not the framework's
 
 **A user may authorise the AI to write anything in their project, ledgers included.**

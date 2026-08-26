@@ -5,7 +5,8 @@
 ## 四項檢查
 
     DUPLICATE_RULE_TEXT      跨檔完全相同的長句（同一規則有兩個家）      WARN
-    SECTION_REF_UNRESOLVED   `<檔>.md` §N 的引用無法唯一解析              WARN
+    SECTION_REF_UNRESOLVED   章節引用無法唯一解析——長式 `<檔>.md` §N **與**短式「憲章 §N」  WARN
+    ALIAS_TARGET_MISSING     設定中的短式目標檔不在本樹中                   INCOMPLETE
     STATE_IN_SPEC_DOC        規格類文件混入狀態（待辦／進度）           WARN
     SCAN_GLOB_MATCHES_NOTHING  掃描 glob 命中 0 檔                      WARN
 
@@ -99,6 +100,20 @@ SPLIT = re.compile(r"。|(?<=\.)[*_\"'’”)\]]*\s+|\n")
 POINTER = re.compile(r"§\s*\d|R-\d\d")
 
 
+# ── 圍籬區塊裡的 `## 3.` 不是章節 ────────────────────────────────
+# 🔴 **實測，擴大掃描範圍後第一次執行就出現：** `HANDOFF.md` 被報成有兩個 `## 3.` 標題。
+#    **其中一個是圍籬區塊內、示範「必備五項」長相的那一行**——⛔ 那是範例文字，不是標題。
+# ⚠️ **這個缺陷原本就在長式檢查裡**，只是 `governance_globs` 內剛好沒有人引用 `HANDOFF.md §3`
+#    才沒有發作。**擴大範圍不是製造了它，是讓它現形。**
+# ⛔ **不用豁免清單修（R-20／R-21）：改為剝除圍籬區塊，修正的是「判準被套用在什麼上」。**
+#    ⚠️ 代價寫明：一個真的被放進圍籬區塊裡的標題會看不見。**⛔ 沒有人會那樣寫。**
+FENCE = re.compile(r"^```.*?^```", re.M | re.S)
+
+
+def strip_fences(text):
+    return FENCE.sub("", text)
+
+
 BANNER = re.compile(r"^\*\*[^*]+\*\*$")
 
 
@@ -155,22 +170,67 @@ def main():
 
     # ② 章節引用可解析
     #    ⚠️ 索引以**檔名**為鍵；掃描全樹但依相對路徑排除（R-18）
+    # 🔴 **同一個缺陷有兩種書寫形式，而只有一種被查。** 長式 `` `<檔名>.md` §N `` 是原本唯一被解析的。
+    #    ⚠️ **這裡寫成角括號是必要的**——⛔ 寫成真檔名，這行註解自己就成為一筆懸空檔案引用
+    #    （`sensor_reference_integrity` 當場抓到我，⛔ 不是我自己看出來的）。
+    #    ⛔ **框架自己大部分時候寫的是短式（「憲章 §N」），本版 68 處，而沒有任何感測器在查它。**
+    #    ⚠️ **實測，發布前用手查出來的，⛔ 不是這支感測器查出來的：**
+    #      感測器檔頭的 `§5.11`（**一段描述缺陷的文字實例化了它所描述的缺陷**）、
+    #      `Audit_Protocol.md` 的 `§8.1`（憲章 `## 8.` 底下沒有 `### 8.1`）、
+    #      指向 T0 改寫時已被裁掉的章節的 `§5.8`。
+    # ⛔ **錨定詞是設定**（`section_ref_aliases`），不是硬編清單：
+    #    下游專案的簡稱不會一樣，而 `R-21` 禁止以白名單定義掃描範圍。
+    #     ⚠️ **掃描範圍取的是程式碼範圍，不是治理文件範圍。** `sensor_reference_integrity`
+    #     之所以存在，就是因為「`.py` 檔頭從來沒被掃過」——⛔ **但它只補了「檔案」引用。
+    #     「章節」引用的同一個洞一直開著，而補完的那一半讓它看起來補完了。**
+    ref_globs = (cfg.get("code_globs", ["scripts/**/*.py", "scripts/**/*.sh"])
+                 + cfg.get("launcher_globs", [])
+                 + cfg["governance_globs"])
+    # ⛔ **這一組 glob 的「空 glob」回報只有一個定義處：`sensor_reference_integrity`。**
+    #    在這裡再報一次，只會讓噪音加倍而不增加任何資訊——
+    #    **而「一個發現有兩個定義處」正是本感測器存在的理由。**
+    #    ⚠️ 實測：重複回報會讓自測的容忍 WARN 數從 81 筆變成 148 筆。
+    ref_files, _ref_dead = resolve_globs(ref_globs, root, cfg)
+
     all_md = {q.name: q for q in root.rglob("*.md") if not excluded(q, root, cfg)}
-    seen = set()
-    for p, t in texts.items():
-        for m in REF.finditer(t):
-            fn, sec = pathlib.Path(m.group(1)).name, m.group(2)
+    aliases = cfg.get("section_ref_aliases", {})
+    alias_res = [(a, re.compile(re.escape(a) + r"\s*§\s*(\d+(?:\.\d+[a-z]?)?)",
+                                re.UNICODE | re.IGNORECASE), tgt)
+                 for a, tgt in aliases.items()]
+
+    def resolve(body, sec):
+        # §9 只配 "## 9." 不配 "### 9.1"
+        return len(re.findall(rf"^#+\s*{re.escape(sec)}(?=[ .、（(])(?!\.\d)", body, re.M))
+
+    seen, checked = set(), 0
+    for p in ref_files:
+        try:
+            t = p.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        pairs = [(pathlib.Path(m.group(1)).name, m.group(2), None) for m in REF.finditer(t)]
+        for anchor, rx, tgt_rel in alias_res:
+            pairs += [(pathlib.Path(tgt_rel).name, m.group(1), anchor) for m in rx.finditer(t)]
+        for fn, sec, anchor in pairs:
+            checked += 1
             tgt = all_md.get(fn)
-            if tgt is None or (p.name, fn, sec) in seen:
+            if tgt is None:
+                if anchor is not None and (p.name, fn, "TARGET") not in seen:
+                    # ⛔ 一個解析不到目標的簡稱，不是「沒有事情要做」（R-33）。
+                    seen.add((p.name, fn, "TARGET"))
+                    findings.append(("INCOMPLETE", "ALIAS_TARGET_MISSING",
+                                     f"{p.name} 引用「{anchor} §{sec}」，但設定指向的 "
+                                     f"{fn} 不在本樹中——**沒查成不等於通過**"))
                 continue
-            body = tgt.read_text(encoding="utf-8", errors="replace")
-            # §9 只配 "## 9." 不配 "### 9.1"
-            hits = len(re.findall(rf"^#+\s*{re.escape(sec)}(?=[ .、（(])(?!\.\d)", body, re.M))
+            if (p.name, fn, sec) in seen:
+                continue
+            hits = resolve(strip_fences(tgt.read_text(encoding="utf-8", errors="replace")), sec)
             if hits != 1:
                 seen.add((p.name, fn, sec))
+                cite = f"「{anchor} §{sec}」" if anchor else f"{fn} §{sec}"
                 findings.append(("WARN", "SECTION_REF_UNRESOLVED",
-                                 f"{p.name} 引用 {fn} §{sec}，命中 {hits} 次"
-                                 f"——{'不存在' if hits == 0 else '不唯一'}"))
+                                 f"{p.name} 引用 {cite}，命中 {hits} 次——"
+                                 f"{'不存在' if hits == 0 else '不唯一'}"))
 
     # ③ 規格類文件不得含狀態
     #    ⚠️ **豁免規則文字本身。** 定義「不得含待辦」的那一段必然含「待辦」二字。
@@ -184,7 +244,7 @@ def main():
                              f"{p.name} 含待辦或進度用語（{len(hits)} 段）——"
                              "**混入狀態的文件會繼承其最快變動部分的更新頻率**"))
 
-    code = emit("治理文本感測器", findings, {"掃描治理文件": len(texts)}, as_json, name)
+    code = emit("治理文本感測器", findings, {"掃描治理文件": len(texts), "檢查的章節引用": checked}, as_json, name)
     if not as_json:
         print("      ⚠️ 只比對**字面**重複，抓不到語意相同而措辭不同者")
     return code

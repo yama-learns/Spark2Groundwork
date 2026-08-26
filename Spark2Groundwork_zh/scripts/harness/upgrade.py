@@ -48,7 +48,7 @@ MSG = {
        → 可能是沒有網路、或防火牆擋住。手動查：
          https://github.com/yama-learns/Spark2Groundwork/releases""",
  "check_tail": """下一步：把新版下載到 `_upgrade/`，然後跑 `upgrade.py diff`。
-⛔ 你的 PROJECT.md、台帳、語料、交接封包、incidents/ 一律不會被碰。""",
+⛔ 只替換上面列出的項目。**其餘一切都不碰，包含你自己開的資料夾。**""",
  "no_upgrade_dir": """[FAIL] 找不到 `_upgrade/`。
        → 先把新版下載並解壓到專案裡的 `_upgrade/` 資料夾，再跑一次。""",
  "diff_none": "`_upgrade/` 裡的版本與你現在的完全相同——⛔ 沒有東西需要換。",
@@ -76,10 +76,17 @@ MSG = {
 }
 
 
-# 🔴 可整包替換的框架資料夾。⛔ 不在此列者一律不碰（憲章 §6.3 的「不可還原」那一類）。
+# 🔴 **可整包替換的框架項目。這兩份清單就是保護機制本身。**
+#    ⛔ **不在這兩份清單上的任何東西，一律不會被替換**——
+#    **包含使用者自己開的資料夾（筆記、圖表、投稿版本……），⛔ 那些名字不可能事先列舉。**
+#    ⚠️ 成對樣本見 `run_selftest.py` 的 `upgrade_case()`：
+#    **拿一個工具沒聽過的資料夾當目標，必須被拒絕，且內容原封不動。**
 FRAMEWORK_DIRS = ("governance", "policy", "profiles", "prompts", "scripts")
 FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md")
-# ⛔ 這些是你的東西，升級⛔ 永遠不碰它們。
+# ⚠️ **這一份⛔ 不是保護機制。** 保護機制是上面那兩份「可替換清單」。
+#    **本清單唯一的用途，是在使用者不小心把常見的自有資料當成升級目標時，
+#    給他一句看得懂的錯誤訊息**，而不是通用的「這不是可替換項目」。
+#    ⛔ **不要把它改成主要防線**——**那會讓沒列在這裡的資料夾看起來像是不受保護的。**
 NEVER_TOUCH = ("PROJECT.md", "ledgers", "corpus", "corpus_md", "handoffs",
                "incidents", "NEXT_SESSION_MEMO.md", "governance_config.json")
 VERSION_FILE = "_VERSION"

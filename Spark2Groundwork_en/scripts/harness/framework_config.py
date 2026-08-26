@@ -82,6 +82,15 @@ DEFAULTS = {
     # 🔴 **Scan scope for code** (`sensor_reference_integrity.py`).
     # ⚠️ The header comments of `.py` and `.sh` files are where rule citations
     #    accumulate, and nothing scanned them before.
+    # 🔴 **Short-form section citations: the anchor word -> the file it points at.**
+    #    `sensor_governance_text` only parses the long `` `<file>.md` §N `` form;
+    #    ⛔ **the framework itself writes the short form "constitution §N" in 58 places,
+    #    and nothing was checking those.**
+    #    ⚠️ **Measured: three dangling citations survived exactly there** (`§5.11` / `§8.1` / `§5.8`).
+    #    ⛔ The anchor lives in configuration, not in the sensor — **a downstream project's
+    #    short name will not be the same as this one's.**
+    "section_ref_aliases": {"constitution": "governance/WORKFLOW_CONSTITUTION.md"},
+
     "code_globs": ["scripts/**/*.py", "scripts/**/*.sh"],
 
     # 🔴 **Launcher scripts** (`sensor_reference_integrity.py`).

@@ -55,15 +55,31 @@ def parse(text):
 def corpus_integrity(root, cfg):
     """提取物完整性。
 
-    ⚠️ 「沒有語料庫」與「有語料庫但查不了」是兩件事，⛔ 不得混為一談：
-    無目錄 → 本檢查不適用，靜默略過；有目錄但無 manifest → INCOMPLETE。
+    ⚠️ **有三種狀態，⛔ 不是兩種。**「沒有語料庫」「有語料庫但裡面還是空的」
+    「有語料庫但查不了」是三件不同的事：
+      無目錄            → 本檢查不適用，靜默略過
+      有目錄但無提取物   → 還沒有東西要保護，WARN
+      有提取物但無 manifest → INCOMPLETE
     **一個判準涵蓋過廣，其代價是把「不適用」誤報成「有風險」。**
+
+    🔴 **實測：** 框架開始隨附一個空的 `corpus_md/`，讓新使用者看得到提取物要放哪裡。
+    **於是每一個新專案第一次執行都報 INCOMPLETE**——
+    ⛔ **而一個一開始就狼來了的輸出，正是教會人忽略它的方式。**
+    ⚠️ **這與先前一個缺陷同型：** 某支工具先建好輸出目錄，才去看有沒有東西要放進去。
+    ⛔ **修法是結構性的，不是加豁免（`R-20`／`R-21`）：判準改為看「有沒有提取物」，
+    ⛔ 而不是看「目錄在不在」。**
     """
     out = []
     cdir = root / cfg["corpus_dir"]
     if not cdir.is_dir():
         return out
     mp = root / cfg["corpus_manifest"]
+    extracts = sorted(cdir.glob("*.md"))
+    if not extracts and not mp.exists():
+        return [("WARN", "CORPUS_EMPTY",
+                 f"{cfg['corpus_dir']}/ 裡還沒有提取物——"
+                 "**沒有東西要保護，⛔ 也等於沒有查過任何東西**。"
+                 "把 PDF 放進原文資料夾，再跑一次提取工具")]
     if not mp.exists():
         return [("INCOMPLETE", "CORPUS_MANIFEST_MISSING",
                  f"{cfg['corpus_dir']}/ 存在但找不到 manifest——"

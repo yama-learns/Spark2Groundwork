@@ -60,16 +60,32 @@ def parse(text):
 def corpus_integrity(root, cfg):
     """Corpus integrity.
 
-    ⚠️ "No corpus" and "a corpus that cannot be checked" are different things and
-    ⛔ must not be conflated: no directory → not applicable, skip silently;
-    directory but no manifest → INCOMPLETE.
+    ⚠️ **Three states, ⛔ not two.** "No corpus", "a corpus with nothing in it yet" and
+    "a corpus that cannot be checked" are different things:
+      no directory              → not applicable, skip silently
+      directory, no extractions → nothing to protect yet, WARN
+      extractions, no manifest  → INCOMPLETE
     **An over-broad criterion pays for itself by reporting "not applicable" as "at risk".**
+
+    🔴 **Measured:** the framework began shipping an empty `corpus_md/` so that a new user can
+    see where extractions go. **Every fresh project then reported INCOMPLETE on its first run**
+    — ⛔ and a first run that cries wolf is exactly what teaches people to ignore the output.
+    ⚠️ **The same shape as an earlier defect**: a tool created its output directory before
+    checking whether there was anything to put in it.
+    ⛔ **The fix is structural, not an exemption (`R-20`/`R-21`): the criterion now keys on
+    whether extractions exist, ⛔ not on whether the directory exists.**
     """
     out = []
     cdir = root / cfg["corpus_dir"]
     if not cdir.is_dir():
         return out
     mp = root / cfg["corpus_manifest"]
+    extracts = sorted(cdir.glob("*.md"))
+    if not extracts and not mp.exists():
+        return [("WARN", "CORPUS_EMPTY",
+                 f"{cfg['corpus_dir']}/ holds no extractions yet — "
+                 "**nothing to protect, and ⛔ nothing checked either**. "
+                 "Put your PDFs in the source folder and run the extraction tool")]
     if not mp.exists():
         return [("INCOMPLETE", "CORPUS_MANIFEST_MISSING",
                  f"{cfg['corpus_dir']}/ exists but no manifest found — "

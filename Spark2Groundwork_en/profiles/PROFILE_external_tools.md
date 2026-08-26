@@ -1,70 +1,143 @@
-# Profile: using external AI tools
+# Profile: you use outside AI tools
 
-**For: Deep Research, automation pipelines (n8n / Zapier), search agents — any AI running out of your sight.**
-**⚠️ This is an add-on; combine it with another profile.**
+**For:** Deep Research, automation flows (n8n, Zapier), search agents,
+**and anything that runs where you cannot see it and hands you a result.**
+
+⚠️ **This is an add-on, ⛔ not a profile on its own.**
+**Use it alongside whichever one you already chose (solo / multi-agent / chat-only).**
 
 ---
 
 ## 1. One overriding rule
 
-⛔ **External tool output ＝ an unverified lead. Its only legitimate use is pointing at a topic.**
+⛔ **Whatever an outside tool hands back is an unverified lead.**
+**Its one legitimate use is to tell you that a topic exists.**
 
-**⛔ No assertion, bibliography, or number from it may be cited without verification against the original.**
+⛔ **Until you have gone to the source yourself, do not cite any statement, reference or number
+it gave you.**
 
-⚠️ **This is not conservatism.** Measured: two Deep Research models restated the same paper
-**both wrongly, and in opposite directions**; and the explanation proposed to reconcile them
-**was also wrong** — because both restatements were false, so any hypothesis reconciling them
-rested on fabricated data.
+⚠️ **This is not caution. It was measured.**
 
-## 2. Five-way triage
+**One case:** two different Deep Research models read the same paper.
+**Both summaries were wrong, and wrong in opposite directions.**
+The part worth noticing came next — to reconcile the two contradictory summaries, someone put
+forward a very reasonable-sounding explanation, **and that explanation was wrong too.**
 
-Classify every item in an external report:
+🔴 **Because neither summary was right, any hypothesis built to reconcile them was built on
+false data.**
 
-| Level | Content | Handling |
+---
+
+## 2. When a report arrives, sort it into five grades
+
+| Grade | What it is | What to do |
 |---|---|---|
-| **1** | Points at a topic, method, or controversy you did not know | ✅ **Most valuable.** Go find the original |
-| **2** | Gives specific bibliography | ⚠️ Check each against an authoritative source. **Identifiers are often wrong** |
-| **3** | Gives numbers | ⛔ **Always go to the original.** Until then it goes in no document |
-| **4** | Gives a conclusion or verdict | ⛔ **Always treated as unverified** |
-| **5** | Topic irrelevant to your question | Exclude. **This is the only valid exclusion reason** |
+| **1** | Points to a topic, method or controversy you did not know about | ✅ **The most valuable kind.** Go and find the source |
+| **2** | Gives specific references | ⚠️ Check each one against your bibliography. **The identifiers are often wrong** |
+| **3** | Gives numbers | ⛔ **Always go back to the source.** Until you have, it goes in no file |
+| **4** | Gives a conclusion or a judgement | ⛔ **Treat as unverified without exception** |
+| **5** | Has nothing to do with your question | Discard. **⚠️ This is the only reason to discard something outright** |
 
-⚠️ **Run two models on the same prompt: their points of disagreement are the highest-value output** —
-**a disagreement marks a place where at least one side is wrong, which is exactly where to go read the original.**
+🔴 **A technique worth using: run the same instructions past two models and look at where they
+disagree.**
 
-## 3. Prompts must be self-contained
+**The disagreements are the highest-value output** —
+**each one marks a place where at least one of them is wrong, ⛔ and that is exactly where you
+should be opening the source.**
 
-⛔ **Every external prompt must be fully self-contained. No "as above", "see previous", "same as R1".**
+---
 
-⚠️ **Why: external tools run in independent conversations with no shared context —
-"as above" is blank at the execution end, and the referenced clause effectively does not exist.**
+## 3. Instructions to an outside tool must stand on their own
 
-**Measured consequence:** a prompt's §1 quoted this very rule, **and its lower half wrote "Same as R3-1"**.
-The referenced marker was used **0 times** in that run; the version with the clause spelled out used it **12 times**.
+⛔ **Every set of instructions you send out must be completely self-contained.**
+**⛔ No "as above", "see previous", "same as R1".**
 
-**Check with:**
+**The reason is mechanical:**
+each run of an outside tool happens in its own separate conversation. ⛔ **They share no
+context.** **"As above" is a blank at the other end** — the clause you thought you had given
+it simply does not exist in that run.
+
+**A measured consequence:** one set of instructions quoted this very rule at the top,
+**and then wrote "Same as R3-1" further down.**
+🔴 **The marker it referred to was used 0 times in that run; the version that spelled the
+clause out was used 12 times.**
+⚠️ **Quoting the rule and breaking it, in the same file.**
+
+**Before sending, you can check with:**
 
 ```
-python scripts/harness/sensor_prompt_self_contained.py <your_prompt.md>
+python3 scripts/harness/sensor_prompt_self_contained.py <your-instructions.md>
 ```
 
-## 4. Extra care with automation pipelines (n8n etc.)
+---
 
-| Risk | Countermeasure |
+## 4. Extra care with automation flows
+
+| Risk | What to do |
 |---|---|
-| **Intermediate output nobody reads** | Every node's output must land as a file, **with a timestamped name** |
-| **Failures swallowed** | ⛔ No silent retry on failure. **A failure record must remain** |
-| **Automated writes to ledgers** | ⛔ **Absolutely forbidden.** The ledger records what *you* confirmed |
+| **Intermediate output nobody looks at** | Every node's output lands in a file, **with a timestamp in the name** |
+| **Failures swallowed** | ⛔ No silent retry on failure. **A failure must leave a record** |
+| **Writing into the ledgers automatically** | ⛔ **Never** |
 
-⚠️ **The most dangerous property of automation: it makes "nobody looked at this" a state with no trace.**
-**The entire premise of this framework is making "did anyone look" a checkable fact.**
+🔴 **The most dangerous thing about automation is that it makes "nobody looked at this" a state
+with no trace.**
+**And the entire premise of this framework is to make "did anyone look at this" a question you
+can answer.**
 
-## 5. Where external output goes
+---
+
+## 5. Where outside reports go
+
+**Make a folder in your project:**
 
 ```
-external/          ← raw reports, stored unmodified
+external/          ← the raw reports, stored and never edited
 ```
 
-⛔ **Do not put external reports in the corpus (`corpus_md/`).**
-The corpus is **programmatically extracted source text**, the comparison target for anchors.
-**Mixing in AI-generated text destroys the meaning of anchor checking — you would be
-matching against sentences the AI wrote itself.**
+⛔ **Do not put them in `corpus_md/`.**
+
+**The reason is worth remembering:** everything in `corpus_md/` is **text a program pulled out
+of a source PDF**, and it is what the "is this quotation really in the source" check compares
+against.
+🔴 **The moment AI-written text is mixed in, that check stops meaning anything — you will match
+against a sentence the AI wrote itself, and conclude that yes, it is in there.**
+
+⚠️ **Upgrading does not touch `external/`** — **the upgrade tool recognises nine names of
+its own and refuses everything else.**
+⛔ **It does not back it up for you either.** If there is something in there you cannot lose,
+⛔ keep your own copy.
+
+---
+
+## 6. How the framework keeps getting better here
+
+**Outside tools go wrong in their own ways, ⛔ and those ways are not the same as your everyday
+AI's.** So they deserve a record of their own.
+
+### 6.1 What you record is "which instruction produced which mistake"
+
+**Every time an outside report is clearly wrong, add an entry to `incidents/MY_INCIDENTS.md` —
+but with the weight in a different place:**
+
+| What to write | Why |
+|---|---|
+| **The exact instructions you sent** | 🔴 **The most important column** — most outside-tool errors come from instructions that did not say enough |
+| What was wrong | The fact |
+| **Which of the five grades above it was** | Over time you will see which grade this tool is least reliable at |
+
+### 6.2 What accumulates is a better instruction template, ⛔ not a new rule
+
+🔴 **This is the biggest difference between this profile and the others.**
+
+**In the solo and multi-agent setups, accumulated incidents turn into a new rule.**
+**With outside tools, accumulated incidents turn into a rewritten set of instructions** —
+**because you do not control how the tool behaves. ⛔ You only control what you hand it.**
+
+**In practice: put the fix into your own template under `prompts/`, and use that one next time.**
+
+### 6.3 What this gets you
+
+**You build up a set of instruction patterns that work for this particular tool.**
+⚠️ **They usually do not transfer** — **a different tool means starting again.**
+🔴 **That fact is itself worth writing down, ⛔ so that next time you do not assume it carries
+over.**

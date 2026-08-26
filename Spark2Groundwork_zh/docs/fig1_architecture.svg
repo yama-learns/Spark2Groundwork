@@ -15,7 +15,7 @@
 <rect x="160" y="80" width="248" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
 <text x="284" y="101" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a2733">governance/AGENTS.md</text>
 <text x="284" y="120" text-anchor="middle" font-size="10" fill="#4a5b6a">查證規範｜學術底線｜決策權</text>
-<rect x="424" y="80" width="278" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
+<rect x="416" y="80" width="294" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
 <text x="563" y="101" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a2733">governance/WORKFLOW_CONSTITUTION.md</text>
 <text x="563" y="120" text-anchor="middle" font-size="10" fill="#4a5b6a">拓撲｜證據鏈｜儀式｜寫入範圍｜治理成本上限</text>
 <rect x="742" y="92" width="196" height="32" rx="16" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.3"/>
@@ -31,16 +31,16 @@
 <text x="246" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">R-01 – R-35｜編號永久</text>
 <rect x="348" y="172" width="172" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
 <text x="434" y="188" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Incident_Log.md</text>
-<text x="434" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">8 個失效家族＋機制</text>
+<text x="434" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">失效家族與其機制</text>
 <rect x="536" y="172" width="172" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
 <text x="622" y="188" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Audit_Protocol.md</text>
 <text x="622" y="203" text-anchor="middle" font-size="9.5" fill="#4a5b6a">對抗審計規範</text>
 <rect x="160" y="216" width="264" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="292" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">policy/　4 份</text>
+<text x="292" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">policy/</text>
 <text x="292" y="247" text-anchor="middle" font-size="9.5" fill="#4a5b6a">來源｜模型身分｜交接｜外部工具</text>
 <rect x="440" y="216" width="268" height="38" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="574" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">profiles/　4 份　＋　prompts/</text>
-<text x="574" y="247" text-anchor="middle" font-size="9.5" fill="#4a5b6a">選一個情境　＋　零件庫與三份模板</text>
+<text x="574" y="232" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">profiles/　＋　prompts/</text>
+<text x="574" y="247" text-anchor="middle" font-size="9.5" fill="#4a5b6a">選一個情境　＋　零件庫與模板</text>
 <rect x="742" y="196" width="196" height="32" rx="16" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.3"/>
 <text x="840" y="216" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f6b4a">✅ 可整包從 GitHub 換新</text>
 
@@ -50,7 +50,7 @@
 <text x="42" y="316" font-size="10.5" fill="#4a5b6a">scripts/</text>
 <text x="42" y="332" font-size="10.5" fill="#4a5b6a">harness/</text>
 <rect x="160" y="288" width="264" height="58" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>
-<text x="292" y="306" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">7 支感測器</text>
+<text x="292" y="306" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">感測器組</text>
 <text x="292" y="322" text-anchor="middle" font-size="9.5" fill="#4a5b6a">一個指令跑完，退出碼 0／1／2</text>
 <text x="292" y="337" text-anchor="middle" font-size="9" fill="#25547f" font-family="monospace">run_all_sensors.py ｜ run_selftest.py</text>
 <rect x="440" y="288" width="268" height="58" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>

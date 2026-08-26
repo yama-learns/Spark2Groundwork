@@ -4,71 +4,75 @@
 
 ---
 
-## All you have to do is three things
+## There are only three things you have to do
 
 | What | Where |
 |---|---|
-| **Fill in one file** | `PROJECT.md` at the root — ⛔ every other governance document is AI-maintained |
-| **Press three buttons** | snapshot / review changes / check update (`.bat` on Windows, `.command` on macOS) |
-| **Adjudicate** | You are the only adjudicator. The AI asks; you decide |
+| **Fill in one file** | `PROJECT.md` in this folder. ⛔ Every other document is looked after by the AI |
+| **Press three buttons** | snapshot / review changes / check update (`.bat` on Windows, `.command` on Mac) |
+| **Decide** | The AI proposes; you decide whether to accept. **This part cannot be handed off** |
 
-⚠️ **Framework folders can be replaced wholesale from GitHub, ⛔ and your ledgers, corpus and
-`PROJECT.md` are never touched.**
+⚠️ **When a new version of the framework comes out you can swap it in wholesale, ⛔ and your
+own material — your ideas, your quotations, the papers you added — is never touched.**
 
 ---
 
 ## 0. What this is
 
-A **file-based governance framework** for developing research ideas with AI assistance.
-It lets you answer three questions at any point:
+**A set of files you copy into your project folder.**
+They give the AI a set of working rules, and they give you a way of checking what it did.
 
-| Question | Answered by |
+It starts from one assumption: **the AI will be wrong, and it will be wrong in the places
+where it sounds most certain.** Every working rule in here corresponds to something that
+actually happened.
+
+| The question it helps you answer | What answers it |
 |---|---|
-| **Which page does this sentence rest on?** | Claim Ledger ＋ anchor sensor |
-| **What would it take to refute this idea?** | Conjecture Ledger ＋ falsification field |
-| **What did the AI just change, and have I reviewed it?** | Git checkpoints ＋ two scripts |
-
-⚠️ **This is not a way to make AI smarter.**
-It assumes AI will be wrong, and that **it will be wrong where it is most confident**.
-Every defence in this framework corresponds to a failure that actually happened.
+| **Which page of the original paper does this statement rest on?** | The Claim Ledger, plus a check that compares your quote against the source |
+| **What would it take to prove this idea wrong?** | The falsification field in the Conjecture Ledger |
+| **What did the AI just change, and have I looked at it?** | Git checkpoints, plus the "review changes" button |
 
 ---
 
-## 1. What it does not claim (**read this first**)
+## 1. What it does not claim (**please read this first**)
 
-⛔ **This framework does not guarantee your research is correct.** It guarantees only that
-**when it is wrong, the error leaves a trace instead of quietly becoming your conclusion.**
+⛔ **This framework does not promise your research is correct.**
+It promises something narrower and more useful:
+**when something goes wrong, it leaves a trace instead of quietly becoming your conclusion.**
 
 | It can check | It cannot check |
 |---|---|
-| Whether a quoted sentence exists in the source | Whether the source **supports your inference** |
-| Whether the falsification field is filled | Whether what you filled in is **actually observable** |
-| Whether a rule has two versions | Whether the rule itself is **right** |
+| Whether the sentence you quoted is really in the source paper | Whether the source paper actually **supports your reasoning** |
+| Whether you filled in the falsification condition | Whether what you wrote there is **something you could really observe** |
+| Whether the same working rule exists in two versions | Whether that working rule itself is **right** |
 
-**The right-hand column is human work, and it is deliberately not mechanised** —
-a sensor that fires on correct text teaches you to ignore it, which is worse than no sensor.
+**The right-hand column is human work, and we leave it that way on purpose.**
+A check that fires on correct work teaches you to ignore it — **and that is worse than having
+no check at all.**
 
 ---
 
-## 2. Five-minute tour
+## 2. What is in this folder
 
 <p align="center">
-  <img src="docs/fig1_architecture.svg" alt="Architecture: what is the framework and what is yours" width="100%">
+  <img src="docs/fig1_architecture.svg" alt="Architecture: what belongs to the framework and what belongs to you" width="100%">
 </p>
 
-⚠️ **Above the red line is the framework — break it and you re-download it. Below the line is
-your data, and nothing anywhere can restore it.**
-
+⚠️ **Everything above the red line belongs to the framework — if the AI breaks it, download it again.**
+🔴 **Everything below the line is yours, and nothing anywhere can restore it. Keep your own backup.**
 
 ```
 SETUP.md              ← 🚩 Start here. Install, fill in, first run
-INITIALIZE_PROMPT.md  ← The prompt you paste to your AI
-profiles/             ← Pick the one matching how you work
-governance/           ← Governance documents (where rules live)
-ledgers/              ← Ledgers (where evidence lives)
-policy/               ← Topic policies (model identity, handoff, sources, external tools)
-prompts/              ← Prompt building blocks and templates
-scripts/harness/      ← Sensors (mechanical checks)
+INITIALIZE_PROMPT.md  ← The text you paste to your AI the first time
+PROJECT.md            ← The only file you have to write yourself
+corpus/               ← Your source PDFs go here, and your bibliography
+corpus_md/            ← The plain text pulled out of those PDFs, used for checking quotes
+ledgers/              ← Your ideas, and the source behind each sentence
+governance/           ← The rules the AI works under
+policy/               ← Rules by topic: sources, handovers, model identity, outside tools
+profiles/             ← Pick the one that matches how you work
+prompts/              ← Ready-made instructions you can paste
+scripts/harness/      ← The automatic checks
 ```
 
 ---
@@ -79,74 +83,114 @@ scripts/harness/      ← Sensors (mechanical checks)
   <img src="docs/fig2_workflow.svg" alt="Workflow: the evidence chain, who watches it, and the loop" width="100%">
 </p>
 
+### 3.1 Getting from "what the paper says" to "what you conclude" takes several steps
 
-### 3.1 The evidence chain has links, not just "did you cite something"
+A sentence with a number in it passes through seven steps on its way from an idea to your
+proposal. **Each one can break, and each breaks in its own way.**
 
-A sentence containing a number passes through seven links on its way from idea to page.
-**Each can break, and each breaks differently.**
-
-| Link | Question | Mechanisable? |
+| Step | The question | Can it be checked automatically? |
 |---|---|---|
-| ① Locate | Which passage should I cite? | ❌ |
-| ② **Exists** | **Is that passage actually in the source?** | ✅ **Zero cost** |
-| ③ Fields | Are the required fields filled? | ✅ |
-| ④ Consistency | Do the documents agree with each other? | ✅ |
-| ⑤ Authenticity | Does this reference actually exist? | ✅ Needs external lookup |
-| ⑥ Support | Does that passage bear the weight of this claim? | ❌ **Human work** |
-| ⑦ Generalisation | Can you go from that sample to here? | ❌ **Human work** |
+| ① Locate | Which passage should I be citing? | ❌ Human work |
+| ② **Exists** | **Is that passage really in the source?** | ✅ **Yes, and it costs nothing** |
+| ③ Fields | Have the required fields been filled in? | ✅ Yes |
+| ④ Consistency | Do the different files agree with each other? | ✅ Yes |
+| ⑤ Real | Does this reference actually exist? | ✅ Yes, but it needs an outside lookup |
+| ⑥ Support | Does that passage bear the weight of this claim? | ❌ Human work |
+| ⑦ Generalisation | Can you go from that study to yours? | ❌ Human work |
 
-**② is the fulcrum of the whole design**: it turns "did anyone actually read the source"
-into a fact you can settle with string comparison.
+🔴 **Step ② is what the whole design rests on.**
+It turns "did anyone actually open the source and read it" into a fact
+**you can settle by comparing text.**
 
 ### 3.2 Two ledgers, two different jobs
 
 | | Conjecture Ledger | Claim Ledger |
 |---|---|---|
-| Governs | **Literature level**: does this idea hold up? | **Sentence level**: which passage backs this? |
-| Key fields | **Falsification condition**, strongest rival | **Verbatim anchor**, page number |
-| Failure mode | An idea becomes an unfalsifiable worldview | A number gets rebuilt from memory |
+| Covers | **The idea**: does this hold up at all? | **The sentence**: which passage is it standing on? |
+| Main fields | What would prove it wrong; the strongest rival explanation | The exact wording quoted, and the page |
+| What goes wrong | An idea slowly becomes something nothing could disprove | A number gets rewritten from memory |
 
-### 3.3 Failures come in families; incidents pass, families recur
+### 3.3 Mistakes get logged automatically, and the framework improves itself
 
-**Logging a single incident is not useful**, because the next one will not look the same.
-What you record is the **mechanism** — see `governance/Incident_Log.md` §2.
+**Working out a fix for one mistake buys you little**, because the next one will not look the
+same. What is worth writing down is the **pattern** — so that you recognise it next time.
 
-### 3.4 The human is the only adjudicator
+**And finding the pattern is a job you can hand to the AI.**
+You say "log that" at the moment it happens; it does the rest.
+🔴 **So the framework grows as you use it, and ends up in the shape that suits you best.**
 
-⚠️ **This is not conservatism; it is a measured result.**
-Across two predecessor projects, **the user had the highest novel-error interception rate
-of any layer in the system**, and their most effective method was not "spotting a wrong answer"
-but **supplying a piece of external data the AI did not have**.
+**The failure patterns that come with the framework are in `governance/Incident_Log.md`;
+what went wrong in your own project goes in `incidents/MY_INCIDENTS.md`.**
 
-**→ Any proposal that removes the human from the loop must first answer: who takes over that layer?**
+### 3.4 You are the one who decides
 
----
+⚠️ **This is not caution. It is a measured result.**
+Across two earlier projects, **the user caught more genuinely new errors than any other part
+of the system**, and their most effective method was not "spotting a wrong answer" but
+**bringing in a piece of information the AI did not have.**
 
-## 4. Where this comes from
-
-**Two real projects, forty-odd logged incidents between them.**
-Every sensor and every hard rule here carries the case that triggered it.
-
-⛔ **Rules without a case do not get written in** — the framework has its own rule saying so.
-
-⚠️ **But that rule has one exception, and it is the reason this framework exists:**
-the failure families marked `[inherited]`, `[framework's own]` or `[predicted]` in
-`governance/Incident_Log.md` **have not happened in your project.** They are listed for honesty, not because they are in force —
-**you may defend against them, but do not claim immunity because of them.**
+**→ Any proposal to take the user out of the loop has to answer one question first:
+who takes over that job?**
 
 ---
 
-## 5. Next step
+## 4. There is no perfect framework — only one that gets better as you use it
 
-👉 **Open `SETUP.md`.**
+🔴 **This section is the idea the whole thing is built on.**
+
+**No framework arrives already suited to your topic, your AI and your working habits.**
+⛔ **We are not going to pretend otherwise.**
+
+**It is built on a different premise: every hole you fall into becomes a railing for next time.**
+
+| What you do | What the framework grows |
+|---|---|
+| Catch the AI getting something wrong and say "log that" | One more entry in `incidents/MY_INCIDENTS.md` |
+| After a few entries, ask the AI to find the repeating patterns | You see a shape that **will happen again** |
+| You decide whether it becomes a rule | One more line in `governance/RULES.md` — **and it is specific to your project** |
+
+⚠️ **The middle step is not optional.** One mistake on its own does not help, because the next
+one will not look the same; **what is worth having is the shape that repeats.**
+
+⛔ **The last step is always your decision, never the AI's** —
+**because that rule will bind both of you afterwards.**
+
+**After a while your rule set will not look like anyone else's.**
+🔴 **That is not drift. That is the point.**
+
+⚠️ **It is also why upgrading never overwrites your material — and the reason may be the
+opposite of what you expect:**
+🔴 **the upgrade tool recognises nine names of its own and refuses everything else.**
+**So your ledgers, your papers, your incident log, `PROJECT.md`,
+and ⛔ any folder you created yourself are all left alone** —
+**you never have to register them on a list.**
+
+---
+
+## 5. Where this came from
+
+**Two real research projects, and forty-odd recorded mistakes between them.**
+Every check and every hard working rule here carries the case that forced it into existence.
+
+⛔ **A working rule without a real case does not get written in.**
+
+⚠️ There is one exception, and it is the reason this framework exists:
+the patterns marked `[inherited]`, `[framework's own]` or `[predicted]` in
+`governance/Incident_Log.md` **have not happened in your project.**
+They are listed so you know what to watch for — ⛔ **not so you can assume you are safe.**
+
+---
+
+## 6. Next step
+
+👉 **Open `SETUP.md` and follow it.**
 
 ---
 
 ## Licence
 
-**This framework is released under the MIT licence**, from
-https://github.com/yama-learns/Spark2Groundwork
+**Released under the MIT licence**, from https://github.com/yama-learns/Spark2Groundwork
 
 ⚠️ **That covers the framework files only.**
-**The research you produce with it is yours** — ⛔ this framework claims no rights over your
-final product, and takes no responsibility for it.
+**The research you produce with them is yours** — ⛔ this framework claims no rights over your
+work, and takes no responsibility for it.

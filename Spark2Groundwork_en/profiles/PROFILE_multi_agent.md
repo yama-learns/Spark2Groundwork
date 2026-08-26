@@ -1,74 +1,182 @@
-# Profile: multiple AI roles
+# Profile: several AIs with separate jobs
 
-**For: two or more AIs with divided duties, using **at least two different vendors**.**
+**For:** you use two or more AIs at once, and **at least two of them are from different
+companies.**
+
+⚠️ **If all your models come from one company, this profile buys you much less** —
+**section 1 explains why.**
 
 ---
 
 ## 1. Three roles
 
-| Role | Duties | Suggested model |
+| Role | Responsible for | Which model |
 |---|---|---|
-| **Governance** | Incident log, process maintenance, governance docs, sensors | Primary model |
-| **Research** | Content iteration: reading sources, analysis, hypothesis testing | Primary model |
-| **Audit** | Adversarial audit. **Produces nothing, fixes nothing** | ⚠️ **Must be a different vendor** |
+| **Governance** | Maintaining rules, logging incidents, maintaining the checks | Your main model |
+| **Research** | The content itself: reading papers, analysis, testing hypotheses | Your main model |
+| **Audit** | Finding holes. ⛔ **Produces nothing and fixes nothing** | 🔴 **Must be a different company's model** |
 
-⛔ **If auditor and audited are the same model, this layer does not exist.**
-**The two models have different blind spots; that is the entire reason for pairing them.**
+🔴 **If the auditor is the same model as the one being audited, that layer is doing nothing.**
 
-## 2. Three contact surfaces, **all passing through the human**
+**The reason is not that it would favour itself. The reason is that it cannot see.**
+A model has its own blind spots — it will not notice what it left out,
+in the same way that you do not notice the thing you did not think of.
+**Switching companies switches the set of blind spots.**
 
-| Surface | Rule |
+⚠️ **This is why "two companies" matters more than "two models".**
+Two models from the same company have blind spots that overlap heavily.
+
+---
+
+## 2. Three points of contact, ⛔ all of which go through you
+
+| Contact point | Rule |
 |---|---|
-| **Ledgers** | ⛔ No AI writes here. Report via decision request → you adjudicate → governance role executes |
-| **State documents** | One per line, **neither writes to nor copies from the other** |
-| **`handoffs/`** | All three may write. ⚠️ **Filenames must carry a role prefix or they will overwrite each other** |
+| **The two ledgers** | ⛔ **No AI writes to them directly.** An AI files a "please decide" request → you decide → the governance role writes it in |
+| **State documents** | **One per line of work**, ⛔ never writing into each other's, never copying each other's content |
+| **`handoffs/`** | All three roles may write here. ⚠️ **Filenames must carry a role prefix, or they will overwrite each other** |
 
-## 3. `framework_config.py` setting
+**Why the ledgers must go through you:**
+A ledger records **what you have confirmed**.
+**If an AI writes straight into it, that column no longer means anyone confirmed anything.**
+
+---
+
+## 3. How each round goes
+
+```
+You press "snapshot"
+   → give the research role its task           → it hands back a packet
+   → give the governance role its task          → it hands back a packet
+     (only if rules are changing this round)
+   → you press "review changes" and see what each side did
+   → you decide → the governance role writes the decision into the ledgers
+   → you press "snapshot" again
+```
+
+### 3.1 Save at every handover, ⛔ not at the end of the day
+
+⚠️ **If two lines of work happen between the same two checkpoints, the changes cannot be
+attributed.** You will see a pile of edits ⛔ **and be unable to tell who made which.**
+
+**Press "snapshot" every time you switch roles.** It is the cheapest, most effective single
+habit in this setup.
+
+### 3.2 The governance role hands over packets too
+
+⚠️ **This gets missed easily, because what the governance role produces is "rules", which does
+not feel like output.**
+
+**But when a rule changes and nobody is told, the consequence is that the other roles find out
+the next time they break it.**
+
+⛔ **If a change this round affects anyone else's permissions, formats or tool behaviour, it
+gets a handover packet with a named recipient.**
+
+---
+
+## 4. Who audits the governance role
+
+🔴 **This is the easiest part of the whole structure to miss — because the person who would
+think of the question is usually the governance role itself.**
+
+**You do not need to audit every round. Audit when one of these four happens:**
+a check was changed, the behaviour rules were changed, a write scope was changed,
+or a new incident was logged.
+
+**Auditing the governance role asks different questions than auditing research:**
+
+| # | The question |
+|---|---|
+| **G-1** | **How many versions of this rule now exist?** Do the different files agree? |
+| **G-2** | **Could this new rule and an existing rule be impossible to obey at the same time?** |
+| **G-3** | Which layer did this change touch, **and which layer is now forced to change as well**? |
+| **G-4** | **Does the new check have both kinds of sample — "must alarm" and "must not alarm"?** |
+| **G-5** | This exception that was granted — **has its cost been written down?** |
+
+⚠️ **G-2 deserves a sentence more, because it is the hardest to catch yourself.**
+
+**A real example.** In a single round, two things happened:
+a new rule said "do not write numbers that will change into the rule text", so the counts were
+removed from the documents;
+and an existing check had the criterion "no count stated in the document → fail".
+🔴 **The moment the new rule was obeyed, the old check failed.**
+**Both rules were written by the same role, ⛔ and the conflict only appeared at the moment
+somebody tried to obey both.**
+
+---
+
+## 5. How the framework keeps getting better here
+
+🔴 **This is where several roles pay for themselves.**
+
+**In a solo setup you have to remember to write incidents down. Here you can make it one
+role's job.**
+
+### 5.1 The governance role maintains the log; ⛔ you close the cases
+
+**Put one sentence in the governance role's standing instructions:**
+
+> "In any round where the research or audit role points out a mistake worth remembering,
+> you log it in `incidents/MY_INCIDENTS.md` and tell me in your handover packet."
+
+⚠️ **Changing the status to "handled" is still yours alone.**
+**Same reason as the ledgers: if a role can declare its own case closed, that column stops
+meaning anything.**
+
+### 5.2 A second use for the audit role: finding the pattern
+
+**About every ten rounds, hand the whole of `incidents/MY_INCIDENTS.md` to the audit role and
+ask:**
+
+> "Which of these incidents are actually the same mechanism wearing different clothes?
+> For each mechanism, tell me why the existing rules did not stop it."
+
+🔴 **Give this to the audit role rather than the governance role.**
+**The rules that failed to stop those incidents are the governance role's own** —
+**and asking anyone to find the holes in their own rules is much harder than asking somebody
+else.**
+
+### 5.3 You decide on new rules; ⛔ the proposer does not approve their own
+
+**Fix the sequence:**
+
+```
+Audit proposes → Governance assesses feasibility and cost → You decide → Governance writes it into RULES.md
+```
+
+⛔ **Never let the proposer approve their own proposal.**
+**This is not distrust. It is that the proposer has already been convinced by their own idea** —
+**they cannot weigh its cost, because in their eyes the cost is worth paying.**
+
+### 5.4 What this gets you
+
+**A rule set that fits your topic more closely every month, where every rule has been through
+three hands: someone proposed it, someone costed it, someone decided.**
+
+⚠️ **It is slower than the solo setup, ⛔ and sturdier** —
+**a solo rule has only ever been read by one person.**
+
+---
+
+## 6. Configuration
+
+Open `scripts/harness/framework_config.py` and state the write scopes:
 
 ```python
 "write_scopes": {
-    "governance": ["governance", "policy", "scripts", "file_index.md", "NEXT_SESSION_MEMO.md"],
-    "research":   ["research", "corpus_md", "RESEARCH_MEMO.md"],
-    "audit":      ["scratch"],          # sandbox; the report goes to handoffs/
+    "governance": ["governance", "policy", "scripts", "incidents",
+                   "file_index.md", "NEXT_SESSION_MEMO.md"],
+    "research":   ["corpus_md", "RESEARCH_MEMO.md"],
+    "audit":      ["scratch"],          # a sandbox; real reports go in handoffs/
     "_shared":    ["handoffs"],
 }
 ```
 
-⚠️ **Giving the audit role a sandbox is necessary.**
-A predecessor project demanded adversarial audit without providing anywhere to run tests —
-**which asks the auditor either not to test or to go out of scope.**
+⚠️ **The audit role must have a sandbox (`scratch/`).**
+**If you ask it to run adversarial tests but give it nowhere to make a mess,
+⛔ you are asking it to either not test or overstep.**
 
-## 4. The **specific** risks of a multi-role setup
-
-### 4.1 Snapshot at handover, not at end of session
-
-⚠️ **If two lines work between the same two checkpoints, changes cannot be attributed** —
-you will see a pile of diffs and not know who made which.
-
-### 4.2 The governance role must also file handoff packets
-
-⚠️ A predecessor project's governance role wrote only its own memo for a long time;
-**the result was that other roles only learned a rule had changed the next time they violated it.**
-
-⛔ **Any change affecting another party's permissions, specs, or tool behaviour requires a packet naming the recipient.**
-
-### 4.3 Who audits the governance role
-
-**This is the most commonly missed link, because the person proposing it is usually the governance role itself.**
-
-**Triggers (not every round):** sensor code changed, T0 changed, write scope changed, new incident logged.
-
-**Four governance-layer attacks, distinct from the research layer:**
-
-| # | Question |
-|---|---|
-| G-1 | **How many versions does this rule have?** Are they consistent? |
-| G-1b | **Would the new rule and some existing rule be mutually exclusive if both were obeyed?** Especially **rule layer vs tool layer** |
-| G-2 | Which layer does this change touch, and **which layer will it force to change**? |
-| G-3 | **Are both halves of the new check's paired fixtures present?** |
-| G-4 | **Has the cost of this exclusion or exemption been written down?** |
-
-⚠️ **Where G-1b comes from:** a project wrote "numbers that change do not go into clauses"
-and removed a count from its documents in the same round, while an existing sensor's condition was
-"no document states the count → FAIL". **Obeying the new rule made the old sensor fail immediately.**
-**Both rules were written by the same person, and the conflict only surfaced when both were obeyed at once.**
+⚠️ **Nothing in `scratch/` is under version control, ⛔ so nothing in it may be cited.**
+**A citation into it reads exactly like a well-founded one, ⛔ and points at something that can
+vanish at any moment.**

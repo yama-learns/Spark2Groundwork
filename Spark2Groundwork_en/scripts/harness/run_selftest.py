@@ -149,6 +149,14 @@ expect("ligatures and hyphenation do not false-alarm", 0, "sensor_claim_ledger.p
        forbid=("ANCHOR_NOT_IN_SOURCE", "ANCHOR_EMPTY"))
 expect("correct anchor does not false-alarm", 0, "sensor_claim_ledger.py", "claim_clean",
        forbid=("ANCHOR_NOT_IN_SOURCE", "ANCHOR_EMPTY"))
+# 🔴 **Three states, not two.** The framework now ships an empty `corpus_md/` so a new user can
+#    see where extractions go -- **and every fresh project then reported INCOMPLETE on its first
+#    run.** ⛔ A first run that cries wolf is what teaches people to ignore the output.
+expect("an empty extraction folder is not 'could not check'", 0, "sensor_claim_ledger.py",
+       "corpus_empty", "CORPUS_EMPTY", forbid=("CORPUS_MANIFEST_MISSING",))
+# ⚠️ The paired half: extractions present but unprotected is still INCOMPLETE.
+expect("extractions with no manifest are INCOMPLETE", 2, "sensor_claim_ledger.py",
+       "corpus_unmanifested", "CORPUS_MANIFEST_MISSING")
 
 # Self-certification
 expect("self-certification is caught", 1, "sensor_self_certification.py", "selfcert_bad")
@@ -173,6 +181,21 @@ expect("duplicated long sentence across files warns", 0, "sensor_governance_text
 expect("duplicated sentence ending mid-line warns", 0, "sensor_governance_text.py",
        "gov_dup_midline", "DUPLICATE_RULE_TEXT")
 expect("dangling section citation warns", 0, "sensor_governance_text.py", "gov_badref", "SECTION_REF_UNRESOLVED")
+# 🔴 **Short form.** The long `` `<file>.md` §N `` form was the only one checked, while the
+#    framework writes "constitution §N" in 58 places -- **three dangling citations lived there
+#    until they were found by hand at release time.**
+expect("dangling short-form citation warns", 0, "sensor_governance_text.py",
+       "secref_alias_bad", "SECTION_REF_UNRESOLVED")
+expect("resolvable short-form citation does not false-alarm", 0, "sensor_governance_text.py",
+       "secref_alias_ok", forbid=("SECTION_REF_UNRESOLVED", "ALIAS_TARGET_MISSING"))
+# ⚠️ **Scope, not form:** this citation lives in a `.py` header. `sensor_reference_integrity`
+#    was built because those were never scanned -- ⛔ but it only covered *file* references.
+expect("short-form citation in a .py header warns", 0, "sensor_governance_text.py",
+       "secref_py", "SECTION_REF_UNRESOLVED")
+# ⚠️ **Paired sample for the fence fix.** `HANDOFF.md` was reported as having two `## 3.`
+#    headings; one was a line inside a fenced template. ⛔ Sample text is not a heading.
+expect("a heading inside a fenced block is not counted", 0, "sensor_governance_text.py",
+       "secref_fence", forbid=("SECTION_REF_UNRESOLVED",))
 expect("clean governance text does not false-alarm", 0, "sensor_governance_text.py", "gov_clean",
        forbid=("DUPLICATE_RULE_TEXT", "SECTION_REF_UNRESOLVED", "STATE_IN_SPEC_DOC"))
 
@@ -397,6 +420,55 @@ def crash_case():
 
 
 crash_case()
+
+
+# -- The upgrade tool must never touch a folder it does not recognise -----------
+# 🔴 **The guarantee people actually rely on is not the "your data" list.**
+#    ⚠️ Users create folders of their own — notes, figures, submitted drafts.
+#    ⛔ None of those can be named in a list written in advance, and the tool must still
+#    leave them alone. **The mechanism that does that is the replaceable list, not the
+#    protected one**: a target that is not a framework item is refused outright.
+# **This test exists so the guarantee is a measured fact rather than a sentence in a guide.**
+def upgrade_case():
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_upg_"))
+    try:
+        root = tmp / "project"
+        (root / "governance").mkdir(parents=True)
+        (root / "governance" / "AGENTS.md").write_text("# A\n", encoding="utf-8")
+        shutil.copy(HERE / "checkpoint.py", root / "scripts_stub.py")  # presence only
+        (root / "scripts" / "harness").mkdir(parents=True)
+        shutil.copy(HERE / "checkpoint.py", root / "scripts" / "harness" / "checkpoint.py")
+        # a folder the user invented; the tool has never heard of it
+        mine = root / "my notes"
+        mine.mkdir()
+        (mine / "keep.md").write_text("do not lose me\n", encoding="utf-8")
+        before = (mine / "keep.md").read_text(encoding="utf-8")
+        # an upgrade source that happens to contain a folder of the same name
+        (tmp / "project" / "_upgrade" / "my notes").mkdir(parents=True)
+        (tmp / "project" / "_upgrade" / "my notes" / "keep.md").write_text(
+            "REPLACED\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "upgrade.py"), "apply", "my notes",
+                            "--root", str(root)],
+                           capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env=env)
+        after = (mine / "keep.md").read_text(encoding="utf-8")
+        refused = r.returncode == 1
+        intact = after == before
+        if refused and intact:
+            print("  ✅ a folder the tool does not recognise is refused and left untouched")
+            ok += 1
+        else:
+            print("  ❌ an unrecognised folder must be refused and left untouched "
+                  f"(exit {r.returncode}, content {'unchanged' if intact else 'OVERWRITTEN'})")
+            bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+upgrade_case()
 
 print("\n" + "=" * 48)
 print(f"  passed {ok} | failed {bad}")
