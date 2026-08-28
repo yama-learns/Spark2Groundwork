@@ -20,6 +20,9 @@ attributing it to the wrong author, journal, or title. The correct-sounding
 content description causes readers to trust the incorrect bibliographic record.
 
 Do NOT strip hedging from what a source actually said.
+TITLE ACCURACY: reproduce every title exactly as published. Do NOT paraphrase,
+shorten, or improve a title. A title you have adjusted is no longer a locator —
+a reader who searches for it will not find the paper, and will not know why.
 ```
 
 ## 區塊 B — 列舉，不要摘要

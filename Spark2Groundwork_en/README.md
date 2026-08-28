@@ -61,19 +61,43 @@ no check at all.**
 ⚠️ **Everything above the red line belongs to the framework — if the AI breaks it, download it again.**
 🔴 **Everything below the line is yours, and nothing anywhere can restore it. Keep your own backup.**
 
+**Yours (an upgrade never replaces any of it):**
+
 ```
-SETUP.md              ← 🚩 Start here. Install, fill in, first run
-INITIALIZE_PROMPT.md  ← The text you paste to your AI the first time
 PROJECT.md            ← The only file you have to write yourself
+my/                   ← 🔴 Everything in here is yours
+  MY_RULES.md         ←   Your working rules. The framework's are copied into §1; your P-xx in §2
+  MY_INCIDENTS.md     ←   What actually went wrong in this project
+  MY_INDEX.md         ←   Your file index (generated; ⛔ you never write it by hand)
+  tools/              ←   Scripts you wrote. ⛔ Not in scripts/ — that folder is replaced on upgrade
 corpus/               ← Your source PDFs go here, and your bibliography
 corpus_md/            ← The plain text pulled out of those PDFs, used for checking quotes
 ledgers/              ← Your ideas, and the source behind each sentence
-governance/           ← The rules the AI works under
+handoffs/             ← Handoff packets: what each round did
+NEXT_SESSION_MEMO.md  ← Working state, overwritten each round
+governance_config.json ← You decide where the AI may write
+```
+
+**The framework's (if it breaks, download it again):**
+
+```
+SETUP.md              ← 🚩 Start here. Install, fill in, first run
+INITIALIZE_PROMPT.md  ← The text you paste to your AI the first time
+governance/           ← The rules the AI works under, and the two ledgers' field specs
 policy/               ← Rules by topic: sources, handovers, model identity, outside tools
 profiles/             ← Pick the one that matches how you work
 prompts/              ← Ready-made instructions you can paste
 scripts/harness/      ← The automatic checks
+docs/                 ← The figures
+file_index.md         ← The framework's own index (⛔ do not register your documents here)
 ```
+
+🔴 **Why the two piles: a file may have exactly one owner.**
+**Mix the framework's content with yours and an upgrade will lose one of them —**
+⚠️ **so your working rules live in `my/`, ⛔ not in `governance/`.**
+
+**When the framework adds a rule, a tool copies the new text verbatim into
+`my/MY_RULES.md`, and the `P-xx` rules you wrote ⛔ are left alone.**
 
 ---
 
@@ -120,7 +144,7 @@ You say "log that" at the moment it happens; it does the rest.
 🔴 **So the framework grows as you use it, and ends up in the shape that suits you best.**
 
 **The failure patterns that come with the framework are in `governance/Incident_Log.md`;
-what went wrong in your own project goes in `incidents/MY_INCIDENTS.md`.**
+what went wrong in your own project goes in `my/MY_INCIDENTS.md`.**
 
 ### 3.4 You are the one who decides
 
@@ -145,9 +169,9 @@ who takes over that job?**
 
 | What you do | What the framework grows |
 |---|---|
-| Catch the AI getting something wrong and say "log that" | One more entry in `incidents/MY_INCIDENTS.md` |
+| Catch the AI getting something wrong and say "log that" | One more entry in `my/MY_INCIDENTS.md` |
 | After a few entries, ask the AI to find the repeating patterns | You see a shape that **will happen again** |
-| You decide whether it becomes a rule | One more line in `governance/RULES.md` — **and it is specific to your project** |
+| You decide whether it becomes a rule | One more line in `my/MY_RULES.md` — **and it is specific to your project** |
 
 ⚠️ **The middle step is not optional.** One mistake on its own does not help, because the next
 one will not look the same; **what is worth having is the shape that repeats.**

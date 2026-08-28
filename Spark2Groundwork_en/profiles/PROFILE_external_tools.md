@@ -116,7 +116,7 @@ AI's.** So they deserve a record of their own.
 
 ### 6.1 What you record is "which instruction produced which mistake"
 
-**Every time an outside report is clearly wrong, add an entry to `incidents/MY_INCIDENTS.md` —
+**Every time an outside report is clearly wrong, add an entry to `my/MY_INCIDENTS.md` —
 but with the weight in a different place:**
 
 | What to write | Why |

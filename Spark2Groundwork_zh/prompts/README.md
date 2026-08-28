@@ -1,65 +1,69 @@
 # Prompt 庫
 
-**用法：`_COMMON_BLOCKS.md` 是零件盒，`TEMPLATE_*.txt` 是成品。**
+**這個資料夾裡放的是「可以直接貼給 AI 的文字」。**
 
-⛔ **成品必須完全自足。** 組裝時把零件的**全文**貼進去，不得寫「見零件 A」。
-**理由與實測後果見 `policy/EXTERNAL_TOOLS.md` 第 2 條。**
-
-| 檔案 | 用途 |
+| 檔案 | 什麼時候用 |
 |---|---|
-| `_COMMON_BLOCKS.md` | 可重複使用的段落 |
-| `TEMPLATE_decompose.txt` | **把構想拆成可證偽的猜想**（初始化第一步） |
-| `TEMPLATE_prior_art.txt` | 先行技術檢索：這件事有沒有人做過 |
-| `TEMPLATE_adversarial.txt` | 對抗審計：請攻擊我的產出 |
+| `START_治理AI.md` | 指派一個 AI 當**治理**角色時，開工第一則訊息貼這份 |
+| `START_研究AI.md` | 指派一個 AI 當**研究**角色時，開工第一則訊息貼這份 |
+| `START_審計AI.md` | 指派一個 AI 當**審計**角色時，開工第一則訊息貼這份 |
+| `TEMPLATE_decompose.txt` | 把一個構想**拆成可證偽的猜想**（第一輪要做的事） |
+| `TEMPLATE_prior_art.txt` | 先行技術檢索：**這件事有沒有人做過** |
+| `TEMPLATE_adversarial.txt` | 對抗審計：**請攻擊我的產出** |
+| `_COMMON_BLOCKS.md` | 零件盒。想自己組一份新 prompt 時用 |
 
-**收件流程：** 收到外部報告後依 `profiles/PROFILE_external_tools.md` §2 五級分流。
+⚠️ **單人情境（只有你和一個 AI）不需要 `START_*`**——
+**你用的是根目錄的 `INITIALIZE_PROMPT.md`。**
 
 ---
 
-## ⚠️ 哪些範本會被感測器判 FAIL，以及為什麼
+## 一條規則：貼全文，⛔ 不要寫「參見前述」
+
+⛔ **每一份 prompt 都必須自己說得完整。**
+
+**理由是機制性的：** 外部工具的每一次執行都在獨立的對話裡，⛔ 彼此不共享上下文。
+**「同上」在執行端等於空白**——你以為交代過的那一條，在那次執行裡根本不存在。
+
+**實測後果：** 某份 prompt 開頭引述了這條規則，然後在下半部寫「Same as R3-1」。
+🔴 **被指涉的標記在那次執行中使用 0 次；條款寫完整的另一份，使用了 12 次。**
+
+**送出去之前可以先檢查：**
 
 ```
-python scripts/harness/sensor_prompt_self_contained.py prompts/TEMPLATE_prior_art.txt
-→ FAIL [PROMPT_NOT_ASSEMBLED] ×6
+python3 scripts/harness/sensor_prompt_self_contained.py <你的 prompt 檔>
 ```
 
-| 範本 | 判定 | 原因 |
+**若那是一份要給 Deep Research 之類工具的檢索 prompt，多加一個參數：**
+
+```
+python3 scripts/harness/sensor_prompt_self_contained.py <檔> --profile deep-research
+```
+
+⚠️ **這個參數是刻意分開的。**
+**檢索專用的條款（雙語檢索、書目標籤那些）只對檢索 prompt 有意義**——
+**⛔ 把它們套用到 `TEMPLATE_decompose.txt` 這種「這一輪不要查文獻」的 prompt 上，
+它會被判 FAIL，而且永遠改不好。**
+
+---
+
+## 三種 `<<<…>>>` 只有一種是缺陷
+
+| 形態 | 例子 | 判定 |
 |---|---|---|
-| `TEMPLATE_decompose.txt` | ✅ **PASS** | 它是完整的成品，⛔ **不含任何區塊佔位符** |
-| `TEMPLATE_adversarial.txt` | ✅ **PASS** | 同上 |
-| `TEMPLATE_prior_art.txt` | ❌ **FAIL** | 它有 6 個 `<<<貼上區塊 X>>>`——**零件還沒貼進去** |
+| **區塊佔位符** | `<<<貼上區塊 B>>>` | ❌ **FAIL**——零件還沒貼進去，這份 prompt 不完整 |
+| **內容槽** | `<<<貼上你的構想全文>>>` | ✅ **不是缺陷**——那是你使用時才填的 |
+| **填空槽** | `<<<填空:一句話>>>` | ⚠️ **WARN**——提醒你還沒填 |
 
-⛔ **這一節先前寫錯了，訂正如下。**
+---
 
-**舊版寫：「範本本身會被感測器判 FAIL，那是正確的」，理由是「範本裡寫的是
-`<<<貼上區塊 B>>>`」。⚠️ 那個理由對 `TEMPLATE_prior_art.txt` 成立，
-對另外兩份不成立——它們裡面根本沒有區塊佔位符。**
+## ⚠️ 一件要記得的事：`TEMPLATE_prior_art.txt` 是組裝好的副本
 
-**它們當時之所以 FAIL，是因為感測器把 Deep Research 專用的 8 項條款表
-套用到了每一份 prompt 上。而 `TEMPLATE_decompose.txt` 開頭逐字寫著
-「⛔ 這一輪不要查文獻」——一份禁止查文獻的 prompt，
-不可能也不應該包含雙語檢索條款。它組裝完成之後仍然會 FAIL，永遠。**
+**它裡面六個段落的文字，和 `_COMMON_BLOCKS.md` 是同一份。**
 
-> 🔴 **而這一節當時替那個誤報寫好了解釋。**
-> **一支對正確文本報警的感測器，加上一份說「這個 FAIL 是正確的」的官方說明——**
-> **第二層比第一層危險，因為它把「忽略這支感測器」寫成了制度。**
+🔴 **所以：如果你改了零件盒裡的某個區塊，⛔ 記得回來把這份範本也改一次。**
 
-**現況：**
+⚠️ **⛔ 目前沒有任何程式在替你盯這件事。**
+**條款同步檢查看的是「單行的詞彙清單」，⛔ 不是多行的段落。**
 
-- **自足性檢查**（跨檔指涉／未組裝的區塊／prompt 汙染）→ **對所有 prompt 執行**
-- **DR 專用條款表**（8 項）→ **只在 `--profile deep-research` 下執行**
-
-```
-python scripts/harness/sensor_prompt_self_contained.py <組裝好的 DR prompt> --profile deep-research
-```
-
-⚠️ **三種 `<<<…>>>` 佔位符只有一種是缺陷：**
-
-| 形態 | 例 | 判定 |
-|---|---|---|
-| 區塊佔位符 | `<<<貼上區塊 B（列舉，不要摘要）>>>` | ❌ FAIL |
-| **內容槽** | `<<<貼上你的構想全文>>>` | ✅ **不是缺陷**，那是你在使用時才填的 |
-| 填空槽 | `<<<填空:一句話>>>` | ⚠️ WARN |
-
-→ **正確用法：先把零件的全文貼進去組裝成品，再跑感測器。**
-→ **組裝完仍判 FAIL，才是真的有問題。**
+**⚠️ 這是一個已知的代價，寫在這裡是為了讓它不至於被靜默地忘記：**
+**兩份文字有一天會不一樣，而它們讀起來都很正常。**

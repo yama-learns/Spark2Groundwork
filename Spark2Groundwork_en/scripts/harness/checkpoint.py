@@ -107,7 +107,7 @@ def utcstamp(fmt):
 
 
 def run(args, cwd, log):
-    """跑一個 git 指令，回傳 (returncode, stdout+stderr)。⛔ 一律記進日誌。"""
+    """Run one git command; return (returncode, stdout+stderr). ⛔ Always logged."""
     p = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
     out = (p.stdout or "") + (p.stderr or "")

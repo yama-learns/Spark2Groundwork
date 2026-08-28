@@ -22,7 +22,7 @@
 
 ## 1. This project's incident table
 
-🔴 **Its home is `incidents/MY_INCIDENTS.md`.**
+🔴 **Its home is `my/MY_INCIDENTS.md`.**
 ⚠️ **Why it moved out:** that is **your data**, and this is a **framework file**.
 Framework files must be upgradable by wholesale replacement, ⛔ and replacing a file
 that holds your incident records deletes them.

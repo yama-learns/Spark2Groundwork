@@ -115,10 +115,16 @@ role's job.**
 
 ### 5.1 The governance role maintains the log; ⛔ you close the cases
 
-**Put one sentence in the governance role's standing instructions:**
+🔴 **Each role has its own start-up prompt. Paste the whole file into a new conversation:**
 
-> "In any round where the research or audit role points out a mistake worth remembering,
-> you log it in `incidents/MY_INCIDENTS.md` and tell me in your handover packet."
+| Role | Paste this |
+|---|---|
+| Governance | `prompts/START_governance_AI.md` |
+| Research | `prompts/START_research_AI.md` |
+| Audit | `prompts/START_audit_AI.md` |
+
+**Logging incidents is already written into the governance role's file** —
+**⛔ you do not need to say it again yourself.**
 
 ⚠️ **Changing the status to "handled" is still yours alone.**
 **Same reason as the ledgers: if a role can declare its own case closed, that column stops
@@ -126,7 +132,7 @@ meaning anything.**
 
 ### 5.2 A second use for the audit role: finding the pattern
 
-**About every ten rounds, hand the whole of `incidents/MY_INCIDENTS.md` to the audit role and
+**About every ten rounds, hand the whole of `my/MY_INCIDENTS.md` to the audit role and
 ask:**
 
 > "Which of these incidents are actually the same mechanism wearing different clothes?
@@ -142,7 +148,7 @@ else.**
 **Fix the sequence:**
 
 ```
-Audit proposes → Governance assesses feasibility and cost → You decide → Governance writes it into RULES.md
+Audit proposes → Governance assesses feasibility and cost → You decide → Governance writes it into my/MY_RULES.md
 ```
 
 ⛔ **Never let the proposer approve their own proposal.**
@@ -161,17 +167,31 @@ three hands: someone proposed it, someone costed it, someone decided.**
 
 ## 6. Configuration
 
-Open `scripts/harness/framework_config.py` and state the write scopes:
+**Open `governance_config.json` in the project root** and state the write scopes:
 
-```python
+```json
 "write_scopes": {
-    "governance": ["governance", "policy", "scripts", "incidents",
-                   "file_index.md", "NEXT_SESSION_MEMO.md"],
-    "research":   ["corpus_md", "RESEARCH_MEMO.md"],
-    "audit":      ["scratch"],          # a sandbox; real reports go in handoffs/
-    "_shared":    ["handoffs"],
+  "governance": ["governance", "policy", "scripts", "my",
+                 "file_index.md", "NEXT_SESSION_MEMO.md"],
+  "research":   ["corpus_md", "RESEARCH_MEMO.md"],
+  "audit":      ["scratch"],
+  "_shared":    ["handoffs"]
 }
 ```
+
+⚠️ **Giving `audit` only a sandbox is deliberate: real reports go to `handoffs/` (`_shared`).**
+
+🔴 **⚠️ ⛔ Do not edit `scripts/harness/framework_config.py`.**
+**That is a framework file, replaced wholesale on upgrade — ⛔ settings changed there
+disappear, and nothing tells you.**
+**⚠️ `governance_config.json` is on the upgrade tool's never-replace list.**
+
+⛔ **A misspelled key is not silently absorbed**: the sensor FAILs and names the closest valid key.
+
+🔴 **`scratch/` does not come with the framework — ⛔ you create it yourself.**
+**Just make a folder called `scratch` at the top level of your project.**
+⚠️ **Leaving it out is deliberate: `scratch/` is defined as the place that is not under
+version control, ⛔ and a sandbox that is under version control is no longer a sandbox.**
 
 ⚠️ **The audit role must have a sandbox (`scratch/`).**
 **If you ask it to run adversarial tests but give it nowhere to make a mess,

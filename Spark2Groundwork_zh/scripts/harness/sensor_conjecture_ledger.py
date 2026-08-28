@@ -37,10 +37,10 @@ from pathlib import Path
 
 LEDGER_NAME = CFG["conjecture_ledger"]
 
-# ⚠️ **單一定義處：`ledgers/Conjecture_Ledger.md` §0.1。本表須與它同步。**
+# ⚠️ **單一定義處：`governance/CONJECTURE_LEDGER_SPEC.md` §0.1。本表須與它同步。**
 #
 # 🔴 **修正（本輪，移植至英文版時發現）：** 本集合原本只有 🔵🟡🟢🔴 四種，
-#    而台帳 §0.1 定義的是**六種**——於是一筆**正確除役（⚫）或正確休眠（🟤）**的猜想
+#    而 `governance/CONJECTURE_LEDGER_SPEC.md` §0.1 定義的是**六種**——於是一筆**正確除役（⚫）或正確休眠（🟤）**的猜想
 #    會被判 `CONJECTURE_STATUS_INVALID` FAIL。**那是 `R-19` 明文禁止的假陽性。**
 #
 # ⚠️ **兩個缺陷互相遮蔽：** 舊碼在狀態不合法時 `continue`，
@@ -201,13 +201,13 @@ def main() -> int:
             declared = fields.get("填不出來的理由", "")
             if is_placeholder(falsif) and not is_placeholder(declared):
                 # 🔴 **「刻意留白並寫下理由」與「欄位是空的」是兩種狀態，訊息必須說出是哪一種。**
-                #    台帳 §0.3 第 1 條逐字寫著「填『—』不會比亂填更糟，這是刻意設計的」，
+                #    `governance/CONJECTURE_LEDGER_SPEC.md` §0.3 第 1 條逐字寫著「填『—』不會比亂填更糟，這是刻意設計的」，
                 #    而舊訊息對這種填法印的是「反證條件為空」——**與忘記填一字不差。**
                 #    ⚠️ 後果很難察覺：**下一輪的人看到「為空」，很可能就去把它填上**，
-                #    而那正是 §0.3 第 1 條想擋的行為。
+                #    而那正是 `governance/CONJECTURE_LEDGER_SPEC.md` §0.3 第 1 條想擋的行為。
                 findings.append(("WARN", "FALSIFICATION_DECLARED_UNFALSIFIABLE",
                                  f"{cid}（{STATUS_NAME[status]}）已聲明填不出反證條件並附理由"
-                                 f"——待人裁決是否除役（⚫）或切分（見台帳 §0.1b）"))
+                                 f"——待人裁決是否除役（⚫）或切分（見 `governance/CONJECTURE_LEDGER_SPEC.md` §0.1b）"))
                 continue
             if is_placeholder(falsif):
                 lvl, why = ("WARN", "反證條件為空") if status == "🔵" else \

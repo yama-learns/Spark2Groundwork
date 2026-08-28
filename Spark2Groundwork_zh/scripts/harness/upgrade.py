@@ -70,8 +70,12 @@ MSG = {
 下一步：
   1. 按「查看變更」按鈕，看這一包換掉了什麼
   2. 跑 `python3 scripts/harness/run_all_sensors.py` 確認還是綠的
-  3. ⚠️ **若你之前手動改過這一包裡的檔案，那些改動現在不見了**——
-     用「查看變更」把它們找回來（檢查點還在）""",
+  3. 🔴 **跑 `python3 scripts/harness/tool_my_index.py` 重新產生你的文件索引**
+     ⚠️ 升級動了框架檔案，索引因此過期——⛔ 不重跑的話下一輪會看到 MY_INDEX_STALE
+  4. ⚠️ **若你之前手動改過這一包裡的檔案，那些改動現在不見了**——
+     用「查看變更」把它們找回來（檢查點還在）
+  5. ⚠️ **框架若新增了工作守則，`my/MY_RULES.md` 會少幾條**——
+     跑 `python3 scripts/harness/tool_sync_my_rules.py` 把原句補進去""",
  "apply_needs_target": "[FAIL] 請指定要換掉哪一個，例如：upgrade.py apply governance",
 }
 
@@ -81,14 +85,26 @@ MSG = {
 #    **包含使用者自己開的資料夾（筆記、圖表、投稿版本……），⛔ 那些名字不可能事先列舉。**
 #    ⚠️ 成對樣本見 `run_selftest.py` 的 `upgrade_case()`：
 #    **拿一個工具沒聽過的資料夾當目標，必須被拒絕，且內容原封不動。**
-FRAMEWORK_DIRS = ("governance", "policy", "profiles", "prompts", "scripts")
-FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md")
+# ⚠️ **v1.4.1 補進 `docs` 與六個啟動器。**
+#    🔴 **它們一直是框架擁有的東西，⛔ 卻不在可替換清單上——
+#    意思是：v1.3.0 修好的七處說明圖跑版，⛔ 送不到任何一個既有專案。**
+#    ⚠️ **這一筆是 `tool_my_index.py` 上線後第一次執行就抓到的：
+#    它把「框架⛔ 不擁有的東西」列出來，而 `docs/` 與六個按鈕出現在那份清單裡。**
+FRAMEWORK_DIRS = ("governance", "policy", "profiles", "prompts", "scripts", "docs")
+FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md",
+                   "查看變更.bat", "查看變更.command",
+                   "檢查更新.bat", "檢查更新.command",
+                   "記錄快照.bat", "記錄快照.command")
+# 🔴 **`.gitignore` 與 `.gitattributes` 刻意⛔ 不列在上面。**
+#    ⚠️ **它們是混合所有權：框架給了預設值，⛔ 而使用者會往裡面加自己的規則。**
+#    **⇒ 依憲章 §6.4，⛔ 整包替換會刪掉使用者加的那幾行。**
+#    ⛔ **已知代價：框架日後若改了預設忽略規則，⛔ 送不到既有專案。⚠️ 寫在這裡，不留白。**
 # ⚠️ **這一份⛔ 不是保護機制。** 保護機制是上面那兩份「可替換清單」。
 #    **本清單唯一的用途，是在使用者不小心把常見的自有資料當成升級目標時，
 #    給他一句看得懂的錯誤訊息**，而不是通用的「這不是可替換項目」。
 #    ⛔ **不要把它改成主要防線**——**那會讓沒列在這裡的資料夾看起來像是不受保護的。**
 NEVER_TOUCH = ("PROJECT.md", "ledgers", "corpus", "corpus_md", "handoffs",
-               "incidents", "NEXT_SESSION_MEMO.md", "governance_config.json")
+               "my", "NEXT_SESSION_MEMO.md", "governance_config.json")
 VERSION_FILE = "_VERSION"
 
 

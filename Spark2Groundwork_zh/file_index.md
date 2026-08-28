@@ -4,6 +4,11 @@
 
 > ⚠️ **本索引不是權威源。** 內容以檔案本身為準。
 > **以索引代替查證就是「索引當權威」家族本身。**
+>
+> 🔴 **⛔ 本檔會被升級整包覆蓋。**
+> **⚠️ 你自己的文件⛔ 不要登記在這裡。**
+> 🔴 **它們的索引是 `my/MY_INDEX.md`**——那一份由程式產生，升級⛔ 永不替換。
+> **跑 `python scripts/harness/tool_my_index.py` 重新產生；說明寫在 `my/MY_INDEX_notes.json`。**
 
 ---
 
@@ -28,14 +33,20 @@
 | 感測器變更三關 ／ 誤報處置 ／ 退出碼 | `governance/WORKFLOW_CONSTITUTION.md` §7 |
 | 全部工作守則（`R-xx`） | `governance/RULES.md` |
 | 失效家族表 | `governance/Incident_Log.md` §2 |
-| 猜想六狀態 ／ 除役與休眠門檻 | `ledgers/Conjecture_Ledger.md` §0 |
-| 主張登錄範圍 ／ 錨點四規則 | `ledgers/Claim_Ledger.md` §0–§1 |
+| 猜想六狀態 ／ 除役與休眠門檻 | `governance/CONJECTURE_LEDGER_SPEC.md` §0 |
+| 主張登錄範圍 ／ 錨點四規則 | `governance/CLAIM_LEDGER_SPEC.md` §0–§1 |
 | **錨點正規化函式** | `scripts/harness/anchor_norm.py` |
-| **所有感測器的路徑設定** | `scripts/harness/framework_config.py` |
+| **感測器的路徑與 glob 設定** | `scripts/harness/framework_config.py`（⚠️ 升級時整包替換） |
+| 🔴 **AI 的寫入權限設定** | 🔴 **`governance_config.json`（專案根目錄，⛔ 升級永不替換）** |
+| **本專案自己的工作守則** | 🔴 **`my/MY_RULES.md`**（`P-xx`；框架規則的副本在其 §1） |
+| 🔴 **你自己的文件索引** | 🔴 **`my/MY_INDEX.md`**（程式產生）＋ `my/MY_INDEX_notes.json`（說明） |
+| **主張台帳的欄位與硬性規則** | `governance/CLAIM_LEDGER_SPEC.md` |
+| **猜想台帳的狀態與門檻** | `governance/CONJECTURE_LEDGER_SPEC.md` |
+| **一份文件只能有一個主人** | `governance/WORKFLOW_CONSTITUTION.md` §6.4 |
 | **退出碼語意的機械實作** | `scripts/harness/_common.py`（`emit`）——⚠️ **語意的定義處是憲章 §7.4，這裡是它的唯一實作** |
 | 交接封包規格 | `policy/HANDOFF.md` |
 | **專案身分、值得做嗎、倫理紅線、檢索關鍵詞** | 🔴 **`PROJECT.md`（根目錄，使用者唯一需親筆的檔案）** |
-| **本專案實際發生過的事故** | `incidents/MY_INCIDENTS.md` |
+| **本專案實際發生過的事故** | `my/MY_INCIDENTS.md` |
 | **AI 寫入權限由誰決定** | `governance/WORKFLOW_CONSTITUTION.md` §6.3 |
 | **治理的成本上限與三問稽核** | `governance/WORKFLOW_CONSTITUTION.md` §10 |
 | **操作性目錄**（`scratch/`／`archive/`／`_to_delete/`） | `governance/WORKFLOW_CONSTITUTION.md` §6.2 |
@@ -75,7 +86,11 @@ python scripts/harness/run_selftest.py
 | `sensor_reference_integrity.py` | **被引用的檔案存不存在**（含 `.py`／`.sh` 檔頭） |
 | `sensor_clause_sync.py` | **被抄到別處的條款清單，是否仍與定義處相同**（`R-24` × 憲章 §3.2 的產物） |
 | `anchor_norm.py` | 正規化函式（**單一定義處**） |
-| `framework_config.py` | 路徑設定（**單一定義處**） |
+| `framework_config.py` | 路徑與 glob 設定（**單一定義處**） |
+| `sensor_my_rules.py` | 🔴 **`my/MY_RULES.md` 是否涵蓋框架的每一條規則** |
+| `tool_sync_my_rules.py` | 把框架新增的規則原句補進 `my/MY_RULES.md`（**不是感測器**） |
+| `sensor_my_index.py` | 🔴 **`my/MY_INDEX.md` 是不是過期的；說明有沒有指向不存在的檔案** |
+| `tool_my_index.py` | 產生 `my/MY_INDEX.md`（**不是感測器**）——判準是「框架⛔ 不擁有的每一樣東西」 |
 | `tool_pdf_to_md.py` | PDF → Markdown 程式化提取（環②的語料庫來源，**不是感測器**） |
 | `checkpoint.py` | 人工／AI 檢查點的**唯一定義處**（`.bat`／`.command` 只是薄殼） |
 | `review_changes.py` | 「上次我看過之後改了什麼」的**唯一定義處** |

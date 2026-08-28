@@ -235,9 +235,30 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
 
 scope_case("寫入 deny 範圍須 FAIL", ["ledgers/Claim_Ledger.md"], 1, "WRITE_TO_DENIED_PATH",
            scopes={"governance": ["governance", "policy"]})
-scope_case("改 T0 須 FAIL（T0 自 t0_docs 併入 deny，⛔ 不在 deny 裡重寫）",
+# 🔴 **D1 的成對樣本（v1.4.1）。**
+#    ⚠️ **舊版把 `t0_docs` 在程式裡無條件併進 `denied`，於是設定關不掉 T0 的保護——
+#    而 `framework_config.py` 的註解同時寫著「治理 Agent 可以維護它們」。**
+#    **⛔ 下面兩項必須同時成立，缺一都代表回到了舊行為。**
+scope_case("deny 含 T0 時，改 T0 須 FAIL",
            ["governance/AGENTS.md"], 1, "WRITE_TO_DENIED_PATH",
-           scopes={"governance": ["governance", "policy"]})
+           scopes={"governance": ["governance", "policy"]},
+           deny=["ledgers", "governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md"])
+scope_case("🔴 deny ⛔ 不含 T0 時，改 T0 ⛔ 不得 FAIL（設定關得掉）",
+           ["governance/AGENTS.md"], 0,
+           scopes={"governance": ["governance", "policy"]},
+           deny=["ledgers"], forbid=("WRITE_TO_DENIED_PATH",))
+
+# 🔴 **D2 的成對樣本（v1.4.1）。**
+#    ⚠️ **舊版在 `write_scopes` 為空時整段跳過，⛔ 連 `deny` 一起跳過——
+#    而 `PROFILE_solo.md` 要求單人專案把它留空。於是單人專案的 `deny` 從來沒有生效過。**
+#    ⛔ **判準是 WARN ＋ 列名，⛔ 不是 FAIL**：主持人本人改台帳是正常的（`R-19`），
+#    ⛔ 但也不得靜默（`R-22`）。
+scope_case("🔴 單人專案改台帳：須列出，⛔ 但不得 FAIL",
+           ["ledgers/Claim_Ledger.md"], 0, "DENIED_PATH_TOUCHED_UNATTRIBUTED",
+           scopes={}, forbid=("WRITE_TO_DENIED_PATH", "WRITE_OUT_OF_SCOPE"))
+scope_case("單人專案改一般檔案：⛔ 不得出現那筆 WARN",
+           ["policy/SOURCES.md"], 0, scopes={},
+           forbid=("DENIED_PATH_TOUCHED_UNATTRIBUTED",))
 scope_case("_human 涵蓋時不誤報，但豁免筆數須印出",
            ["ledgers/Claim_Ledger.md"], 0, "_human", forbid=("WRITE_TO_DENIED_PATH",))
 scope_case("範圍內的變更不誤報", ["policy/SOURCES.md"], 0,
@@ -430,6 +451,355 @@ def upgrade_case():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+
+
+# ── D3／D6 的成對樣本（v1.4.1）──────────────────────────────
+# 🔴 **`my/MY_RULES.md` 是框架規則的副本，⛔ 而副本不能沒有守望者。**
+#    ⚠️ **「同一個事實有兩份拷貝，而只有一份會被更新」是失效家族的軸二本身。**
+def my_rules_case(desc, rules, my_rules, want_code, needle=None, forbid=()):
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_myrules_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        (tmp / "my").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "governance/RULES.md").write_text(rules, encoding="utf-8")
+        if my_rules is not None:
+            (tmp / "my/MY_RULES.md").write_text(my_rules, encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_my_rules.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        banned = [c for c in forbid if c in out]
+        why = []
+        if r.returncode != want_code:
+            why.append("期望 exit " + str(want_code) + "，實得 " + str(r.returncode))
+        if needle and needle not in out:
+            why.append("輸出未含 " + needle)
+        if banned:
+            why.append("⛔ 誤報：" + "、".join(banned))
+        if why:
+            print("  ❌ " + desc + "（" + "；".join(why) + "）"); bad += 1
+        else:
+            print("  ✅ " + desc); ok += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+_FW = "## A\n\n**R-05** 甲。\n**R-06** 乙。\n"
+_HDR = "# 我的規則\n\n## 1. 框架規則\n\n"
+_TAIL = "\n<!-- FRAMEWORK_RULES_END -->\n\n---\n\n## 2. 本專案自訂規則\n"
+
+my_rules_case("公版有而 MY_RULES 沒有的條，須 FAIL", _FW,
+              _HDR + "**R-05** 甲。\n" + _TAIL, 1, "RULE_MISSING_IN_MY")
+my_rules_case("兩邊一致時⛔ 不得誤報", _FW,
+              _HDR + "**R-05** 甲。\n**R-06** 乙。\n" + _TAIL, 0,
+              forbid=("RULE_MISSING_IN_MY", "RULE_TEXT_DRIFT", "OVERRIDE_WITHOUT_REASON"))
+my_rules_case("正文被改而未標覆寫，須 FAIL", _FW,
+              _HDR + "**R-05** 甲甲甲。\n**R-06** 乙。\n" + _TAIL, 1, "RULE_TEXT_DRIFT")
+# 🔴 **這一項是本感測器自己的回歸測試。**
+#    ⚠️ **首版的判準是「標記那一行後面有字」，於是
+#    `**R-05** [本專案覆寫] 甲。` 會通過——⛔ 因為那些字是條文本身，不是理由。**
+my_rules_case("🔴 覆寫標記寫在條文那一行，須 FAIL（⛔ 不得當成有理由）", _FW,
+              _HDR + "**R-05** [本專案覆寫] 甲甲。\n**R-06** 乙。\n" + _TAIL, 1,
+              "RULE_TEXT_DRIFT")
+my_rules_case("覆寫標記自成一行且有理由時，⛔ 不得 FAIL", _FW,
+              _HDR + "**R-05** 甲甲。\n[本專案覆寫] 本專案的文本另有需求。\n"
+              + "**R-06** 乙。\n" + _TAIL, 0,
+              forbid=("RULE_TEXT_DRIFT", "OVERRIDE_WITHOUT_REASON"))
+my_rules_case("MY_RULES 不存在時須 INCOMPLETE（⛔ 不是 PASS）", _FW, None, 2,
+              "MY_RULES_MISSING")
+
+
+# ── D6：未知設定鍵⛔ 不得被靜默吃掉（v1.4.1）──────────────────
+# ⚠️ **舊版是 `cfg.update(data)`：`deny` 打成 `denny` ⛔ 不會有任何反應，
+#    而使用者相信自己設定過了。⛔ 「靜默過濾」家族發生在設定的入口。**
+def config_key_case(desc, cfg_obj, want_ok, needle=None):
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_cfgkey_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "governance_config.json").write_text(
+            json.dumps(cfg_obj, ensure_ascii=False), encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        # ⚠️ **判準是「有沒有報未知鍵」，⛔ 不是退出碼。**
+        #    🔴 **實測（本測試自己抓到）：樣本目錄沒有 git repo，
+        #    於是合法設定那兩項會得到 exit 2（`SCOPE_UNCHECKABLE`）——
+        #    ⛔ 那是對的行為，而以退出碼當判準會把它誤判成失敗。**
+        flag = "不認得的設定鍵" in out
+        good = (not flag) if want_ok else flag
+        if needle and needle not in out:
+            good = False
+        if good:
+            print("  ✅ " + desc); ok += 1
+        else:
+            print("  ❌ " + desc + "（exit " + str(r.returncode) + "）"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+config_key_case("🔴 打錯的設定鍵須報錯並建議正確鍵名",
+                {"denny": ["ledgers"]}, False, "deny")
+config_key_case("正確的設定鍵⛔ 不得報錯", {"deny": ["ledgers"]}, True)
+config_key_case("底線開頭的鍵是給人看的，⛔ 不得報錯",
+                {"_說明": "給人看的", "deny": ["ledgers"]}, True)
+
+
+# ── 🔴 git 回報成功卻沒有輸出（v1.4.1，主持人的機器實測）──────────
+# **`subprocess.run(..., capture_output=True, text=True)` 回 exit 0 而 stdout 是 `None`，
+#  於是 `top.stdout.strip()` 丟 AttributeError，整支感測器崩潰。**
+# ⚠️ **這個缺陷從 v1.0.0 起就在，而它到 v1.4.1 才第一次現形**——
+#    🔴 **舊版在 `write_scopes` 為空時整段跳過，而單人專案一律留空：
+#    ⛔ 那段程式碼在任何真實使用者的機器上從來沒有執行過。**
+# ⛔ **本測試⛔ 不重現「stdout 是 None」（那要看平台），
+#    它重現的是同一條分支：git 說成功而沒有給東西。⚠️ 兩者走同一個判準。**
+def git_blind_case():
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_gitblind_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        shim = tmp / "bin"
+        shim.mkdir()
+        if sys.platform == "win32":
+            (shim / "git.bat").write_text("@echo off\r\nexit /b 0\r\n", encoding="utf-8")
+        else:
+            g = shim / "git"
+            g.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            g.chmod(0o755)
+        env = dict(os.environ, PYTHONIOENCODING="utf-8",
+                   PATH=str(shim) + os.pathsep + os.environ.get("PATH", ""))
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        crashed = "Traceback" in out
+        # 🔴 **⛔ 「沒有輸出」⛔ 不得被讀成「專案位於另一個 repo 之內」**——
+        #    ⚠️ 那是一個讀起來合理而且錯的診斷（`pathlib.Path("")` ＝ 當前目錄）。
+        wrong_dx = "另一個 repo" in out
+        good = (not crashed) and (not wrong_dx) and r.returncode == 2 \
+            and "SCOPE_UNCHECKABLE" in out
+        if good:
+            print("  ✅ 🔴 git 說成功卻沒輸出：判 INCOMPLETE，⛔ 不崩潰、⛔ 不誤診"); ok += 1
+        else:
+            why = []
+            if crashed:
+                why.append("⛔ 崩潰了")
+            if wrong_dx:
+                why.append("⛔ 誤診為「位於另一個 repo」")
+            if r.returncode != 2:
+                why.append("期望 exit 2，實得 " + str(r.returncode))
+            print("  ❌ git 說成功卻沒輸出（" + "；".join(why) + "）"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+git_blind_case()
+
+
+# ── 🔴 專案位於 repo 的子目錄（v1.4.1）────────────────────────
+# **本框架自己的倉庫就是這個形狀：兩個版本各是一個子目錄。**
+# ⚠️ **舊版一律拒絕回報並判 INCOMPLETE——⛔ 那會是一盞永遠亮著的燈（`R-19`）。**
+# 🔴 **兩項必須同時成立：子樹內的變更看得到，⛔ 子樹外的變更看不到。**
+#    **⛔ 只做第一項就是「對著錯誤的 repo 下判定」，那正是舊版要擋的東西。**
+def subrepo_case():
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_subrepo_"))
+    try:
+        proj = tmp / "edition_zh"
+        (proj / "governance").mkdir(parents=True, exist_ok=True)
+        (proj / "policy").mkdir(parents=True, exist_ok=True)
+        (proj / "ledgers").mkdir(parents=True, exist_ok=True)
+        (tmp / "別的東西").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (proj / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (proj / "policy/SOURCES.md").write_text("x\n", encoding="utf-8")
+        (proj / "ledgers/Claim_Ledger.md").write_text("x\n", encoding="utf-8")
+        (tmp / "別的東西/note.md").write_text("x\n", encoding="utf-8")
+        (proj / "governance_config.json").write_text(json.dumps(
+            {"write_scopes": {"governance": ["governance", "policy"]},
+             "deny": ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
+        g = ["git", "-C", str(tmp)]
+        subprocess.run(["git", "init", "-q", str(tmp)], capture_output=True)
+        subprocess.run(g + ["add", "-A"], capture_output=True)
+        subprocess.run(g + ["-c", "user.name=t", "-c", "user.email=t@t",
+                            "commit", "-q", "-m", "base"], capture_output=True)
+        # 子樹內動一筆 deny、子樹外動一筆
+        (proj / "ledgers/Claim_Ledger.md").write_text("changed\n", encoding="utf-8")
+        (tmp / "別的東西/note.md").write_text("changed\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(proj)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        saw_inside = "WRITE_TO_DENIED_PATH" in out and "ledgers/Claim_Ledger.md" in out
+        saw_outside = "別的東西" in out
+        refused = "SCOPE_UNCHECKABLE" in out
+        if saw_inside and not saw_outside and not refused:
+            print("  ✅ 🔴 專案在 repo 子目錄：看得到子樹內，⛔ 看不到子樹外"); ok += 1
+        else:
+            why = []
+            if refused:
+                why.append("⛔ 仍然拒絕回報")
+            if not saw_inside:
+                why.append("⛔ 子樹內的 deny 變更沒被抓到")
+            if saw_outside:
+                why.append("🔴 ⛔ 回報了子樹外的檔案")
+            print("  ❌ 專案在 repo 子目錄（" + "；".join(why) + "）"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+subrepo_case()
+
+
+# ── 🔴 `subprocess.run` 的解碼必須指定，⛔ 不得靠系統地區編碼（v1.4.1）────
+#
+# **實測（繁中 Windows、Python 3.14.2）：`text=True` 而沒有 `encoding` 時，
+#  Python 以 `cp950` 解 git 的 UTF-8 輸出 → `UnicodeDecodeError`。**
+# 🔴 **而它在 `subprocess` 的讀取執行緒裡爆掉：執行緒死了、例外不會傳出來、
+#    `communicate()` 回 `None`——主程式看到的是「exit 0，而且沒有輸出」。**
+# ⛔ **「成功但沒東西」與「成功且真的沒東西」在那裡長得一模一樣。**
+#
+# ⚠️ **本測試是**靜態檢查**：它讀 harness 的原始碼，⛔ 不執行它們。**
+#    🔴 **理由：這個缺陷只在非 UTF-8 地區的機器上會發生，
+#    ⛔ 而自測要在任何機器上都跑得出同一個結論。**
+#    **⛔ 一個「在我的機器上測不出來」的判準，等於沒有判準。**
+def subprocess_encoding_case():
+    global ok, bad
+    import ast as _ast
+    offenders = []
+    for f in sorted(HERE.glob("*.py")):
+        if f.name.startswith("_selftest"):
+            continue
+        try:
+            tree = _ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError as e:
+            offenders.append(f"{f.name}: ⛔ 無法解析（{e}）")
+            continue
+        for node in _ast.walk(tree):
+            if not isinstance(node, _ast.Call):
+                continue
+            fn = node.func
+            if not (isinstance(fn, _ast.Attribute) and fn.attr == "run"
+                    and isinstance(fn.value, _ast.Name) and fn.value.id == "subprocess"):
+                continue
+            kw = {k.arg for k in node.keywords if k.arg}
+            decodes = "text" in kw or "universal_newlines" in kw
+            if decodes and "encoding" not in kw:
+                offenders.append(f"{f.name}:{node.lineno}")
+    if not offenders:
+        # ⚠️ **分母要印出來**（`R-35`）：「0 筆」是盤點的結果，⛔ 不是沒有盤點。
+        n = len([f for f in HERE.glob("*.py")])
+        print(f"  ✅ 🔴 subprocess 解碼一律指定 encoding（掃了 {n} 支，0 筆例外）"); ok += 1
+    else:
+        print("  ❌ 有 subprocess.run 會用系統地區編碼解碼：" + "、".join(offenders)); bad += 1
+
+
+subprocess_encoding_case()
+
+
+# ── 🔴 你的文件索引（v1.4.1）──────────────────────────────
+# **實測個案：某專案套用框架後就不再維護自己的檔案索引了。**
+# 🔴 **關鍵性質：判準是「框架⛔ 不擁有的每一樣東西」，⛔ 不是一份要收哪些的清單——
+#    所以使用者自己發明的資料夾必須自動出現在索引裡（`R-21`）。**
+def my_index_case(desc, build, want_code, needle=None, forbid=(), regen=True,
+                  in_index=None):
+    """⚠️ `needle` 查的是**感測器的輸出**；`in_index` 查的是**產生出來的索引檔**。
+
+    🔴 **這兩者⛔ 不是同一個東西，而首版把它們當成同一個：**
+    **感測器只印統計，⛔ 不印檔案清單——於是「某個檔有沒有進索引」用 `needle` 永遠查不到。**
+    ⚠️ **自測當場抓到，⛔ 而它抓到的是我寫的判準對錯了對象。**
+    """
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_myindex_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        (tmp / "my").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "PROJECT.md").write_text("# p\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        if regen:
+            subprocess.run([PY, str(HERE / "tool_my_index.py")], cwd=str(tmp),
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        build(tmp)
+        r = subprocess.run([PY, str(HERE / "sensor_my_index.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        banned = [c for c in forbid if c in out]
+        why = []
+        if r.returncode != want_code:
+            why.append("期望 exit " + str(want_code) + "，實得 " + str(r.returncode))
+        if needle and needle not in out:
+            why.append("輸出未含 " + needle)
+        if in_index is not None:
+            idxf = tmp / "my/MY_INDEX.md"
+            body = idxf.read_text(encoding="utf-8") if idxf.is_file() else ""
+            if in_index not in body:
+                why.append("索引檔未含 " + in_index)
+        if banned:
+            why.append("⛔ 誤報：" + "、".join(banned))
+        if why:
+            print("  ❌ " + desc + "（" + "；".join(why) + "）"); bad += 1
+        else:
+            print("  ✅ " + desc); ok += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# ⚠️ **`tool_my_index.py` 由 `HERE` 執行，而它以自己的位置推專案根目錄——
+#    ⛔ 所以樣本不能靠 cwd。改為在樣本目錄裡放一份薄殼呼叫。**
+def _gen(tmp):
+    import subprocess
+    (tmp / "scripts" / "harness").mkdir(parents=True, exist_ok=True)
+    for f in ("tool_my_index.py", "framework_config.py", "_common.py", "upgrade.py"):
+        (tmp / "scripts" / "harness" / f).write_bytes((HERE / f).read_bytes())
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    subprocess.run([PY, str(tmp / "scripts/harness/tool_my_index.py")],
+                   capture_output=True, text=True,
+                   encoding="utf-8", errors="replace", env=env)
+
+
+my_index_case("索引還沒產生過須 INCOMPLETE（⛔ 不是 PASS）",
+              lambda t: None, 2, "MY_INDEX_MISSING", regen=False)
+my_index_case("剛產生的索引⛔ 不得誤報",
+              _gen, 0, forbid=("MY_INDEX_STALE", "INDEX_NOTE_DANGLING",
+                               "MY_INDEX_MISSING"), regen=False)
+my_index_case("🔴 使用者自己開的資料夾必須出現在索引裡（⛔ 不是白名單）",
+              lambda t: (_gen(t), (t / "deepresearch").mkdir(),
+                         (t / "deepresearch/草稿.md").write_text("x", encoding="utf-8"),
+                         _gen(t),
+                         None)[-1], 0, in_index="deepresearch/草稿.md",
+              forbid=("MY_INDEX_STALE",), regen=False)
+my_index_case("產生之後又多了一個檔：須報過期",
+              lambda t: (_gen(t),
+                         (t / "新東西.md").write_text("x", encoding="utf-8"),
+                         None)[-1], 1, "MY_INDEX_STALE", regen=False)
+my_index_case("說明指向不存在的檔案：須 FAIL",
+              lambda t: ((t / "my/MY_INDEX_notes.json").write_text(
+                             '{"沒有這個檔.md": "x"}', encoding="utf-8"),
+                         _gen(t), None)[-1], 1, "INDEX_NOTE_DANGLING", regen=False)
+my_index_case("說明檔壞掉：須 INCOMPLETE（⛔ 不得當成「沒有說明」）",
+              lambda t: (_gen(t),
+                         (t / "my/MY_INDEX_notes.json").write_text("{壞掉", encoding="utf-8"),
+                         None)[-1], 2, "INDEX_NOTES_UNREADABLE", regen=False)
 
 upgrade_case()
 

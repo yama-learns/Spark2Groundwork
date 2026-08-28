@@ -21,3 +21,19 @@ ledger's adjudication column: **if the AI can declare a thing finished, the colu
 > reconstructing them afterwards is filling in data from memory. **Blank is more useful than invented.**
 >
 > The purpose is not exculpation; it is to make "which task design induces which failure" checkable.
+
+---
+
+## This project's own failure families (**`MY-①`, `MY-②`, …**)
+
+🔴 **The numbering is ⛔ not shared with the framework.** The families in
+`governance/Incident_Log.md` §2 are ①②③…; **this section uses `MY-①`, `MY-②`, …** —
+⚠️ **mix the two and nobody can later tell whose a given entry is.**
+
+⛔ **⚠️ And ⛔ not `P-①` either: `P-xx` already means a project *rule* in `MY_RULES.md`.**
+🔴 **Two different things sharing one prefix is the same defect one level down.**
+
+**(None yet. ⚠️ This "none" is the result of taking stock.)**
+
+> **When an incident earns family status:**
+> **the same shape happens a second time.** ⛔ A one-off with a freak cause stays in the table above.

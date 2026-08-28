@@ -215,6 +215,9 @@ xattr -dr com.apple.quarantine .
 ⛔ **不要全部都留。**
 一份沒有人維護的治理文件，比沒有那份文件更糟——**它會讓你以為有人在看。**
 
+⚠️ **若你選了多角色設定：** 請在專案根目錄自己建一個叫 `scratch` 的資料夾，
+**當作審計角色的沙盒。** ⛔ 它不隨框架附上——**`scratch/` 的定義就是「不進版本控制」。**
+
 ### 5.2 先跑自我測試
 
 ```
@@ -301,7 +304,7 @@ python3 scripts/harness/run_all_sensors.py
 
 ⛔ **不要把判斷標準調鬆。**
 正確的做法是修比對邏輯，並且**補上一個「這種情況不該報警」的測試樣本**。
-`governance/RULES.md` 裡有完整說明。
+`my/MY_RULES.md` 裡有完整說明（框架規則的副本在它的 §1）。
 
 ### 8.2 AI 會在最有把握的地方出錯
 
@@ -337,7 +340,7 @@ python3 scripts/harness/run_all_sensors.py
 以及 `README.md`、`SETUP.md`、`INITIALIZE_PROMPT.md`、`file_index.md` 四個檔案。
 
 ⛔ **除此之外的一切都不會被碰**——
-**包含 `PROJECT.md`、`ledgers/`、`corpus/`、`incidents/`，
+**包含 `PROJECT.md`、`ledgers/`、`corpus/`、`my/`，
 也包含你自己開的任何資料夾**（筆記、圖表、投稿版本，隨你怎麼開）。
 
 ⚠️ **這一點值得講清楚，因為它常被誤解：**

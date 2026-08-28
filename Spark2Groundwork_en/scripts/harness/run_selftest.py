@@ -255,9 +255,32 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
 
 scope_case("writing into deny FAILs", ["ledgers/Claim_Ledger.md"], 1, "WRITE_TO_DENIED_PATH",
            scopes={"governance": ["governance", "policy"]})
-scope_case("editing a T0 FAILs (folded in from t0_docs, never restated in deny)",
+# 🔴 **The paired sample for D1 (v1.4.1).**
+#    ⚠️ **The old code folded `t0_docs` into `denied` unconditionally, so no configuration
+#    could turn T0 protection off — while the comment in `framework_config.py` said
+#    "a governance agent may maintain them".**
+#    **⛔ Both of the following must hold; either one failing means the old behaviour is back.**
+scope_case("with T0 in deny, editing a T0 FAILs",
            ["governance/AGENTS.md"], 1, "WRITE_TO_DENIED_PATH",
-           scopes={"governance": ["governance", "policy"]})
+           scopes={"governance": ["governance", "policy"]},
+           deny=["ledgers", "governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md"])
+scope_case("🔴 with T0 ⛔ not in deny, editing a T0 must ⛔ NOT fail (it is switchable)",
+           ["governance/AGENTS.md"], 0,
+           scopes={"governance": ["governance", "policy"]},
+           deny=["ledgers"], forbid=("WRITE_TO_DENIED_PATH",))
+
+# 🔴 **The paired sample for D2 (v1.4.1).**
+#    ⚠️ **The old code skipped the whole block when `write_scopes` was empty, ⛔ `deny`
+#    included — and `PROFILE_solo.md` tells a solo project to leave it empty. So `deny`
+#    had never once been in effect in a solo project.**
+#    ⛔ **The verdict is WARN plus names, ⛔ not FAIL**: the principal editing their own
+#    ledger is normal (`R-19`), ⛔ and silence is not an option either (`R-22`).
+scope_case("🔴 solo project edits a ledger: must be listed, ⛔ must not FAIL",
+           ["ledgers/Claim_Ledger.md"], 0, "DENIED_PATH_TOUCHED_UNATTRIBUTED",
+           scopes={}, forbid=("WRITE_TO_DENIED_PATH", "WRITE_OUT_OF_SCOPE"))
+scope_case("solo project edits an ordinary file: ⛔ that WARN must not appear",
+           ["policy/SOURCES.md"], 0, scopes={},
+           forbid=("DENIED_PATH_TOUCHED_UNATTRIBUTED",))
 scope_case("covered by _human: no false alarm, and the count is printed",
            ["ledgers/Claim_Ledger.md"], 0, "_human", forbid=("WRITE_TO_DENIED_PATH",))
 scope_case("an in-scope change does not false-alarm", ["policy/SOURCES.md"], 0,
@@ -467,6 +490,355 @@ def upgrade_case():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+
+
+# ── Paired samples for D3 / D6 (v1.4.1) ────────────────────────
+# 🔴 **`my/MY_RULES.md` is a copy of the framework's rules, ⛔ and a copy cannot be unwatched.**
+#    ⚠️ **"One fact, two copies, only one updated" is failure axis two itself.**
+def my_rules_case(desc, rules, my_rules, want_code, needle=None, forbid=()):
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_myrules_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        (tmp / "my").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "governance/RULES.md").write_text(rules, encoding="utf-8")
+        if my_rules is not None:
+            (tmp / "my/MY_RULES.md").write_text(my_rules, encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_my_rules.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        banned = [c for c in forbid if c in out]
+        why = []
+        if r.returncode != want_code:
+            why.append("expected exit " + str(want_code) + ", got " + str(r.returncode))
+        if needle and needle not in out:
+            why.append("output lacks " + needle)
+        if banned:
+            why.append("⛔ false alarm: " + ", ".join(banned))
+        if why:
+            print("  ❌ " + desc + " (" + "; ".join(why) + ")"); bad += 1
+        else:
+            print("  ✅ " + desc); ok += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+_FW = "## A\n\n**R-05** alpha.\n**R-06** beta.\n"
+_HDR = "# My rules\n\n## 1. Framework rules\n\n"
+_TAIL = "\n<!-- FRAMEWORK_RULES_END -->\n\n---\n\n## 2. This project's own rules\n"
+
+my_rules_case("a framework rule missing from MY_RULES FAILs", _FW,
+              _HDR + "**R-05** alpha.\n" + _TAIL, 1, "RULE_MISSING_IN_MY")
+my_rules_case("identical copies ⛔ must not false-alarm", _FW,
+              _HDR + "**R-05** alpha.\n**R-06** beta.\n" + _TAIL, 0,
+              forbid=("RULE_MISSING_IN_MY", "RULE_TEXT_DRIFT", "OVERRIDE_WITHOUT_REASON"))
+my_rules_case("edited text with no override marker FAILs", _FW,
+              _HDR + "**R-05** alphaalpha.\n**R-06** beta.\n" + _TAIL, 1, "RULE_TEXT_DRIFT")
+# 🔴 **This one is this sensor's own regression test.**
+#    ⚠️ **The first criterion was "there is text after the marker", so
+#    `**R-05** [project override] alpha.` passed — ⛔ because that text is the clause itself.**
+my_rules_case("🔴 marker on the rule's own line FAILs (⛔ never counts as a reason)", _FW,
+              _HDR + "**R-05** [project override] alphaalpha.\n**R-06** beta.\n" + _TAIL, 1,
+              "RULE_TEXT_DRIFT")
+my_rules_case("marker on its own line with a reason ⛔ must not FAIL", _FW,
+              _HDR + "**R-05** alphaalpha.\n[project override] this project needs it tighter.\n"
+              + "**R-06** beta.\n" + _TAIL, 0,
+              forbid=("RULE_TEXT_DRIFT", "OVERRIDE_WITHOUT_REASON"))
+my_rules_case("a missing MY_RULES is INCOMPLETE (⛔ not a PASS)", _FW, None, 2,
+              "MY_RULES_MISSING")
+
+
+# ── D6: an unrecognised config key must ⛔ never be absorbed silently (v1.4.1) ──
+# ⚠️ **The old line was `cfg.update(data)`: misspell `deny` as `denny` and ⛔ nothing happens,
+#    while the user believes the setting took effect. ⛔ "Silent filtering" at the front door.**
+def config_key_case(desc, cfg_obj, want_ok, needle=None):
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_cfgkey_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "governance_config.json").write_text(
+            json.dumps(cfg_obj, ensure_ascii=False), encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        # ⚠️ **The criterion is "did it report an unknown key", ⛔ not the exit code.**
+        #    🔴 **Measured (this test caught it itself): the fixture has no git repo, so the
+        #    two valid-key cases exit 2 (`SCOPE_UNCHECKABLE`) — ⛔ which is correct behaviour,
+        #    and using the exit code as the criterion would call it a failure.**
+        flag = "does not recognise" in out
+        good = (not flag) if want_ok else flag
+        if needle and needle not in out:
+            good = False
+        if good:
+            print("  ✅ " + desc); ok += 1
+        else:
+            print("  ❌ " + desc + " (exit " + str(r.returncode) + ")"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+config_key_case("🔴 a misspelled key errors out and names the closest valid key",
+                {"denny": ["ledgers"]}, False, "deny")
+config_key_case("a valid key ⛔ must not error", {"deny": ["ledgers"]}, True)
+config_key_case("an underscore key is for people and ⛔ must not error",
+                {"_note": "for people", "deny": ["ledgers"]}, True)
+
+
+# ── 🔴 git reports success but produces no output (v1.4.1, measured on the principal's machine) ──
+# **`subprocess.run(..., capture_output=True, text=True)` returned exit 0 with `stdout` set to
+#  `None`, so `top.stdout.strip()` raised AttributeError and the whole sensor crashed.**
+# ⚠️ **The defect had been there since v1.0.0 and surfaced only in v1.4.1** —
+#    🔴 **the old code skipped the whole block when `write_scopes` was empty, and a solo
+#    project always leaves it empty: ⛔ that code had never run on a real user's machine.**
+# ⛔ **This test does ⛔ not reproduce "stdout is None" (that is platform-dependent);
+#    it reproduces the same branch: git said success and handed us nothing.**
+def git_blind_case():
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_gitblind_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        shim = tmp / "bin"
+        shim.mkdir()
+        if sys.platform == "win32":
+            (shim / "git.bat").write_text("@echo off\r\nexit /b 0\r\n", encoding="utf-8")
+        else:
+            g = shim / "git"
+            g.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            g.chmod(0o755)
+        env = dict(os.environ, PYTHONIOENCODING="utf-8",
+                   PATH=str(shim) + os.pathsep + os.environ.get("PATH", ""))
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        crashed = "Traceback" in out
+        # 🔴 **"no output" must ⛔ never be read as "the project sits inside another
+        #    repository"** — ⚠️ a diagnosis that reads plausibly and is wrong
+        #    (`pathlib.Path("")` is the current directory).
+        wrong_dx = "inside another repository" in out
+        good = (not crashed) and (not wrong_dx) and r.returncode == 2 \
+            and "SCOPE_UNCHECKABLE" in out
+        if good:
+            print("  ✅ 🔴 git says success with no output: INCOMPLETE, ⛔ no crash, ⛔ no misdiagnosis"); ok += 1
+        else:
+            why = []
+            if crashed:
+                why.append("⛔ crashed")
+            if wrong_dx:
+                why.append("⛔ misdiagnosed as 'inside another repository'")
+            if r.returncode != 2:
+                why.append("expected exit 2, got " + str(r.returncode))
+            print("  ❌ git says success with no output (" + "; ".join(why) + ")"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+git_blind_case()
+
+
+# ── 🔴 The project is a subdirectory of a repo (v1.4.1) ────────
+# **This framework's own repository has exactly that shape: each edition is a subdirectory.**
+# ⚠️ **The old code always refused to report and went INCOMPLETE — ⛔ a light always on (`R-19`).**
+# 🔴 **Both must hold: changes inside the subtree are seen, ⛔ changes outside are not.**
+#    **⛔ Doing only the first is "judging the wrong repo", which is what the old code feared.**
+def subrepo_case():
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_subrepo_"))
+    try:
+        proj = tmp / "edition_en"
+        (proj / "governance").mkdir(parents=True, exist_ok=True)
+        (proj / "policy").mkdir(parents=True, exist_ok=True)
+        (proj / "ledgers").mkdir(parents=True, exist_ok=True)
+        (tmp / "something_else").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (proj / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (proj / "policy/SOURCES.md").write_text("x\n", encoding="utf-8")
+        (proj / "ledgers/Claim_Ledger.md").write_text("x\n", encoding="utf-8")
+        (tmp / "something_else/note.md").write_text("x\n", encoding="utf-8")
+        (proj / "governance_config.json").write_text(json.dumps(
+            {"write_scopes": {"governance": ["governance", "policy"]},
+             "deny": ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
+        g = ["git", "-C", str(tmp)]
+        subprocess.run(["git", "init", "-q", str(tmp)], capture_output=True)
+        subprocess.run(g + ["add", "-A"], capture_output=True)
+        subprocess.run(g + ["-c", "user.name=t", "-c", "user.email=t@t",
+                            "commit", "-q", "-m", "base"], capture_output=True)
+        # one denied change inside the subtree, one change outside it
+        (proj / "ledgers/Claim_Ledger.md").write_text("changed\n", encoding="utf-8")
+        (tmp / "something_else/note.md").write_text("changed\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(proj)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        saw_inside = "WRITE_TO_DENIED_PATH" in out and "ledgers/Claim_Ledger.md" in out
+        saw_outside = "something_else" in out
+        refused = "SCOPE_UNCHECKABLE" in out
+        if saw_inside and not saw_outside and not refused:
+            print("  ✅ 🔴 project inside a repo subdirectory: subtree seen, ⛔ outside not seen"); ok += 1
+        else:
+            why = []
+            if refused:
+                why.append("⛔ still refused to report")
+            if not saw_inside:
+                why.append("⛔ the denied change inside the subtree was missed")
+            if saw_outside:
+                why.append("🔴 ⛔ reported a file outside the subtree")
+            print("  ❌ project inside a repo subdirectory (" + "; ".join(why) + ")"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+subrepo_case()
+
+
+# ── 🔴 `subprocess.run` decoding must be stated, ⛔ never left to the locale (v1.4.1) ──
+#
+# **Measured (Traditional-Chinese Windows, Python 3.14.2): with `text=True` and no
+#  `encoding`, Python decoded git's UTF-8 output as `cp950` → `UnicodeDecodeError`.**
+# 🔴 **And it blew up inside `subprocess`'s reader thread: the thread died, the exception
+#    never propagated, and `communicate()` returned `None` — so the caller saw
+#    "exit 0 and no output".**
+# ⛔ **"Succeeded but produced nothing" and "succeeded and genuinely had nothing"
+#    look identical there.**
+#
+# ⚠️ **This test is a **static** check: it reads the harness's source, ⛔ it does not run it.**
+#    🔴 **Why: the defect only occurs on a machine with a non-UTF-8 locale, ⛔ and a
+#    self-test has to reach the same conclusion on every machine.**
+#    **⛔ A criterion that cannot fire on my machine is not a criterion.**
+def subprocess_encoding_case():
+    global ok, bad
+    import ast as _ast
+    offenders = []
+    for f in sorted(HERE.glob("*.py")):
+        if f.name.startswith("_selftest"):
+            continue
+        try:
+            tree = _ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError as e:
+            offenders.append(f"{f.name}: ⛔ could not parse ({e})")
+            continue
+        for node in _ast.walk(tree):
+            if not isinstance(node, _ast.Call):
+                continue
+            fn = node.func
+            if not (isinstance(fn, _ast.Attribute) and fn.attr == "run"
+                    and isinstance(fn.value, _ast.Name) and fn.value.id == "subprocess"):
+                continue
+            kw = {k.arg for k in node.keywords if k.arg}
+            decodes = "text" in kw or "universal_newlines" in kw
+            if decodes and "encoding" not in kw:
+                offenders.append(f"{f.name}:{node.lineno}")
+    if not offenders:
+        # ⚠️ **Print the denominator** (`R-35`): "0" is the result of taking stock,
+        #    ⛔ not the absence of stocktaking.
+        n = len([f for f in HERE.glob("*.py")])
+        print(f"  ✅ 🔴 every subprocess decode names its encoding ({n} files scanned, 0 exceptions)"); ok += 1
+    else:
+        print("  ❌ subprocess.run calls that would decode with the locale: " + ", ".join(offenders)); bad += 1
+
+
+subprocess_encoding_case()
+
+
+# ── 🔴 Your own file index (v1.4.1) ────────────────────────────
+# **Measured case: a project adopted the framework and stopped maintaining its own file index.**
+# 🔴 **The key property: the criterion is "everything the framework does ⛔ not own",
+#    ⛔ never a list of what to include — so a folder the user invents must appear in the
+#    index automatically (`R-21`).**
+def my_index_case(desc, build, want_code, needle=None, forbid=(), regen=True,
+                  in_index=None):
+    """⚠️ `needle` checks **the sensor's output**; `in_index` checks **the generated index**.
+
+    🔴 **They are ⛔ not the same thing, and the first version treated them as one:**
+    **the sensor prints counts, ⛔ never the file list — so "is this file in the index"
+    could never be answered by `needle`.**
+    ⚠️ **The self-test caught it, ⛔ and what it caught was my criterion aimed at the
+    wrong object.**
+    """
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_myindex_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        (tmp / "my").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "PROJECT.md").write_text("# p\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        build(tmp)
+        r = subprocess.run([PY, str(HERE / "sensor_my_index.py"), "--root", str(tmp)],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        out = (r.stdout or "") + (r.stderr or "")
+        banned = [c for c in forbid if c in out]
+        why = []
+        if r.returncode != want_code:
+            why.append("expected exit " + str(want_code) + ", got " + str(r.returncode))
+        if needle and needle not in out:
+            why.append("output lacks " + needle)
+        if in_index is not None:
+            idxf = tmp / "my/MY_INDEX.md"
+            body = idxf.read_text(encoding="utf-8") if idxf.is_file() else ""
+            if in_index not in body:
+                why.append("index file lacks " + in_index)
+        if banned:
+            why.append("⛔ false alarm: " + ", ".join(banned))
+        if why:
+            print("  ❌ " + desc + " (" + "; ".join(why) + ")"); bad += 1
+        else:
+            print("  ✅ " + desc); ok += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# ⚠️ **`tool_my_index.py` derives the project root from its own location, ⛔ so a fixture
+#    cannot rely on cwd. Copy the harness files the tool needs into the fixture instead.**
+def _gen(tmp):
+    import subprocess
+    (tmp / "scripts" / "harness").mkdir(parents=True, exist_ok=True)
+    for f in ("tool_my_index.py", "framework_config.py", "_common.py", "upgrade.py"):
+        (tmp / "scripts" / "harness" / f).write_bytes((HERE / f).read_bytes())
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    subprocess.run([PY, str(tmp / "scripts/harness/tool_my_index.py")],
+                   capture_output=True, text=True,
+                   encoding="utf-8", errors="replace", env=env)
+
+
+my_index_case("a never-generated index is INCOMPLETE (⛔ not a PASS)",
+              lambda t: None, 2, "MY_INDEX_MISSING")
+my_index_case("a freshly generated index ⛔ must not false-alarm",
+              _gen, 0, forbid=("MY_INDEX_STALE", "INDEX_NOTE_DANGLING", "MY_INDEX_MISSING"))
+my_index_case("🔴 a folder the user invented must appear in the index (⛔ not a whitelist)",
+              lambda t: (_gen(t), (t / "deepresearch").mkdir(),
+                         (t / "deepresearch/draft.md").write_text("x", encoding="utf-8"),
+                         _gen(t), None)[-1], 0, in_index="deepresearch/draft.md",
+              forbid=("MY_INDEX_STALE",))
+my_index_case("a file added after generation: must report stale",
+              lambda t: (_gen(t), (t / "new_thing.md").write_text("x", encoding="utf-8"),
+                         None)[-1], 1, "MY_INDEX_STALE")
+my_index_case("a description pointing at a missing file: FAIL",
+              lambda t: ((t / "my/MY_INDEX_notes.json").write_text(
+                             '{"no_such_file.md": "x"}', encoding="utf-8"),
+                         _gen(t), None)[-1], 1, "INDEX_NOTE_DANGLING")
+my_index_case("a broken notes file: INCOMPLETE (⛔ never 'there are no descriptions')",
+              lambda t: (_gen(t),
+                         (t / "my/MY_INDEX_notes.json").write_text("{broken", encoding="utf-8"),
+                         None)[-1], 2, "INDEX_NOTES_UNREADABLE")
 
 upgrade_case()
 

@@ -59,13 +59,13 @@ from framework_config import excluded                         # noqa: E402
 HEAD = re.compile(r"^###\s+(C-\d+)\s*\|\s*([^|]+?)\s*\|\s*(.+?)\s*$")
 FIELD = re.compile(r"^\*\*(.+?)[:：]\*\*\s*(.*)$")
 # ⚠️ Two digits minimum. `C-1` written for a work item would otherwise be read as a citation
-#    of C-01 — see `ledgers/Conjecture_Ledger.md` §0.4.
+#    of C-01 — see `governance/CONJECTURE_LEDGER_SPEC.md` §0.4.
 CITATION = re.compile(r"\bC-(\d{2,})\b")
 PLACEHOLDER = {"", "-", "—", "–", "TBD", "n/a", "N/A", "?", "pending", "..."}
 REQUIRED = ["Statement", "Origin", "Falsification", "Strongest rival",
             "Rival's differing prediction", "Basis", "Log"]
 
-# ⚠️ **Single home: `ledgers/Conjecture_Ledger.md` §0.1.** Keep these in step.
+# ⚠️ **Single home: `governance/CONJECTURE_LEDGER_SPEC.md` §0.1.** Keep these in step.
 STATES = {"🔵": "Conjecture", "🟡": "Falsifiable", "🟢": "Literature-supported",
           "🔴": "Refuted", "⚫": "Unfalsifiable (retired)", "🟤": "Dormant"}
 NO_FALSIFICATION_NEEDED = {"⚫", "🟤"}
@@ -157,13 +157,13 @@ def main():
                              f"fill them in before real use"))
             continue
 
-        # ⚠️ Six states, not four. `ledgers/Conjecture_Ledger.md` §0.1 defines ⚫ and 🟤 as
+        # ⚠️ Six states, not four. `governance/CONJECTURE_LEDGER_SPEC.md` §0.1 defines ⚫ and 🟤 as
         #    legitimate; a sensor that accepts only four **FAILs a correctly retired or
         #    dormant conjecture** — precisely the false alarm `R-19` forbids.
         if sym not in STATES:
             findings.append(("FAIL", "CONJECTURE_STATUS_INVALID",
                              f"{cid} state '{state}' is not one of the six in "
-                             f"`ledgers/Conjecture_Ledger.md` §0.1"))
+                             f"`governance/CONJECTURE_LEDGER_SPEC.md` §0.1"))
             continue
 
         for k in REQUIRED:

@@ -128,6 +128,17 @@ handoff packet) must carry a **specific model identifier** in its author field.
 If the model-performance record in `policy/HANDOFF.md` cannot be tied to specific artefacts,
 **the whole table degrades into impressions.**
 
+> 🔴 **⚠️ Only half of this section has a mechanical defence (stated explicitly from v1.4.1).**
+> **`sensor_model_attribution.py` scans `attribution_globs`, which in v1.4.1 is
+> `handoffs/*.md` and nothing else.**
+> 🔴 **So the author field of the "main text", the MVE and analysis reports
+> ⛔ has nothing checking it.**
+> ⚠️ **The two former globs `outputs/` and `reports/` matched 0 files from v1.0.0 onward —
+> neither directory ever existed.**
+> **⛔ The scope is completed once `research/` exists in v1.5.0.**
+> **⚠️ Until then this section is a rule with ⛔ no mechanical counterpart for the main text —
+> written down here rather than left blank.**
+
 **Mechanical defence: `scripts/harness/sensor_model_attribution.py`.**
 
 ### 3.5 The git checkpoint tag carries the model

@@ -105,7 +105,7 @@ wrong** — and in this setup that is the best-value thing you can do.
 
 ### 6.1 Keep a plain-text incident log
 
-**Keep `incidents/MY_INCIDENTS.md`** (or just start a text file of your own).
+**Keep `my/MY_INCIDENTS.md`** (or just start a text file of your own).
 
 **Whenever the AI makes a mistake worth remembering, ask it there and then to write a short
 entry covering four things:**

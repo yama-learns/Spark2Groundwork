@@ -26,6 +26,23 @@ def _force_utf8():
     **那正是 `R-22` 與憲章 §7.4 要擋的混淆，發生在框架自己身上。**
 
     ⛔ `errors="replace"` 是刻意的：**最壞情況是印出 `?`，⛔ 不是整支程式當掉。**
+
+    ## 🔴 ⛔ 本函式的效力範圍：**只管「我們自己印出去的東西」**
+
+    ⚠️ **⛔ 它⛔ 不管「我們讀進來的東西」。**
+    **子行程的輸出由 `subprocess` 自己解碼，⛔ 而 `text=True` 若沒指定 `encoding`，
+    用的是系統地區編碼（繁中 Windows ＝ `cp950`）。**
+
+    🔴 **實測（2026-08-27，Python 3.14.2）：`sensor_scope_and_t0.py` 因此收到
+    `returncode == 0` 而 `stdout` 是 `None`**——**解碼在 `subprocess` 的讀取執行緒裡爆掉，
+    執行緒死了，例外⛔ 不會傳到主執行緒。**
+
+    ⛔ **⇒ 每一個要讀輸出的 `subprocess.run` 都必須自己寫
+    `encoding="utf-8", errors="replace"`。⚠️ 本函式⛔ 幫不上忙。**
+    **守望者：`run_selftest.py` 的 `subprocess_encoding_case()`（靜態檢查）。**
+
+    ⚠️ **⛔ 這一段是補寫的：本函式原本讀起來像「編碼問題已經處理過了」，
+    🔴 而那是一句為真、但效力範圍不涵蓋另一條通道的話（`R-34`）。**
     """
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -141,6 +158,7 @@ def dead_glob_findings(dead, where, root=None):
                         "「查無比對對象」與「比對後一致」在輸出上長得一樣"))
         else:
             out.append(("WARN", "SCAN_GLOB_MATCHES_NOTHING",
-                        f"{where} 的 glob「{g}」命中 0 個檔案（目錄尚不存在）"
+                        f"{where} 的 glob「{g}」命中 0 個檔案"
+                        "（⚠️ 目錄不存在，或目錄在而裡面還沒有這種副檔名的檔）"
                         "——**它目前保護不了任何東西**（⚠️ 不適用 ≠ 通過）"))
     return out

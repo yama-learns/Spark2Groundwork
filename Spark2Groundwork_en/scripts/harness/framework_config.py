@@ -41,6 +41,36 @@ DEFAULTS = {
     # ⚠️ These are **globs**, not a hard-coded list (R-21: whitelists filter silently)
     "governance_globs": ["governance/*.md", "policy/*.md", "ledgers/*.md", "file_index.md"],
 
+    # 🔴 **Your own file index** (`tool_my_index.py`, `sensor_my_index.py`).
+    # ⚠️ **Measured case: a project adopted the framework and stopped maintaining its own
+    #    file index — its `file_index.md` holds ⛔ not one research-related entry.**
+    #    🔴 **`file_index.md` began as a predecessor project's table for research documents;
+    #    when it was refined into the framework its contents became the framework's own,
+    #    ⛔ and the name did not change.**
+    # ⛔ **The list is generated (criterion = "everything the framework does not own",
+    #    ⛔ never a list of what to include); the descriptions are AI-maintained.
+    #    ⚠️ Why separate: code cannot extract a meaningful title from .docx / .pdf.**
+    "my_index": "my/MY_INDEX.md",
+    "my_index_notes": "my/MY_INDEX_notes.json",
+    # ⚠️ **Files the framework itself produces: ⛔ they are not "your documents".**
+    #    🔴 **Measured: after one upgrade run, `git-checkpoint.log` appeared under
+    #    "not yet described" — ⛔ a file nobody will ever describe becomes a permanent
+    #    line of noise.**
+    #    ⛔ **This is an exclusion list (deny-shaped), ⛔ not a whitelist of what to include.**
+    "my_index_exclude": ["git-*.log"],
+
+    # 🔴 **Framework rules ↔ project rules** (`sensor_my_rules.py`, `tool_sync_my_rules.py`).
+    # ⚠️ **Why two copies exist:** `governance/` is replaced wholesale on upgrade,
+    #    **so a project that accumulated its own rules in `RULES.md` lost them on upgrade.**
+    #    🔴 **That was literally true before v1.4.0, while `PROFILE_solo.md` encouraged it.**
+    # ⛔ **A copy cannot be left unwatched** — that is failure axis two. The watcher is
+    #    `sensor_my_rules.py`.
+    "framework_rules": "governance/RULES.md",
+    "my_rules": "my/MY_RULES.md",
+    # ⚠️ Marked entries do not raise `RULE_TEXT_DRIFT`; they go to the stats line instead —
+    #    **an exemption has to be visible.**
+    "override_marker": "[project override]",
+
     # Ledgers
     "conjecture_ledger": "ledgers/Conjecture_Ledger.md",
     "claim_ledger": "ledgers/Claim_Ledger.md",
@@ -61,7 +91,7 @@ DEFAULTS = {
     #    (`governance/AGENTS.md` §5), so between proposal and adjudication **a proposal
     #    file necessarily cites IDs that do not exist yet**, and `CITATION_NOT_IN_LEDGER`
     #    necessarily FAILs. Measured: 12 in a single round.
-    #    → Exactly the question `profiles/PROFILE_multi_agent.md` §4.3 G-1b asks:
+    #    → Exactly the question `profiles/PROFILE_multi_agent.md` §4 G-2 asks:
     #      "can this new rule and an existing rule both be obeyed at the same time?"
     #
     # ⛔ **The criterion is deliberately structural (path + filename), not a free-text
@@ -77,7 +107,17 @@ DEFAULTS = {
     #    **were never supposed to carry an author field**. The old version scanned the root
     #    and therefore needed a hard-coded exemption list to suppress the alarms it created
     #    for itself — **a whitelist compensating for a wrong scan scope** (`R-21`).
-    "attribution_globs": ["handoffs/*.md", "outputs/*.md", "reports/*.md"],
+    # ⚠️ **v1.4.1: the `outputs/` and `reports/` globs have been removed.**
+    #    🔴 **They matched 0 files from v1.0.0 onward — neither directory ever existed,
+    #    and neither was ever defined by any document.**
+    #    ⛔ **The directories are NOT being created**: where research output lands is
+    #    defined by `research/` in v1.5.0. **Creating two undefined directories now
+    #    would only manufacture a migration later.**
+    # 🔴 **Known gap (⛔ left visible on purpose): `MODEL_IDENTITY.md` §3.4 requires the
+    #    author field of the "main text" to carry a specific model identifier,
+    #    ⛔ and no main text can possibly fall inside this scan scope.**
+    #    **That section now says so. The scope is completed once `research/` exists.**
+    "attribution_globs": ["handoffs/*.md"],
 
     # 🔴 **Scan scope for code** (`sensor_reference_integrity.py`).
     # ⚠️ The header comments of `.py` and `.sh` files are where rule citations
@@ -131,7 +171,8 @@ DEFAULTS = {
                         "policy/*.md", "profiles/*.md"],
 
     # Artefacts: things downstream will cite; subject to the self-certification check
-    "artifact_globs": ["handoffs/*.md", "outputs/*.md", "reports/*.md"],
+    # ⚠️ Same as `attribution_globs`: the two dead globs were removed in v1.4.1.
+    "artifact_globs": ["handoffs/*.md"],
 
     # Always excluded from scans
     # (⚠️ evaluated on paths **relative to root** — see R-18)
@@ -145,8 +186,11 @@ DEFAULTS = {
     #    exclusion list a write exemption, and **the exclusion list exists to save scan cost,
     #    not to grant authority.**
         # ⚠️ What these directories ARE is defined in constitution §6.2; ⛔ this key only lists them.
+    # ⚠️ **`_upgrade` 是 v1.4.1 補的。** 🔴 **它是升級用的暫存包（`upgrade.py` 讀它），
+    #    ⛔ 而它一度被 `tool_my_index.py` 當成「你的文件」列進索引——一次 85 筆。**
+    #    **⚠️ 那是實際跑一次升級才看到的，⛔ 不是讀設定看出來的。**
     "excluded_dirs": ["archive", ".git", "__pycache__", "selftest", "scratch",
-                      "_to_delete", "node_modules", ".venv"],
+                      "_to_delete", "_upgrade", "node_modules", ".venv"],
 
     # 🔴 **Paths the AI does not write to — ⚠️ a DEFAULT, ⛔ not a prohibition.**
     #
@@ -160,12 +204,21 @@ DEFAULTS = {
     #    🔴 **a broken ledger or corpus can be restored from nowhere.**
     # ⛔ Information, not persuasion — **what to do with it is the user's decision.**
     #
-    # ⚠️ **The two T0 files are deliberately absent here** — a governance agent **may** now
-    #    maintain them, **which is the precondition for a user keeping this framework alive.**
+    # 🔴 **v1.4.1: the two T0 files are now listed here verbatim.**
+    #    ⚠️ **They used to be deliberately absent while the sensor folded them in
+    #    unconditionally in code — ⛔ so no configuration could turn it off, even though
+    #    this comment said "a governance agent may maintain them". Opposite intents.**
+    #    ✅ **With them listed, "clear `deny` and you have full authorisation"
+    #    (constitution §6.3) is true for the first time.**
+    #    ⛔ **To let a governance AI maintain T0, delete these two entries — that is your
+    #    decision, ⛔ not a prohibition by the framework.**
     #
-    # ⚠️ **Only in effect when `write_scopes` is set** (the sensor reads `git status` and
-    #    cannot tell a human's edit from an AI's).
-    "deny": ["ledgers", "corpus", "corpus_md"],
+    # ⚠️ **From v1.4.1 this no longer depends on whether `write_scopes` is set.**
+    #    **A solo project (empty `write_scopes`) gets a WARN that names the files —
+    #    ⛔ not silence and ⛔ not a red light** — because the sensor reads `git status`
+    #    and ⛔ cannot tell a human's edit from an AI's.
+    "deny": ["ledgers", "corpus", "corpus_md",
+             "governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md"],
 
     # Only needed for multi-role projects: each role's write scope.
     # Solo projects: leave as {} and the sensor will skip the check explicitly.
@@ -192,11 +245,31 @@ def load(root=None):
     user = (pathlib.Path(root) / "governance_config.json") if root else _USER
     if user.exists():
         try:
-            cfg.update(json.loads(user.read_text(encoding="utf-8")))
+            data = json.loads(user.read_text(encoding="utf-8"))
         except Exception as e:                       # noqa: BLE001
             # ⛔ Never swallow this: broken settings with sensors still running
             #    means declaring a pass over the wrong scope.
             raise SystemExit(f"[FAIL] governance_config.json could not be parsed: {e}")
+        # 🔴 **An unrecognised key is an error, ⛔ never silently absorbed (v1.4.1).**
+        #    ⚠️ **The old line was `cfg.update(data)`: misspell `deny` as `denny` and nothing
+        #    happens — `denny` joins the config, `deny` keeps its default, ⛔ and the user
+        #    believes the setting took effect.**
+        #    **🔴 That is the "silent filter" family, at the config's front door.**
+        # ⛔ **This must not be a WARN: an absorbed key looks exactly like a successful setting.**
+        # ⚠️ Keys starting with an underscore (e.g. `_note`) are allowed on purpose —
+        #    **a config file has to be readable by a person.**
+        unknown = [k for k in data if k not in DEFAULTS and not k.startswith("_")]
+        if unknown:
+            import difflib
+            lines = []
+            for k in unknown:
+                near = difflib.get_close_matches(k, DEFAULTS, n=1)
+                lines.append(f"  ⛔ {k}" + (f"   ⚠️ did you mean: {near[0]}" if near else ""))
+            raise SystemExit("[FAIL] governance_config.json has keys this framework does "
+                             "not recognise:\n" + "\n".join(lines)
+                             + "\n**⛔ Fix or remove them. An absorbed key looks exactly "
+                               "like a successful setting.**")
+        cfg.update(data)
     return cfg
 
 

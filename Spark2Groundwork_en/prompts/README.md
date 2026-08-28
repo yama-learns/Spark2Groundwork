@@ -1,67 +1,72 @@
-# Prompt Library
+# Prompt library
 
-**`_COMMON_BLOCKS.md` is the parts bin; `TEMPLATE_*.txt` are the finished items.**
+**This folder holds text you can paste straight to an AI.**
 
-⛔ **Finished prompts must be fully self-contained.** When assembling, paste the block's
-**full text**; do not write "see block A".
-**Reason and measured consequence: `policy/EXTERNAL_TOOLS.md` item 2.**
-
-| File | Purpose |
+| File | When to use it |
 |---|---|
-| `_COMMON_BLOCKS.md` | Reusable passages |
-| `TEMPLATE_decompose.txt` | **Split an idea into falsifiable conjectures** (initialisation, step one) |
-| `TEMPLATE_prior_art.txt` | Prior-art check: has anyone done this |
-| `TEMPLATE_adversarial.txt` | Adversarial audit: attack my output |
+| `START_governance_AI.md` | Paste as the first message when you put an AI in the **governance** role |
+| `START_research_AI.md` | Paste as the first message when you put an AI in the **research** role |
+| `START_audit_AI.md` | Paste as the first message when you put an AI in the **audit** role |
+| `TEMPLATE_decompose.txt` | Break an idea into **falsifiable conjectures** (the first round's job) |
+| `TEMPLATE_prior_art.txt` | Prior-art search: **has anyone already done this?** |
+| `TEMPLATE_adversarial.txt` | Adversarial audit: **please attack my output** |
+| `_COMMON_BLOCKS.md` | The parts bin, for when you want to build a prompt of your own |
 
-**Intake: triage every external report with `profiles/PROFILE_external_tools.md` §2.**
+⚠️ **A solo setup (just you and one AI) does not need the `START_*` files** —
+**you use `INITIALIZE_PROMPT.md` at the top level instead.**
 
 ---
 
-## ⚠️ Which templates FAIL the sensor, and why
+## One rule: paste the whole thing, ⛔ never "see above"
+
+⛔ **Every prompt has to say everything it needs by itself.**
+
+**The reason is mechanical:** each run of an outside tool happens in its own conversation, and
+⛔ they share no context. **"As above" is a blank at the other end** — the clause you thought
+you had given it simply does not exist in that run.
+
+**Measured consequence:** one prompt quoted this very rule at the top, then wrote
+"Same as R3-1" further down.
+🔴 **The marker it referred to was used 0 times in that run; the version that spelled the
+clause out was used 12 times.**
+
+**You can check before sending:**
 
 ```
-python scripts/harness/sensor_prompt_self_contained.py prompts/TEMPLATE_prior_art.txt
-→ FAIL [PROMPT_NOT_ASSEMBLED] ×6
+python3 scripts/harness/sensor_prompt_self_contained.py <your prompt file>
 ```
 
-| Template | Verdict | Why |
-|---|---|---|
-| `TEMPLATE_decompose.txt` | ✅ **PASS** | It is a finished prompt. ⛔ **No block slots in it.** |
-| `TEMPLATE_adversarial.txt` | ✅ **PASS** | Same |
-| `TEMPLATE_prior_art.txt` | ❌ **FAIL** | Six `<<<PASTE BLOCK X>>>` — **the parts were never pasted in** |
-
-⛔ **This section used to be wrong. Correction below.**
-
-**The old text said "the templates themselves will FAIL the sensor, and that is correct",
-on the grounds that "the template says `<<<PASTE BLOCK B>>>`". ⚠️ That holds for
-`TEMPLATE_prior_art.txt` and not for the other two — they contain no block slots at all.**
-
-**They FAILed because the sensor applied the Deep-Research-specific 8-clause list to every
-prompt. And `TEMPLATE_decompose.txt` opens with "⛔ do not search the literature this round" —
-a prompt that forbids literature search cannot and should not carry bilingual search clauses.
-It would have kept FAILing after assembly, forever.**
-
-> 🔴 **And this section had written the explanation for that false alarm.**
-> **A sensor that fires on correct text, plus an official note saying the FAIL is correct —**
-> **the second layer is the more dangerous one, because it turns "ignore this sensor" into policy.**
-
-**How it works now:**
-
-- **Self-containment** (cross-prompt references / unassembled blocks / prompt pollution)
-  → **runs on every prompt**
-- **The DR clause list** (8 items) → **only under `--profile deep-research`**
+**If it is a search prompt for something like Deep Research, add one argument:**
 
 ```
-python scripts/harness/sensor_prompt_self_contained.py <assembled DR prompt> --profile deep-research
+python3 scripts/harness/sensor_prompt_self_contained.py <file> --profile deep-research
 ```
 
-⚠️ **Only one of the three `<<<...>>>` slot kinds is a defect:**
+⚠️ **Keeping that separate is deliberate.**
+**The search-specific clauses (bilingual passes, bibliographic tags) only mean something for a
+search prompt** — **⛔ applied to a prompt like `TEMPLATE_decompose.txt`, which says "do not
+search the literature this round", they produce a FAIL that can never be fixed.**
+
+---
+
+## Three kinds of `<<<…>>>`, and only one is a defect
 
 | Kind | Example | Verdict |
 |---|---|---|
-| Block slot | `<<<PASTE BLOCK B (enumerate, do not summarise)>>>` | ❌ FAIL |
-| **Content slot** | `<<<PASTE YOUR IDEA IN FULL>>>` | ✅ **Not a defect** — you fill it at use time |
-| Fill-in slot | `<<<FILL IN: one sentence>>>` | ⚠️ WARN |
+| **Block placeholder** | `<<<PASTE BLOCK B>>>` | ❌ **FAIL** — a part has not been pasted in; the prompt is incomplete |
+| **Content slot** | `<<<PASTE YOUR IDEA IN FULL>>>` | ✅ **Not a defect** — you fill it in when you use it |
+| **Fill-in slot** | `<<<FILL IN: one sentence>>>` | ⚠️ **WARN** — a reminder that you have not filled it |
 
-→ **Correct use: paste the parts in full, assemble the finished prompt, then run the sensor.**
-→ **A FAIL after assembly is a real problem.**
+---
+
+## ⚠️ One thing to remember: `TEMPLATE_prior_art.txt` is an assembled copy
+
+**The six sections inside it are the same text as in `_COMMON_BLOCKS.md`.**
+
+🔴 **So if you edit a block in the parts bin, ⛔ remember to come back and update the template.**
+
+⚠️ **⛔ No program is watching this for you.**
+**The clause-sync check looks at single-line term lists, ⛔ not multi-line passages.**
+
+**⚠️ This is a known cost, written down here so it does not get forgotten silently:**
+**one day the two copies will differ, and both will read perfectly normally.**

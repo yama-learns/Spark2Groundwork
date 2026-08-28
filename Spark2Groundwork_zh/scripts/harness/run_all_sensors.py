@@ -31,6 +31,8 @@ SENSORS = [
     ("sensor_scope_and_t0.py", False),
     ("sensor_reference_integrity.py", False),
     ("sensor_clause_sync.py", False),
+    ("sensor_my_rules.py", False),
+    ("sensor_my_index.py", False),
 ]
 
 # ⚠️ **以下不列入預設套件，因為它們的介面是「一份檔案」而非「整個專案」。**

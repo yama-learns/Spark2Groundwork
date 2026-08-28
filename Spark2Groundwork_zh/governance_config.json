@@ -1,0 +1,46 @@
+{
+  "_說明": [
+    "這是這個專案的權限設定。它就是憲章 §6.3 所說的那個「機械對應物」。",
+    "",
+    "⛔ 升級永遠不會覆蓋這個檔案（它在 upgrade.py 的 NEVER_TOUCH 上）。",
+    "⚠️ 也就是說：框架之後若改了預設值，那些改動不會送到這裡——",
+    "   那是刻意的。規格的更新該送到你手上，而『你授權了什麼』是你的決定，",
+    "   ⛔ 框架不該覆蓋它。",
+    "",
+    "⚠️ 底線開頭的鍵（像這一個）是給人看的，檢查程式會略過。",
+    "⛔ 打錯的鍵不會被略過——它會讓感測器直接報 FAIL 並告訴你最接近的正確鍵名。"
+  ],
+  "_deny 是什麼": [
+    "AI 預設不寫的地方。⚠️ 這是預設值，⛔ 不是禁令——清空它就是完整授權。",
+    "",
+    "🔴 為什麼預設擋這五個：判準是『壞掉之後還原得回來嗎』。",
+    "   ledgers/ corpus/ corpus_md/ 壞了沒有任何地方可以還原。",
+    "   governance/AGENTS.md 與 WORKFLOW_CONSTITUTION.md 是 T0，改壞了整套規則會跟著歪。",
+    "",
+    "⚠️ 要讓治理 AI 維護 T0，把最後兩行刪掉。那是你的裁決。",
+    "⛔ 框架不設不可解除的禁令（憲章 §6.3）。"
+  ],
+  "deny": [
+    "ledgers",
+    "corpus",
+    "corpus_md",
+    "governance/AGENTS.md",
+    "governance/WORKFLOW_CONSTITUTION.md"
+  ],
+  "_write_scopes 是什麼": [
+    "多角色專案才需要：每個角色可以寫哪些地方。單人專案留空 {} 就好。",
+    "",
+    "⚠️ 留空⛔ 不等於關掉檢查（v1.4.1 起）。",
+    "   留空時，落在 deny 範圍內的變更仍然會被列出來——",
+    "   只是不判越界，因為感測器讀 git status，⛔ 分不出是你改的還是 AI 改的。",
+    "",
+    "範例（三角色）：",
+    "  \"write_scopes\": {",
+    "    \"governance\": [\"governance\", \"policy\", \"scripts\", \"my\", \"file_index.md\"],",
+    "    \"research\":   [\"corpus_md\", \"RESEARCH_MEMO.md\"],",
+    "    \"audit\":      [\"scratch\"],",
+    "    \"_shared\":    [\"handoffs\"]",
+    "  }"
+  ],
+  "write_scopes": {}
+}

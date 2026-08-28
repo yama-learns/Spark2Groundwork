@@ -1,0 +1,12 @@
+my/tools/ ── 你自己寫的腳本
+
+放在這裡的東西，升級不會碰。
+
+要用框架的設定或共用函式，這樣寫（從專案根目錄執行）：
+
+    import sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "scripts/harness"))
+    import framework_config
+
+⚠️ 這一行之所以要自己寫，是因為你的腳本不在 scripts/ 裡——
+   而它不在那裡，正是為了讓它活過下一次升級。

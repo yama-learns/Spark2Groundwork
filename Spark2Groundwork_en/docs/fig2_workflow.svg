@@ -1,109 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700" font-family="-apple-system, Segoe UI, Helvetica Neue, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
 <rect x="0" y="0" width="980" height="700" fill="#ffffff"/>
 <defs>
-  <marker id="b" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#3c4a56"/></marker>
-  <marker id="bg" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#2e7d5b"/></marker>
-  <marker id="by" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#b8802f"/></marker>
+  <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#5a6b7a"/></marker>
+  <marker id="ag" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#2e7d5b"/></marker>
 </defs>
-
-<text x="490" y="28" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a2733">Workflow &#8212; the evidence chain, who watches it, and the loop</text>
-<text x="490" y="49" text-anchor="middle" font-size="12" fill="#4a5b6a">Credibility comes down to: <tspan font-weight="bold" fill="#1a2733">how many steps lead from a sentence back to its source, and whether each left a trace.</tspan></text>
-
-<!-- band 1 evidence chain -->
+<text x="490" y="28" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a2733">Workflow — the evidence chain, who watches it, and the loop</text>
+<text x="490" y="49" text-anchor="middle" font-size="12" fill="#4a5b6a">Credibility is: how many steps it takes to trace a sentence back to the source, and whether each step left a trace.</text>
 <rect x="28" y="68" width="924" height="148" rx="7" fill="#eef4fa" stroke="#3d72a4" stroke-width="1.6"/>
-<text x="42" y="90" font-size="13" font-weight="bold" fill="#25547f">1 Chain</text>
-<text x="42" y="108" font-size="10.5" fill="#4a5b6a">how things flow</text>
-
-<rect x="132" y="82" width="130" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="197" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Source PDF</text>
-<text x="197" y="117" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus/</text>
-
-<rect x="332" y="82" width="150" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="407" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Extraction</text>
-<text x="407" y="117" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus_md / never hand-edited</text>
-
-<rect x="132" y="152" width="130" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="197" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Your idea</text>
-<text x="197" y="187" text-anchor="middle" font-size="9.5" fill="#4a5b6a">PROJECT.md</text>
-
-<rect x="332" y="152" width="150" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="407" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">Conjecture Ledger</text>
-<text x="407" y="187" text-anchor="middle" font-size="9.5" fill="#4a5b6a">each with a falsification condition</text>
-
-<rect x="536" y="112" width="196" height="60" rx="5" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.8"/>
-<text x="634" y="134" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f6b4a">Claim Ledger</text>
-<text x="634" y="152" text-anchor="middle" font-size="10" fill="#2b2b2b">every sentence carries a verbatim anchor</text>
-<text x="634" y="166" text-anchor="middle" font-size="10" fill="#2b2b2b">+ a page number</text>
-
-<rect x="782" y="112" width="156" height="60" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="860" y="140" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">Research output</text>
-<text x="860" y="158" text-anchor="middle" font-size="9.5" fill="#4a5b6a">proposal / paper</text>
-
-<line x1="264" y1="105" x2="326" y2="105" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-<text x="297" y="97" text-anchor="middle" font-size="9.5" fill="#4a5b6a">programmatic</text>
-<line x1="264" y1="175" x2="326" y2="175" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-<text x="297" y="167" text-anchor="middle" font-size="9.5" fill="#4a5b6a">decompose</text>
-<path d="M484,105 L514,105 L514,130 L530,130" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#bg)"/>
-<text x="524" y="97" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1f6b4a">verbatim match</text>
-<path d="M484,175 L514,175 L514,154 L530,154" fill="none" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-<text x="556" y="196" text-anchor="middle" font-size="9.5" fill="#4a5b6a">load-bearing claims carry an id</text>
-<line x1="734" y1="142" x2="776" y2="142" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-
-<!-- band 2 who watches -->
-<rect x="28" y="228" width="924" height="126" rx="7" fill="#fdf3e7" stroke="#b8802f" stroke-width="1.6"/>
-<text x="42" y="250" font-size="13" font-weight="bold" fill="#96661a">2 Watchers</text>
-<text x="42" y="268" font-size="10.5" fill="#4a5b6a">machine vs human</text>
-
-<rect x="150" y="240" width="390" height="102" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="166" y="260" font-size="12" font-weight="bold" fill="#1a2733">What a machine can check &#8212; the sensor suite, one command</text>
-<text x="166" y="280" font-size="10" fill="#2b2b2b">anchor really in the source  |  fields complete  |  cross-file consistency</text>
-<text x="166" y="297" font-size="10" fill="#2b2b2b">cited files exist  |  artefacts do not certify themselves</text>
-<text x="166" y="317" font-size="10.5" font-weight="bold" fill="#96661a">exit  0 pass  |  1 defect  |  2 could not check</text>
-<text x="166" y="333" font-size="10" fill="#8f2d2d" font-weight="bold">2 is not a pass &#8212; &#8220;could not check&#8221; and &#8220;checked, fine&#8221; stay apart</text>
-
-<rect x="556" y="240" width="382" height="102" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="572" y="260" font-size="12" font-weight="bold" fill="#1a2733">Deliberately left to a human &#8212; not mechanised</text>
-<text x="572" y="280" font-size="10" fill="#2b2b2b">does that passage support this claim</text>
-<text x="572" y="297" font-size="10" fill="#2b2b2b">may you generalise from that sample to here</text>
-<text x="572" y="317" font-size="10.5" fill="#4a5b6a">That is not a to-do. It is judgement.</text>
-<text x="572" y="333" font-size="10" fill="#8f2d2d" font-weight="bold">Force it and you get a sensor that fires on correct text</text>
-
-<path d="M634,224 L634,182" fill="none" stroke="#2e7d5b" stroke-width="1.6" marker-end="url(#bg)"/>
-
-<!-- band 3 loop -->
-<rect x="28" y="366" width="924" height="132" rx="7" fill="#eef7f1" stroke="#2e7d5b" stroke-width="1.6"/>
-<text x="42" y="388" font-size="13" font-weight="bold" fill="#1f6b4a">3 The loop</text>
-<text x="42" y="406" font-size="10.5" fill="#4a5b6a">three buttons</text>
-<text x="42" y="422" font-size="10.5" fill="#4a5b6a">in the root</text>
-
-<rect x="150" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
-<text x="226" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">snapshot</text>
-<text x="226" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">make a checkpoint</text>
-
-<rect x="342" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
-<text x="418" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">AI works</text>
-<text x="418" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">hands off a packet</text>
-
-<rect x="534" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
-<text x="610" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">review changes</text>
-<text x="610" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">what it actually changed</text>
-
-<rect x="726" y="382" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
-<text x="802" y="403" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">You adjudicate</text>
-<text x="802" y="421" text-anchor="middle" font-size="9.5" fill="#4a5b6a">the only adjudicator</text>
-
-<line x1="304" y1="408" x2="336" y2="408" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-<line x1="496" y1="408" x2="528" y2="408" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-<line x1="688" y1="408" x2="720" y2="408" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#b)"/>
-<path d="M880,408 L916,408 L916,460 L226,460 L226,440" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#bg)"/>
-<text x="571" y="478" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f6b4a">Press snapshot again = &#8220;I reviewed this&#8221;: the reviewed marker moves, and the next diff starts here</text>
-
-<!-- bottom -->
-<rect x="28" y="516" width="924" height="164" rx="7" fill="#fffbea" stroke="#c9a227" stroke-width="1.5"/>
-<text x="44" y="538" font-size="12.5" font-weight="bold" fill="#7d6209">What this figure is actually saying</text>
-<text x="44" y="564" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">1. Green covers only what is mechanised.</tspan> All sensors green <tspan font-weight="bold">does not mean the research is right</tspan> &#8212; it means the machine-checkable parts are fine.</text>
-<text x="44" y="590" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">2. Every defence corresponds to a failure that really happened.</tspan> No measured case, no sensor &#8212; <tspan font-weight="bold">false alarms teach people to switch the system off.</tspan></text>
-<text x="44" y="616" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">3. You are the only adjudicator, and that is a measured finding.</tspan> Across two predecessor projects the user intercepted more novel errors than any other layer,</text>
-<text x="58" y="638" font-size="11.5" fill="#2b2b2b">and the most effective method was <tspan font-weight="bold">supplying external data the AI did not have.</tspan></text>
-<text x="44" y="664" font-size="11" fill="#4a5b6a">So: any proposal that removes the user from the loop must first answer who takes over that layer.</text>
+<text x="42" y="90" font-size="13" font-weight="bold" fill="#3d72a4">① evidence</text>
+<text x="42" y="108" font-size="10.5" fill="#4a5b6a">how it flows</text>
+<rect x="132" y="82" width="152" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="208" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">source PDF</text>
+<text x="208" y="118" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus/</text>
+<rect x="340" y="82" width="176" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="428" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">extraction</text>
+<text x="428" y="118" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus_md / ⛔ never hand-edited</text>
+<rect x="132" y="152" width="152" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="208" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">your idea</text>
+<text x="208" y="188" text-anchor="middle" font-size="9.5" fill="#4a5b6a">PROJECT.md</text>
+<rect x="340" y="152" width="176" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="428" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">conjecture ledger</text>
+<text x="428" y="188" text-anchor="middle" font-size="9.5" fill="#4a5b6a">each with a falsifier</text>
+<rect x="566" y="108" width="206" height="62" rx="5" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.8"/>
+<text x="669" y="127" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f6b4a">claim ledger</text>
+<text x="669" y="144" text-anchor="middle" font-size="9.5" fill="#4a5b6a">every sentence has a verbatim</text>
+<text x="669" y="159" text-anchor="middle" font-size="9.5" fill="#4a5b6a">anchor + page</text>
+<rect x="800" y="108" width="138" height="62" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
+<text x="869" y="127" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">research output</text>
+<text x="869" y="144" text-anchor="middle" font-size="9.5" fill="#4a5b6a">proposal / paper</text>
+<line x1="286" y1="105" x2="334" y2="105" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<text x="310" y="97" text-anchor="middle" font-size="9.5" fill="#4a5b6a">programmatic</text>
+<line x1="286" y1="175" x2="334" y2="175" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<text x="310" y="167" text-anchor="middle" font-size="9.5" fill="#4a5b6a">decompose</text>
+<path d="M518,105 L542,105 L542,126 L560,126" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="540" y="97" text-anchor="middle" font-size="9.5" fill="#1f6b4a">verbatim match</text>
+<path d="M518,175 L542,175 L542,152 L560,152" fill="none" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<text x="600" y="192" text-anchor="middle" font-size="9.5" fill="#4a5b6a">load-bearing claims carry an ID</text>
+<line x1="774" y1="139" x2="794" y2="139" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<rect x="28" y="228" width="924" height="140" rx="7" fill="#fdf3e7" stroke="#b8802f" stroke-width="1.6"/>
+<text x="42" y="250" font-size="13" font-weight="bold" fill="#b8802f">② who watches</text>
+<text x="42" y="268" font-size="10.5" fill="#4a5b6a">machine / human</text>
+<rect x="150" y="240" width="390" height="116" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
+<text x="166" y="260" font-size="12" font-weight="bold" fill="#1a2733">What a machine can check — the sensor set, one command</text>
+<text x="166" y="280" font-size="10" fill="#2b2b2b">is the anchor in the source　|　are the fields complete　|　do files agree</text>
+<text x="166" y="297" font-size="10" fill="#2b2b2b">do cited files exist　|　does an artefact certify itself</text>
+<text x="166" y="314" font-size="10" fill="#2b2b2b">did your rules miss a new framework clause　|　is your file index stale</text>
+<text x="166" y="334" font-size="10.5" font-weight="bold" fill="#96661a">exit code　0 pass　|　1 defect　|　2 could not check</text>
+<text x="166" y="350" font-size="10" font-weight="bold" fill="#8f2d2d">⛔ 2 is not a pass — "could not check" and "checked, fine" must stay apart</text>
+<rect x="556" y="240" width="382" height="116" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
+<text x="572" y="260" font-size="12" font-weight="bold" fill="#1a2733">Deliberately left to a person — ⛔ not mechanised</text>
+<text x="572" y="282" font-size="10" fill="#2b2b2b">does that passage support this sentence</text>
+<text x="572" y="301" font-size="10" fill="#2b2b2b">does that sample generalise to here</text>
+<text x="572" y="320" font-size="10" fill="#2b2b2b">that is not a to-do; it is a judgement.</text>
+<text x="572" y="350" font-size="10" font-weight="bold" fill="#8f2d2d">⚠️ Mechanise it anyway and you get a sensor that fires on correct text</text>
+<path d="M634,224 L634,176" fill="none" stroke="#2e7d5b" stroke-width="1.6" marker-end="url(#ag)"/>
+<rect x="28" y="380" width="924" height="132" rx="7" fill="#eef7f1" stroke="#2e7d5b" stroke-width="1.6"/>
+<text x="42" y="402" font-size="13" font-weight="bold" fill="#2e7d5b">③ each round</text>
+<text x="42" y="420" font-size="10.5" fill="#4a5b6a">three buttons</text>
+<text x="42" y="436" font-size="10.5" fill="#4a5b6a">in the root</text>
+<rect x="150" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
+<text x="226" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">snapshot</text>
+<text x="226" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">make a checkpoint</text>
+<line x1="304" y1="422" x2="336" y2="422" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<rect x="342" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
+<text x="418" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">the AI works</text>
+<text x="418" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">hands over a packet</text>
+<line x1="496" y1="422" x2="528" y2="422" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<rect x="534" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
+<text x="610" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">review changes</text>
+<text x="610" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">what it actually changed</text>
+<line x1="688" y1="422" x2="720" y2="422" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
+<rect x="726" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
+<text x="802" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">you decide</text>
+<text x="802" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">the only adjudicator</text>
+<path d="M880,422 L916,422 L916,474 L226,474 L226,454" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#ag)"/>
+<text x="571" y="492" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f6b4a">Press snapshot again = "I have seen it": the reviewed mark moves forward, and the next "what changed" starts here</text>
+<rect x="28" y="522" width="924" height="158" rx="7" fill="#fffbea" stroke="#c9a227" stroke-width="1.5"/>
+<text x="44" y="544" font-size="12.5" font-weight="bold" fill="#7d6209">What this figure is actually saying</text>
+<text x="44" y="570" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">① Green covers only what is mechanised.</tspan>　An all-green run ⛔ does not mean the research is right — it means the machine-checkable parts are fine.</text>
+<text x="44" y="596" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">② Every defence corresponds to a failure that really happened.</tspan>　⛔ No measured case, no sensor — false alarms teach people to switch the whole thing off.</text>
+<text x="44" y="622" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">③ You are the only adjudicator, and that is measured.</tspan>　Across two predecessor projects the user caught more novel errors than any other layer.</text>
+<text x="58" y="644" font-size="11.5" fill="#2b2b2b">And the most effective interception was supplying external material the AI did not have.</text>
+<text x="44" y="668" font-size="11" fill="#4a5b6a">→ So: any proposal that removes the user from the loop must first answer "who takes this layer".</text>
 </svg>

@@ -164,6 +164,7 @@ crossing a `<!-- page: N -->` marker.**
 (`anchors_spanning_pages`) and excluded from the hit rate.
 **After the fix the same paper scores 100% (30 sampled, 6 page-spanning candidates).**
 → The same finding also produced `ledgers/Claim_Ledger.md` §1.1 rule 5 (**anchors must not span pages**).
+⚠️ **(That section moved to `governance/CLAIM_LEDGER_SPEC.md` §1.1 in v1.4.1. ⛔ This line keeps its original wording because it records what was true then.)**
 
 ---
 
@@ -776,6 +777,8 @@ first `## ` heading.**
 
 ### 10e. What decision 17 actually landed: `Claim_Ledger.md` §1.1 rule 4 becomes a citation
 
+⚠️ **(§1.1 moved to `governance/CLAIM_LEDGER_SPEC.md` in v1.4.1. ⛔ The heading keeps its original wording.)**
+
 The content of R-27 / R-28 was written out **twice** — in `governance/RULES.md` and again in
 `ledgers/Claim_Ledger.md` (including the `individ-\nual` example). ⚠️ **In both editions.**
 → The ledger now points at `governance/RULES.md` R-27 and R-28, **keeping only the consequence
@@ -1168,3 +1171,252 @@ as "at risk".**
 | `corpus_unmanifested/` | extractions but no manifest → **INCOMPLETE** (proves the old behaviour survived) |
 
 **Self-tests 54 → 56.**
+
+---
+
+## #17 | 2026-08-27 | 🔴 An upgrade deleted a project's accumulated rules — **while the manual encouraged accumulating them**
+
+**Triggering case (⛔ measured, not inferred from reading the code):**
+a clean project was built locally, an `R-36` was added to `governance/RULES.md` and a
+project family to `Incident_Log.md`, then `upgrade.py apply governance` was run:
+
+| | before | after |
+|---|---|---|
+| `R-36` | 1 | 🔴 **0** |
+| the project family | 1 | 🔴 **0** |
+
+**Mechanism: `upgrade.py` does `shutil.rmtree` + `copytree` for a directory.**
+
+🔴 **The serious part: the framework had already solved this once, and only halfway.**
+`governance/Incident_Log.md` §1 says verbatim why project incidents moved to `MY_INCIDENTS.md`:
+"a framework file has to be replaceable wholesale, ⛔ and overwriting a file that holds your
+incident records deletes them."
+**`RULES.md`, in the same folder, ⛔ never got that treatment.**
+
+⚠️ **And `PROFILE_solo.md` §5.4 said "after a year your `governance/RULES.md` will not look
+like anyone else's — that is the point", and the next paragraph listed what an upgrade will
+not overwrite — ⛔ and `RULES.md` was not on that list.**
+**Every word was true; together they led the reader to the opposite conclusion.**
+
+**What was fixed:** added `my/MY_RULES.md` (`P-xx` numbering, the framework's rules copied
+verbatim into §1), `sensor_my_rules.py`, `tool_sync_my_rules.py`; constitution §6.4
+"a file may have exactly one owner".
+
+**Paired samples:** six `my_rules_case()` entries in `run_selftest.py`.
+
+⚠️ **The first finding this sensor produced was its own parser defect** — the insertion-point
+comment at the end of §1 of `MY_RULES.md` joined the last rule's body. **The second is worth
+more: the first override criterion was "there is text after the marker", so
+`**R-19** [project override] <the original clause>` passed — ⛔ because that text is the clause
+itself, not a reason. The criterion is now "the marker must be on a line of its own", with a
+regression test.**
+
+---
+
+## #18 | 2026-08-27 | 🔴 `deny` had never once been in effect in a solo project — and solo is the default
+
+**Triggering case:** the old `sensor_scope_and_t0.py` skipped block ② entirely when
+`write_scopes` was empty, **⛔ `deny` included. And `PROFILE_solo.md` §6 tells a solo project
+to leave it empty.**
+
+🔴 **Consequence: constitution §6.3's "the mechanical counterpart is `deny`; clear it and you
+have full authorisation" made no difference either way in a solo project** — **the sentence
+described a mechanism that was not running.**
+
+⚠️ **The second half of the same round: `t0_docs` was folded into `denied` in code, so no
+configuration could switch T0 protection off, while the comment in `framework_config.py` said
+"the two T0 files are deliberately absent here; a governance agent may maintain them".**
+🔴 **Two comments by the same author with opposite intent: the absence of T0 from `deny` is a
+gap, and a gap carries no intent.**
+
+**What was fixed:**
+(1) The two T0 files are listed verbatim in the `deny` default; the code ⛔ appends nothing.
+(2) The permission check no longer depends on `write_scopes`; a solo project gets a WARN with
+names (`DENIED_PATH_TOUCHED_UNATTRIBUTED`).
+⚠️ **⛔ Not a FAIL: the principal editing their own ledger is normal (`R-19`); ⛔ and not
+silence either (`R-22`).**
+(3) An unrecognised key in `governance_config.json` is now a FAIL with a `difflib` suggestion.
+
+**Paired samples:** four `scope_case()` entries (T0 in / not in deny; solo editing a ledger /
+an ordinary file) plus three `config_key_case()` entries.
+
+⚠️ **`config_key_case()`'s criterion was corrected by the self-test itself: the first version
+judged by exit code, and the fixture has no git repo, so the two valid-key cases exit 2
+(`SCOPE_UNCHECKABLE`) — ⛔ which is correct behaviour. The criterion is now "did the output
+report an unknown key".**
+
+**Self-tests 57 → 69.**
+
+---
+
+## #19 | 2026-08-27 | 🔴 A code path broken since v1.0.0 that had never once run
+
+**Triggering case:** the principal ran `run_all_sensors.py` on their own machine
+(Traditional-Chinese Windows) and `sensor_scope_and_t0.py` **crashed in both editions**:
+
+```
+AttributeError: 'NoneType' object has no attribute 'strip'
+  top.stdout.strip()
+```
+
+**`subprocess.run(..., capture_output=True, text=True)` returned `returncode == 0`
+⛔ with `stdout` set to `None`.**
+
+🔴 **The defect had been there since v1.0.0. It surfaced for the first time in v1.4.1
+⛔ because the old code skipped block ② entirely when `write_scopes` was empty — and
+`PROFILE_solo.md` tells a solo project to leave it empty.**
+**⇒ That code had never run on a real user's machine.**
+⚠️ **`#18` (making `deny` effective in a solo project) ⛔ did not cause the crash;
+it is what made it visible.**
+
+⚠️ **The framework handled it correctly: `run_all_sensors.py` read the crash as
+`SENSOR_CRASHED` → INCOMPLETE, and the summary was INCOMPLETE — ⛔ not PASS and ⛔ not FAIL.
+`R-22` did its job.**
+
+**Two fixes:**
+
+**(1) When `stdout` is not a string, report INCOMPLETE and print the facts (type, stderr).**
+⛔ **⚠️ This deliberately does ⛔ not claim to know the cause** — per `R-34`, the authority
+on a limit is a measurement, ⛔ not a guess.
+🔴 **It also blocks a worse failure: falling through turns `pathlib.Path("")` into the
+current directory, so the sensor would report "the project sits inside another repository" —
+a diagnosis that reads plausibly and is wrong.**
+
+**(2) When the project is a subdirectory of a repo, ⛔ stop refusing to report; narrow the
+report to that subtree instead.**
+⚠️ **The old code always went INCOMPLETE. This framework's own repository has exactly that
+shape (each edition is a subdirectory), and so does a user who drops the project into an
+existing notes repo — ⛔ a light that is always on (`R-19`).**
+⚠️ **`git status --porcelain` prints paths relative to the repository root, ⛔ not to the
+directory named by `-C` — strip the prefix, ⛔ do not assume.**
+
+**Paired samples:**
+
+| Sample | Must |
+|---|---|
+| `git_blind_case()`: a fake `git` on PATH that exits 0 and prints nothing | INCOMPLETE, ⛔ no crash, ⛔ no "another repository" misdiagnosis |
+| `subrepo_case()`: the project is a repo subdirectory, one change inside and one outside | **the denied change inside is seen, ⛔ the file outside is not** |
+
+🔴 **The second half of `subrepo_case()` is the point: ⛔ doing only the first half is
+"judging the wrong repo", which is exactly what the old refusal was protecting against.
+⛔ When you soften a remedy, keep what it was actually protecting.**
+
+**Self-tests 69 → 71.**
+
+### 🔴 Follow-up (2026-08-27, after the principal ran the diagnostic): **the cause is established, ⛔ no longer "unknown"**
+
+```
+python -c "...capture_output=True, text=True..."
+→ Exception in thread Thread-1 (_readerthread):
+  UnicodeDecodeError: 'cp950' codec can't decode byte 0x94 in position 16
+→ 0 None ''
+```
+
+**Python 3.14.2, Traditional-Chinese Windows. With `text=True` and ⛔ no `encoding`,
+Python decodes git's UTF-8 output using the locale encoding (`cp950`).**
+**`輔` in the path is `E8 BC 94` in UTF-8 — ⛔ byte 16 is `0x94`, which cp950 cannot decode.**
+
+🔴 **⛔ The part worth remembering is not that it fails, but how:**
+**the decode happens in `subprocess`'s reader thread. ⚠️ That thread dies, the exception
+⛔ never reaches the main thread, and `communicate()` returns `None` — so the caller sees
+"exit 0 and no output".**
+**⛔ The standard library itself turned an error into a silent empty value.**
+
+### ⚠️ The same fix, applied to only half the code
+
+**`run()` in `checkpoint.py` and `review_changes.py` says
+`encoding="utf-8", errors="replace"` verbatim — ⛔ and `sensor_scope_and_t0.py` did not.**
+🔴 **The fix already existed in two programs in the same folder; it was never carried to the third.**
+
+⚠️ **It is also the `R-34` shape: `_common._force_utf8()` fixes *what we print out*,
+⛔ and it read as "encoding has been dealt with". ⛔ A true fix whose scope does not cover
+the other channel.** **What it does ⛔ not cover is now written in its own docstring.**
+
+### The paired sample that was added
+
+**`subprocess_encoding_case()`: walks `scripts/harness/*.py` with `ast`; any
+`subprocess.run` carrying `text=`/`universal_newlines=` and ⛔ no `encoding=` is a FAIL,
+named as `file:line`.**
+
+⚠️ **⛔ It is a static check and runs nothing. Why: the defect only occurs on a machine with
+a non-UTF-8 locale, 🔴 and a criterion that cannot fire on my machine is not a criterion.**
+
+**Measured: with `encoding` removed, the self-test reported
+`❌ subprocess.run calls that would decode with the locale: sensor_scope_and_t0.py:83`.**
+
+**Self-tests 71 → 72.**
+
+
+---
+
+## #20 | 2026-08-27 | 🔴 The framework displaced an index the user already had
+
+**Triggering case (reported by the principal): a project adopted v1.3.0 and then stopped
+maintaining its own file index — its `file_index.md` holds ⛔ not one research-related entry.**
+
+**Mechanism: `file_index.md` began life in a predecessor project as the table for
+"research plan versions and supporting documents". When it was refined into the framework its
+contents became entirely the framework's own, ⛔ and the name did not change.**
+🔴 **So a new user sees a file called "file index" and assumes it is theirs — and then either
+registers their documents in it (lost at the next upgrade) or stops registering anything
+(what actually happened).**
+
+⚠️ **That project's own handoff packet carries the corroborating sentence: they deliberately
+did ⛔ not register the tool they wrote in `file_index.md`, because "an upgrade overwrites it,
+and registering there puts the pointer somewhere that disappears".**
+**⇒ ⛔ The framework did not merely neglect the user's index; it displaced a mechanism that
+already existed.**
+
+**Added: `tool_my_index.py` (generator) and `sensor_my_index.py` (watcher).**
+
+### Three design decisions
+
+**(1) The criterion is "everything the framework does ⛔ not own", ⛔ never a list of what to
+include.**
+🔴 **A list of what to include is a whitelist (`R-21`): users keep inventing new folders.**
+⚠️ **A predecessor project's generator had exactly that shape, and its author wrote the
+sentence themselves: "a hand-written index misses files, ⛔ and a generator misses directories."**
+**The single home for the framework's names is the replaceable list in `upgrade.py` — the tool
+`import`s it ⛔ rather than keeping a second copy.**
+
+**(2) The file list is generated; the descriptions are AI-maintained; the two live apart.**
+⚠️ **The principal's practice: the descriptions in a research index have always been maintained
+by the research AI. ⛔ And code cannot extract anything meaningful from `.docx` / `.pdf` / `.xlsx`.**
+🔴 **Files with no description are ⛔ not hidden; they get their own section** —
+**an index that looks complete while missing half the files is worse than no index.**
+
+**(3) The sensor does ⛔ not reimplement generation; it calls `tool_my_index.render()` and
+compares verbatim.**
+⚠️ **If two generators differed anywhere, "is it stale" would say stale forever, ⛔ while the
+real cause is that the two programs are not the same.**
+
+### 🔴 The tool caught another defect on its very first run
+
+**It lists what the framework does not own, and `docs/` (the two figures) and the six launcher
+buttons appeared in that list.**
+🔴 **⇒ They have always been the framework's, ⛔ and they were not on `upgrade.py`'s
+replaceable list — meaning the seven figure-layout fixes made in v1.3.0 ⛔ reach no existing
+project.** **`docs` and the six launchers are now on the list.**
+
+⚠️ **`.gitignore` and `.gitattributes` are deliberately ⛔ left off** — they have mixed
+ownership (the framework supplies defaults, the user adds to them), and per constitution §6.4
+replacing them wholesale would delete the user's lines.
+**⛔ The known cost is recorded in `upgrade.py`'s comments.**
+
+### Paired samples (**six**)
+
+| Sample | Must |
+|---|---|
+| The index has never been generated | **INCOMPLETE**, ⛔ not PASS |
+| A freshly generated index | ⛔ must not false-alarm |
+| 🔴 **The user creates a `deepresearch/` of their own** | **that file must appear in the index** (⛔ proving it is not a whitelist) |
+| A file added after generation | **FAIL `MY_INDEX_STALE`** |
+| A description pointing at a missing file | **FAIL `INDEX_NOTE_DANGLING`** |
+| A broken notes file | **INCOMPLETE**, ⛔ never "there are no descriptions" |
+
+⚠️ **The third sample's criterion was corrected by the self-test itself: the first version
+checked "the sensor's output", ⛔ and the sensor prints counts, not the file list. It now
+checks the generated index file.**
+🔴 **⛔ I had aimed the criterion at the wrong object, ⚠️ and the self-test caught it.**
+
+**Self-tests 72 → 78. Sensors 8 → 9.**

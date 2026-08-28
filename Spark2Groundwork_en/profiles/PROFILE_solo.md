@@ -16,7 +16,7 @@
 | `governance/RULES.md`, `governance/Incident_Log.md` | The working rules, and the failure patterns behind them |
 | Both files in `ledgers/` | Your ideas, and the source behind each sentence |
 | `corpus/`, `corpus_md/` | Your source papers and their plain-text copies |
-| `incidents/MY_INCIDENTS.md` | **What went wrong in your project.** Section 5 explains why this is the important one |
+| `my/MY_INCIDENTS.md` | **What went wrong in your project.** Section 5 explains why this is the important one |
 | `NEXT_SESSION_MEMO.md` | Where things stood at the end of a round; used to open the next one |
 | `scripts/harness/` | The automatic checks |
 | The three buttons at the top level | snapshot / review changes / check update |
@@ -98,11 +98,11 @@ something you have to remember.**
 
 **Whenever you catch the AI doing something worth remembering** — a citation that does not
 match, a field filled in carelessly, a confident-sounding judgement it never actually checked —
-**ask it there and then to write the case into `incidents/MY_INCIDENTS.md`.**
+**ask it there and then to write the case into `my/MY_INCIDENTS.md`.**
 
 **One sentence is enough:**
 
-> "Log what just happened in `incidents/MY_INCIDENTS.md`. Say what the task was,
+> "Log what just happened in `my/MY_INCIDENTS.md`. Say what the task was,
 > why you did it that way, and how to avoid it next time."
 
 ⚠️ **Changing the status column to "handled" is your decision, ⛔ never the AI's.**
@@ -116,13 +116,19 @@ meaning anything.**
 
 **About every ten rounds, or every three logged cases, ask the AI to do this:**
 
-> "Read `incidents/MY_INCIDENTS.md` and find the patterns that repeat.
+> "Read `my/MY_INCIDENTS.md` and find the patterns that repeat.
 > For each one, tell me: is this something an existing rule failed to stop,
 > or is there no rule covering it at all?"
 
 **Then you decide whether to add a rule.**
-⛔ **The AI may propose; writing it into `governance/RULES.md` is your call** —
+⛔ **The AI may propose; writing it into `my/MY_RULES.md` is your call** —
 **because that rule will bind both of you afterwards.**
+
+🔴 **⚠️ Into `my/MY_RULES.md`, ⛔ not `governance/RULES.md`.**
+**`governance/` is a framework folder and is replaced wholesale on upgrade —
+⛔ anything you write there disappears.**
+**Number your own rules `P-01`, `P-02`, … ⛔ never continue the sequence as `R-36`**
+(the next framework version may use that number itself).
 
 ### 5.3 What is worth turning into a rule
 
@@ -137,26 +143,46 @@ meaning anything.**
 
 ### 5.4 What this gets you
 
-**After a year, your `governance/RULES.md` will not look like anyone else's.**
+**After a year, your `my/MY_RULES.md` will not look like anyone else's.**
 **That is not drift; that is the point** —
 **your copy slowly becomes a set of defences against the mistakes that your topic, your AI and
 your working habits actually produce.**
 
-⚠️ **This is also why upgrading never overwrites your material.**
-🔴 **The upgrade tool recognises nine names of its own and refuses everything else** —
-**your incident log, your ledgers, your papers, `PROJECT.md`, and any folder you created
-yourself are all outside its reach.**
+⚠️ **An upgrade never overwrites any of this: `my/`, `ledgers/`, `corpus/`, `corpus_md/`,
+`handoffs/`, `PROJECT.md`, or any folder you created yourself.**
+🔴 **The upgrade tool recognises a handful of names of its own and refuses everything else.**
+
+> ⚠️ **v1.4.1 corrected something here, and it is worth saying out loud.**
+> **Before v1.4.0 this section told you to accumulate rules in `governance/RULES.md`,
+> and the next paragraph said "upgrading never overwrites your material" and listed the
+> things that were safe — 🔴 ⛔ and `RULES.md` was not on that list. Every word was true,
+> and together they led the reader to the opposite conclusion.**
+> **⛔ Rules now live in `my/`, and the copy of the framework's rules is watched by
+> `sensor_my_rules.py`.**
 
 ---
 
 ## 6. Configuration
 
-Open `scripts/harness/framework_config.py` and make sure this is empty:
+**Open `governance_config.json` in the project root.** ⚠️ **⛔ Not the `.py` file under `scripts/`** —
+🔴 **`scripts/` is replaced wholesale on upgrade, and settings changed there disappear.**
 
-```python
-"write_scopes": {}          # empty for a solo setup. The checks will say "not applicable"
+**A solo setup needs no changes at all.** The default already reads:
+
+```json
+"write_scopes": {}
 ```
 
-**Leaving it empty does not switch a check off. It tells the checks that this project has no
-division of roles.**
-⛔ **They will honestly print "not applicable" rather than printing "passed".**
+⚠️ **Empty ⛔ does not switch a check off.** **It tells the checks that this project has no
+division of roles, so they issue ⛔ no out-of-scope verdict — because they read `git status`
+and ⛔ cannot tell your edit from the AI's.**
+
+🔴 **Changes inside the no-write area are still listed** (from v1.4.1):
+
+```
+[WARN] 1 change this round falls inside the AI's default no-write area:
+       ledgers/Claim_Ledger.md — if you made it yourself this is normal;
+       if not, read this list
+```
+
+⛔ **⚠️ That is ⛔ not a red light and ⛔ not silence.** **It is a list for you to claim.**

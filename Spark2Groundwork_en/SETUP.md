@@ -224,6 +224,10 @@ xattr -dr com.apple.quarantine .
 A governance document nobody maintains is worse than not having it —
 **it makes you think somebody is watching.**
 
+⚠️ **If you chose the multi-agent profile:** make a folder called `scratch` at the top level
+of your project, **as the audit role's sandbox.** ⛔ It does not come with the framework —
+**`scratch/` is by definition the place that is not under version control.**
+
 ### 5.2 Run the self-test first
 
 ```
@@ -313,7 +317,7 @@ there.** If you skip it, you will see the same changes again next time.
 
 ⛔ **Do not loosen the standard.**
 The correct response is to fix the comparison logic and **add a test case saying "this
-situation must not raise an alarm".** `governance/RULES.md` explains this in full.
+situation must not raise an alarm".** `my/MY_RULES.md` explains this in full (the framework's rules are copied into its §1).
 
 ### 8.2 The AI will be wrong where it is most confident
 
@@ -353,7 +357,7 @@ latest on GitHub.
 and the four files `README.md`, `SETUP.md`, `INITIALIZE_PROMPT.md`, `file_index.md`.
 
 ⛔ **Everything else is left alone** — including `PROJECT.md`, `ledgers/`, `corpus/`,
-`incidents/`, **and any folder you made yourself** (notes, figures, submitted drafts,
+`my/`, **and any folder you made yourself** (notes, figures, submitted drafts,
 whatever you like).
 
 ⚠️ **This is worth stating plainly, because it is often read the other way round:**

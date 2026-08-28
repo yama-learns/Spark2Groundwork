@@ -104,17 +104,23 @@
 
 ### 5.1 事故由治理角色維護，⛔ 由你結案
 
-**約定好一句話，寫進治理角色的常駐指示：**
+🔴 **三個角色各有一份開工指令，開新對話時整份貼過去：**
 
-> 「任何一輪，只要研究或審計角色指出了一個值得記住的失誤，
-> 你負責把它登進 `incidents/MY_INCIDENTS.md`，並在封包裡告訴我。」
+| 角色 | 貼這一份 |
+|---|---|
+| 治理 | `prompts/START_治理AI.md` |
+| 研究 | `prompts/START_研究AI.md` |
+| 審計 | `prompts/START_審計AI.md` |
+
+**「登記事故」這件事已經寫在治理角色那一份裡了**——
+**⛔ 你不需要自己再交代一次。**
 
 ⚠️ **「狀態」欄改成「已處置」仍然只有你能決定。**
 **理由與台帳相同：如果角色可以自己宣告事情處理完了，那一欄就不再代表任何事。**
 
 ### 5.2 審計角色的第二個用途：找模式
 
-**大約每十輪，把 `incidents/MY_INCIDENTS.md` 整份交給審計角色，問：**
+**大約每十輪，把 `my/MY_INCIDENTS.md` 整份交給審計角色，問：**
 
 > 「這些事故裡，哪幾筆其實是同一個機制的不同外觀？
 > 對每一個機制，告訴我：現有規則為什麼沒擋住它？」
@@ -128,7 +134,7 @@
 **流程固定成這樣：**
 
 ```
-審計角色提出 → 治理角色評估可行性與代價 → 你裁決 → 治理角色寫進 RULES.md
+審計角色提出 → 治理角色評估可行性與代價 → 你裁決 → 治理角色寫進 my/MY_RULES.md
 ```
 
 ⛔ **不要讓提議的人自己核准。**
@@ -147,17 +153,30 @@
 
 ## 6. 設定
 
-打開 `scripts/harness/framework_config.py`，把寫入範圍寫清楚：
+**打開專案根目錄的 `governance_config.json`**，把寫入範圍寫清楚：
 
-```python
+```json
 "write_scopes": {
-    "governance": ["governance", "policy", "scripts", "incidents",
-                   "file_index.md", "NEXT_SESSION_MEMO.md"],
-    "research":   ["corpus_md", "RESEARCH_MEMO.md"],
-    "audit":      ["scratch"],          # 沙盒；正式報告寫進 handoffs/
-    "_shared":    ["handoffs"],
+  "governance": ["governance", "policy", "scripts", "my",
+                 "file_index.md", "NEXT_SESSION_MEMO.md"],
+  "research":   ["corpus_md", "RESEARCH_MEMO.md"],
+  "audit":      ["scratch"],
+  "_shared":    ["handoffs"]
 }
 ```
+
+⚠️ **`audit` 只有沙盒是刻意的：正式報告寫進 `handoffs/`（`_shared`）。**
+
+🔴 **⚠️ ⛔ 不要改 `scripts/harness/framework_config.py`。**
+**那是框架檔案，升級時整包替換——⛔ 改在那裡的設定會消失，而且不會有任何訊息。**
+**⚠️ `governance_config.json` 在升級工具的「永不替換」清單上。**
+
+⛔ **打錯的鍵不會被靜默吃掉**：感測器會直接 FAIL 並告訴你最接近的正確鍵名。
+
+🔴 **`scratch/` 不會隨框架附上，⛔ 你要自己建一個。**
+**在專案根目錄開一個叫 `scratch` 的資料夾就好。**
+⚠️ **它不隨框架附上是刻意的：`scratch/` 的定義就是「不進版本控制」，
+⛔ 而一個進了版本控制的沙盒就不再是沙盒了。**
 
 ⚠️ **一定要給審計角色一塊沙盒（`scratch/`）。**
 **如果你要求它做對抗測試，卻沒給它一塊可以亂寫的地方，

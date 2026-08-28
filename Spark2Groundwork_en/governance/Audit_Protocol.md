@@ -87,7 +87,7 @@ nowhere to run tests **asks the auditor either not to test or to go out of scope
 
 **Triggers:** sensor code changed / T0 changed / write scope changed / new incident logged.
 
-**The four attacks are in `profiles/PROFILE_multi_agent.md` §4.3.**
+**The five questions for auditing the governance role (`G-1`–`G-5`) are in `profiles/PROFILE_multi_agent.md` §4.**
 
 ⛔ **The governance role must not assess whether it needs auditing.**
 

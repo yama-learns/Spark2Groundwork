@@ -1,0 +1,51 @@
+{
+  "_note": [
+    "These are this project's permission settings. This file is the 'mechanical",
+    "counterpart' that constitution §6.3 refers to.",
+    "",
+    "⛔ An upgrade never overwrites this file (it is on upgrade.py's NEVER_TOUCH list).",
+    "⚠️ Which means: if the framework later changes its defaults, those changes do not",
+    "   reach here — deliberately. A specification update should reach you; what you have",
+    "   authorised is your decision, ⛔ and the framework should not overwrite it.",
+    "",
+    "⚠️ Keys starting with an underscore (like this one) are for people; the checker skips them.",
+    "⛔ A misspelled key is not skipped — the sensor FAILs and names the closest valid key."
+  ],
+  "_what deny is": [
+    "Where the AI does not write by default. ⚠️ A default, ⛔ not a prohibition —",
+    "clear it and you have granted full authorisation.",
+    "",
+    "🔴 Why these five: the criterion is 'can it be restored if it breaks'.",
+    "   ledgers/ corpus/ corpus_md/ can be restored from nowhere.",
+    "   governance/AGENTS.md and WORKFLOW_CONSTITUTION.md are T0; break them and the",
+    "   whole rule set bends with them.",
+    "",
+    "⚠️ To let a governance AI maintain T0, delete the last two entries. That is your call.",
+    "⛔ The framework sets no prohibition you cannot lift (constitution §6.3)."
+  ],
+  "deny": [
+    "ledgers",
+    "corpus",
+    "corpus_md",
+    "governance/AGENTS.md",
+    "governance/WORKFLOW_CONSTITUTION.md"
+  ],
+  "_what write_scopes is": [
+    "Only multi-role projects need this: which paths each role may write.",
+    "A solo project leaves it as {}.",
+    "",
+    "⚠️ Empty ⛔ does not mean the check is off (from v1.4.1).",
+    "   With it empty, changes inside the deny scope are still listed — there is just no",
+    "   out-of-scope verdict, because the sensor reads git status and ⛔ cannot tell your",
+    "   edit from the AI's.",
+    "",
+    "Example (three roles):",
+    "  \"write_scopes\": {",
+    "    \"governance\": [\"governance\", \"policy\", \"scripts\", \"my\", \"file_index.md\"],",
+    "    \"research\":   [\"corpus_md\", \"RESEARCH_MEMO.md\"],",
+    "    \"audit\":      [\"scratch\"],",
+    "    \"_shared\":    [\"handoffs\"]",
+    "  }"
+  ],
+  "write_scopes": {}
+}

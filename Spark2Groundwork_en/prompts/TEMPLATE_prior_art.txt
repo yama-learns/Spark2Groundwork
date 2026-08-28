@@ -1,29 +1,103 @@
 Role: Senior researcher conducting a prior-art review.
 
+⚠️ This template is already assembled — ⛔ you do not need to paste any blocks into it.
+   Send the whole file as it stands. Only two things are yours to fill in: the
+   CLAIM UNDER TEST below, and the keywords and databases in BILINGUAL SEARCH.
+
 OBJECTIVE
 =========
 Determine whether the following claim has ALREADY BEEN TESTED, and with what result.
 
   CLAIM UNDER TEST: <<<FILL IN: one sentence, and it must be falsifiable>>>
 
-<<<PASTE BLOCK B (enumerate, do not summarise)>>>
+ENUMERATE, DO NOT SUMMARISE
+===========================
+ENUMERATE the closest existing work. ONE PER LINE. For each:
+author | year | venue | full title | what exactly they did |
+what they did NOT do that the target question requires.
 
-<<<PASTE BLOCK C (competing accounts)>>>
+Do NOT write general statements such as "there is a large literature on X".
+Either name the studies, or write exactly `NONE RETRIEVED` and nothing else.
+A general claim about a literature is not a finding.
 
-<<<PASTE BLOCK F (measurement and reliability)>>>
+`NOT-COVERED` is a verdict about whether anyone has ANSWERED the question.
+It is NOT a statement that you found no relevant literature. EVEN WHEN THE
+VERDICT IS NOT-COVERED, you must still enumerate the closest existing work.
 
-<<<PASTE BLOCK E (bilingual search)>>>
+COMPETING ACCOUNTS
+==================
+For each alternative account, give:
+  - name of the account, and its canonical reference
+  - what it explains that the target claim also explains
+  - the observable result on which the two accounts DISAGREE
 
-<<<PASTE BLOCK D (source standards)>>>
+The third bullet is the important one. An alternative account that makes the
+same predictions is not a competitor — it is a re-description.
 
-<<<PASTE BLOCK A (hallucination guard)>>>
+If you find no genuine competing account, write exactly
+`NO COMPETING ACCOUNT RETRIEVED` — and then state what you searched for.
+
+MEASUREMENT AND RELIABILITY
+===========================
+For every measure you report:
+  - state the REPORTED reliability of the individual-level score, with the source
+  - if the source does not report it, write [RELIABILITY NOT REPORTED]
+  - state sample size, number of trials, number of sessions
+  - state whether the score is a difference score, a fitted parameter, or a
+    directly-observed quantity
+
+Do NOT estimate, infer, or carry over a value from a different study.
+[RELIABILITY NOT REPORTED] is a useful finding; a plausible-looking invented
+number is not.
+
+BILINGUAL SEARCH
+================
+You MUST run BOTH search passes and report what each yielded.
+PASS A (English): <<<FILL IN: English keywords>>>
+PASS B (<<<FILL IN: your language>>>): <<<FILL IN: keywords in that language>>>
+<<<FILL IN: the specialist databases for that language>>>
+
+If a non-English search returns nothing for a sub-question, SAY SO EXPLICITLY
+for that sub-question. Do not silently substitute an English-language study.
+
+SOURCE STANDARD (graded, not exclusionary)
+==========================================
+Include peer-reviewed articles, conference papers, and book chapters in ANY
+language. Tag every entry:
+  [LANG: ...]  [VENUE-TYPE: ...]  [EVIDENCE: empirical|methodological|review|conceptual]
+
+A missing identifier is NOT a reason to exclude a source. Give the fullest
+available identifier and mark [NO-DOI: <reason>].
+
+NEVER invent bibliographic fields to satisfy a citation format.
+Inventing a journal name, volume, or page range is a fabrication, not a
+formatting choice.
+
+HALLUCINATION GUARDRAIL
+=======================
+You are producing LEADS, not ground truth. Every claim will be independently
+verified against the original source before use. Precision about what you are
+unsure of is more valuable than fluent completeness.
+
+Wherever you are uncertain, output [UNCERTAIN: <what specifically>] rather than
+a confident-sounding guess. Do NOT invent effect sizes, sample sizes, reliability
+coefficients, journal names, or identifiers.
+
+The specific failure to avoid: describing a real study's CONTENT correctly while
+attributing it to the wrong author, journal, or title. The correct-sounding
+content description causes readers to trust the incorrect bibliographic record.
+
+Do NOT strip hedging from what a source actually said.
+TITLE ACCURACY: reproduce every title exactly as published. Do NOT paraphrase,
+shorten, or improve a title. A title you have adjusted is no longer a locator —
+a reader who searches for it will not find the paper, and will not know why.
 
 OUTPUT CONTRACT
 ===============
 1. PRIOR ART VERDICT: FULLY-COVERED / PARTIALLY-COVERED / NOT-COVERED
-   plus the enumeration in the four-part format of block B
+   plus the enumeration in the four-part format required above
 2. COMPETING ACCOUNTS
-3. SEARCH LOG (PASS A and PASS B separately)
+3. SEARCH LOG (PASS A and PASS B reported separately)
 4. FINDINGS
 5. EVIDENCE TABLE
 6. GAPS: what remains genuinely unknown after this search

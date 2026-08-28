@@ -188,20 +188,43 @@ Spark2Groundwork_zh/     完整框架，繁體中文
 
 Inside either one:
 
+🔴 **Everything splits into two piles, and the line is who owns a file.**
+
+**Yours — an upgrade never touches any of it:**
+
+| | |
+|---|---|
+| `PROJECT.md` | 🔴 **The only file you have to write yourself** |
+| `my/MY_RULES.md` | **Your working rules.** The framework's are copied into §1; the `P-xx` you write go in §2 |
+| `my/MY_INCIDENTS.md` | What actually went wrong in this project |
+| `my/MY_INDEX.md` | An index of everything here that is yours — **generated, never hand-written** |
+| `my/tools/` | Scripts you wrote. ⛔ Not in `scripts/`, which is replaced on upgrade |
+| `corpus/` | **Your source PDFs go here**, along with your bibliography |
+| `corpus_md/` | The plain text pulled out of those PDFs, for checking quotations |
+| `ledgers/` | Where your ideas and your quoted evidence are recorded |
+| `handoffs/` | Handoff packets: what each round did |
+| `NEXT_SESSION_MEMO.md` | Working state, overwritten each round |
+| `governance_config.json` | **You decide where the AI may write** |
+
+**The framework's — if it breaks, download it again:**
+
 | | |
 |---|---|
 | `SETUP.md` | The setup guide. Start here |
 | `INITIALIZE_PROMPT.md` | The text you paste to your AI the first time |
-| `PROJECT.md` | 🔴 **The only file you have to write yourself** |
-| `corpus/` | **Your source PDFs go here**, along with your bibliography |
-| `corpus_md/` | The plain text pulled out of those PDFs, for checking quotations |
-| `ledgers/` | Where your ideas and your quoted evidence are recorded |
-| `governance/` | The rules the AI works under |
+| `governance/` | The rules the AI works under, and the two ledgers' field specifications |
 | `policy/` | Rules for particular topics: sources, handovers, model identity, outside tools |
 | `profiles/` | Pick the one that matches how you work |
 | `prompts/` | Ready-made instructions you can paste |
 | `scripts/harness/` | The automatic checks |
+| `docs/` | The figures |
+| `file_index.md` | The framework's own index. ⛔ Do not register your documents here |
 | Three buttons | snapshot / review changes / check update (`.bat` for Windows, `.command` for Mac) |
+
+🔴 **Why the split: a file may have exactly one owner.** Mix the framework's content with
+yours and an upgrade will lose one of them. ⚠️ **So your rules live in `my/`, ⛔ not in
+`governance/` — and when the framework adds a rule, a tool copies the new text into your file
+verbatim while leaving the rules you wrote alone.**
 
 ---
 

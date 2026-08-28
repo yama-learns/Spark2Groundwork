@@ -72,8 +72,13 @@ including folders you created yourself.**""",
 Next:
   1. Press the review-changes button to see what this package changed
   2. Run `python3 scripts/harness/run_all_sensors.py` and confirm it is still green
-  3. ⚠️ **If you had hand-edited files in this package, those edits are gone now** —
-     recover them with review-changes (the checkpoint is still there)""",
+  3. 🔴 **Run `python3 scripts/harness/tool_my_index.py` to regenerate your file index**
+     ⚠️ The upgrade touched framework files, so the index is now stale — ⛔ without this
+     you will see MY_INDEX_STALE on the next round
+  4. ⚠️ **If you had hand-edited files in this package, those edits are gone now** —
+     recover them with review-changes (the checkpoint is still there)
+  5. ⚠️ **If the framework added working rules, `my/MY_RULES.md` is now short a few** —
+     run `python3 scripts/harness/tool_sync_my_rules.py` to copy them in verbatim""",
  "apply_needs_target": "[FAIL] Say which one, e.g.: upgrade.py apply governance",
 }
 
@@ -83,14 +88,27 @@ Next:
 #    **包含使用者自己開的資料夾（筆記、圖表、投稿版本……），⛔ 那些名字不可能事先列舉。**
 #    ⚠️ 成對樣本見 `run_selftest.py` 的 `upgrade_case()`：
 #    **拿一個工具沒聽過的資料夾當目標，必須被拒絕，且內容原封不動。**
-FRAMEWORK_DIRS = ("governance", "policy", "profiles", "prompts", "scripts")
-FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md")
+# ⚠️ **v1.4.1 added `docs` and the six launchers.**
+#    🔴 **They have always been the framework's, ⛔ and they were not on the replaceable
+#    list — meaning the seven figure-layout fixes made in v1.3.0 ⛔ reach no existing project.**
+#    ⚠️ **This was caught by `tool_my_index.py` on its very first run: it lists everything the
+#    framework does ⛔ not own, and `docs/` and the six buttons appeared in that list.**
+FRAMEWORK_DIRS = ("governance", "policy", "profiles", "prompts", "scripts", "docs")
+FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md",
+                   "check_update.bat", "check_update.command",
+                   "review_changes.bat", "review_changes.command",
+                   "snapshot.bat", "snapshot.command")
+# 🔴 **`.gitignore` and `.gitattributes` are deliberately ⛔ absent above.**
+#    ⚠️ **They have mixed ownership: the framework supplies defaults, ⛔ and users add their
+#    own rules.** **⇒ Per constitution §6.4, replacing them wholesale would delete those lines.**
+#    ⛔ **Known cost: later changes to the framework's default ignore rules ⛔ do not reach
+#    existing projects. ⚠️ Written down here rather than left blank.**
 # ⚠️ **這一份⛔ 不是保護機制。** 保護機制是上面那兩份「可替換清單」。
 #    **本清單唯一的用途，是在使用者不小心把常見的自有資料當成升級目標時，
 #    給他一句看得懂的錯誤訊息**，而不是通用的「這不是可替換項目」。
 #    ⛔ **不要把它改成主要防線**——**那會讓沒列在這裡的資料夾看起來像是不受保護的。**
 NEVER_TOUCH = ("PROJECT.md", "ledgers", "corpus", "corpus_md", "handoffs",
-               "incidents", "NEXT_SESSION_MEMO.md", "governance_config.json")
+               "my", "NEXT_SESSION_MEMO.md", "governance_config.json")
 VERSION_FILE = "_VERSION"
 
 

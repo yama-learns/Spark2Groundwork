@@ -36,6 +36,31 @@ DEFAULTS = {
     # ⚠️ 這是 **glob**，不是硬編清單（R-21：白名單會靜默過濾）
     "governance_globs": ["governance/*.md", "policy/*.md", "ledgers/*.md", "file_index.md"],
 
+    # 🔴 **你的文件索引**（`tool_my_index.py`、`sensor_my_index.py`）。
+    # ⚠️ **實測個案：某專案套用框架後就不再維護自己的檔案索引了——
+    #    它的 `file_index.md` 裡⛔ 沒有一條跟研究有關。**
+    #    🔴 **`file_index.md` 原本是先行專案用來管研究文件的表，
+    #    精煉為框架時內容全變成框架自己的東西，⛔ 而名字沒換。**
+    # ⛔ **索引由程式產生（判準＝「框架不擁有的每一樣東西」，⛔ 不是一份要收哪些的清單）；
+    #    說明由 AI 維護。⚠️ 分開的理由：程式對 .docx／.pdf 取不到有意義的標題。**
+    "my_index": "my/MY_INDEX.md",
+    "my_index_notes": "my/MY_INDEX_notes.json",
+    # ⚠️ **框架自己產生的檔案：⛔ 它們不是「你的文件」。**
+    #    🔴 **實測：跑完一次升級之後，`git-checkpoint.log` 出現在索引的「尚無說明」裡——
+    #    ⛔ 一個永遠不會有人去寫說明的檔案，會變成一行永久的雜訊。**
+    #    ⛔ **這是排除清單（deny 形態），⛔ 不是「要收哪些」的白名單。**
+    "my_index_exclude": ["git-*.log"],
+
+    # 🔴 **公版規則 ↔ 專案規則**（`sensor_my_rules.py`、`tool_sync_my_rules.py`）。
+    # ⚠️ **為什麼要有兩份：** `governance/` 在升級時整包替換，
+    #    **所以一個往 `RULES.md` 累積自己規則的專案，會在升級時失去那些累積。**
+    #    🔴 **v1.4.0 以前確實如此，而 `PROFILE_solo.md` 正在鼓勵使用者那樣做。**
+    # ⛔ **兩份拷貝⛔ 不能沒有守望者**——那正是失效家族的軸二。守望者是 `sensor_my_rules.py`。
+    "framework_rules": "governance/RULES.md",
+    "my_rules": "my/MY_RULES.md",
+    # ⚠️ 標了它就不報 `RULE_TEXT_DRIFT`，改為印進統計欄——**豁免要看得見。**
+    "override_marker": "[本專案覆寫]",
+
     # 台帳
     "conjecture_ledger": "ledgers/Conjecture_Ledger.md",
     "claim_ledger": "ledgers/Claim_Ledger.md",
@@ -56,7 +81,7 @@ DEFAULTS = {
     #    流程是「AI 提案 → 人裁決 → 人寫入台帳」（`governance/AGENTS.md` §5），
     #    於是在「提案已交、裁決未下」的那段期間，**提案檔必然引用尚未存在的編號**，
     #    而 `CITATION_NOT_IN_LEDGER` 必然報 FAIL。實測一輪 12 筆。
-    #    → 這正是 `profiles/PROFILE_multi_agent.md` §4.3 G-1b 問的
+    #    → 這正是 `profiles/PROFILE_multi_agent.md` §4 的 G-2 問的
     #      「新規則會不會與某條既有規則在『同時遵守』時互相排斥」。
     #
     # ⛔ **豁免的判準刻意是結構性的（路徑＋檔名），不是一句自由文字的理由。**
@@ -70,7 +95,14 @@ DEFAULTS = {
     #    根目錄的 .md 是框架提供的模板（README／SETUP／file_index …），**本來就不該有作者欄**。
     #    舊版掃根目錄，因此必須靠一張硬編豁免清單壓住自己製造的告警——
     #    **那張白名單是為了補償一個錯的掃描範圍而存在的**（`R-21`）。
-    "attribution_globs": ["handoffs/*.md", "outputs/*.md", "reports/*.md"],
+    # ⚠️ **v1.4.1：`outputs/` 與 `reports/` 兩個 glob 已移除。**
+    #    🔴 **它們從 v1.0.0 起就命中 0 個檔案——那兩個目錄從未存在過，也從未被任何文件定義。**
+    #    ⛔ **不補建目錄**：研究產出的落點在 v1.5.0 由 `research/` 定義，
+    #    **先建兩個沒有定義的目錄，等於自己製造一次遷移。**
+    # 🔴 **已知缺口（⛔ 刻意留著，不假裝已覆蓋）：`MODEL_IDENTITY.md` §3.4 要求
+    #    「主文本」的作者欄寫具體型號，⛔ 而本範圍裡不可能有主文本。**
+    #    **該節已加註此事。掃描範圍待 `research/` 存在後補上。**
+    "attribution_globs": ["handoffs/*.md"],
 
     # 🔴 **程式碼的掃描範圍**（`sensor_reference_integrity.py`）。
     # ⚠️ `.py` 與 `.sh` 的**檔頭註解**是規則引用的重災區，而在此之前從未被掃過。
@@ -118,7 +150,8 @@ DEFAULTS = {
                         "policy/*.md", "profiles/*.md"],
 
     # 產出物：會被下游引用者，受自我背書檢查
-    "artifact_globs": ["handoffs/*.md", "outputs/*.md", "reports/*.md"],
+    # ⚠️ 同 `attribution_globs`：`outputs/`／`reports/` 兩個死 glob 已於 v1.4.1 移除。
+    "artifact_globs": ["handoffs/*.md"],
 
     # 掃描時一律排除（⚠️ 以**相對於 root 的路徑**判定，見 R-18）
     #
@@ -129,8 +162,11 @@ DEFAULTS = {
     # ⛔ **不得讓 write_scopes 的檢查自動略過 excluded_dirs**——
     #    那等於讓排除清單順便取得寫入豁免，而**排除清單是為了省掃描成本設的，不是為了授權。**
         # ⚠️ 這幾個目錄「是什麼」的定義處是憲章 §6.2，⛔ 本處只列名不解釋。
+    # ⚠️ **`_upgrade` 是 v1.4.1 補的。** 🔴 **它是升級用的暫存包（`upgrade.py` 讀它），
+    #    ⛔ 而它一度被 `tool_my_index.py` 當成「你的文件」列進索引——一次 85 筆。**
+    #    **⚠️ 那是實際跑一次升級才看到的，⛔ 不是讀設定看出來的。**
     "excluded_dirs": ["archive", ".git", "__pycache__", "selftest", "scratch",
-                      "_to_delete", "node_modules", ".venv"],
+                      "_to_delete", "_upgrade", "node_modules", ".venv"],
 
     # 🔴 **AI 的寫入禁區——⚠️ 這是「預設值」，⛔ 不是禁令。**
     #
@@ -142,11 +178,17 @@ DEFAULTS = {
     #    🔴 **台帳與語料壞了，沒有任何地方可以還原。**
     # ⛔ 這是資訊，不是規勸——**知道差別之後怎麼設定，是使用者的決定。**
     #
-    # ⚠️ **T0 兩份刻意不列在這裡**——治理 Agent 現在**可以**維護它們，
-    #    **而那正是這套框架能被使用者自己養下去的前提。**
+    # 🔴 **v1.4.1：T0 兩份現在逐字列在這裡。**
+    #    ⚠️ **舊版刻意不列，而感測器在程式裡無條件把它們併進來——⛔ 於是設定關不掉，
+    #    而本註解卻寫著「治理 Agent 可以維護它們」。兩處意圖相反。**
+    #    ✅ **列在這裡之後，「清空 `deny` 就是完整授權」（憲章 §6.3）第一次是真的。**
+    #    ⛔ **要讓治理 AI 能維護 T0，把這兩行刪掉——那是你的裁決，⛔ 不是框架的禁令。**
     #
-    # ⚠️ **本項只在有設 `write_scopes` 時生效**（感測器讀 `git status`，分不出人與 AI）。
-    "deny": ["ledgers", "corpus", "corpus_md"],
+    # ⚠️ **v1.4.1 起，本項⛔ 不再取決於 `write_scopes` 有沒有設。**
+    #    **單人專案（`write_scopes` 為空）得到的是一筆列出檔名的 WARN，⛔ 不是靜默，
+    #    也⛔ 不是紅燈**——感測器讀 `git status`，⛔ 分不出人與 AI。
+    "deny": ["ledgers", "corpus", "corpus_md",
+             "governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md"],
 
     # 多角色專案才需要：各角色的寫入範圍
     # 單 agent 專案請留空 {}，感測器會自動略過該項檢查
@@ -172,10 +214,28 @@ def load(root=None):
     user = (pathlib.Path(root) / "governance_config.json") if root else _USER
     if user.exists():
         try:
-            cfg.update(json.loads(user.read_text(encoding="utf-8")))
+            data = json.loads(user.read_text(encoding="utf-8"))
         except Exception as e:                       # noqa: BLE001
             # ⛔ 不得靜默忽略：設定壞掉而感測器照跑，等於在錯誤的範圍上宣告通過
             raise SystemExit(f"[FAIL] governance_config.json 無法解析：{e}")
+        # 🔴 **不認得的鍵一律報錯，⛔ 不得靜默吃掉（v1.4.1）。**
+        #    ⚠️ **舊版是 `cfg.update(data)`：把 `deny` 打成 `denny`，程式不會有任何反應——**
+        #    **`denny` 被加進設定、`deny` 留在預設值，⛔ 而使用者相信自己設定過了。**
+        #    **🔴 那是「靜默過濾」家族發生在設定的入口。**
+        # ⛔ **不得降級成 WARN：一個被吃掉的設定鍵，畫面上與「設定成功」一模一樣。**
+        # ⚠️ 底線開頭的鍵（如 `_說明`）刻意允許——**設定檔要能寫給人看。**
+        unknown = [k for k in data if k not in DEFAULTS and not k.startswith("_")]
+        if unknown:
+            import difflib
+            lines = []
+            for k in unknown:
+                near = difflib.get_close_matches(k, DEFAULTS, n=1)
+                lines.append(f"  ⛔ {k}" + (f"　⚠️ 你可能想寫的是：{near[0]}" if near else ""))
+            raise SystemExit("[FAIL] governance_config.json 有本框架不認得的設定鍵：\n"
+                             + "\n".join(lines)
+                             + "\n**⛔ 改對或刪掉它。一個被吃掉的設定鍵，"
+                               "與設定成功長得一模一樣。**")
+        cfg.update(data)
     return cfg
 
 

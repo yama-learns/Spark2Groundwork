@@ -29,6 +29,25 @@ def _force_utf8():
     exist to prevent, occurring inside the framework itself.**
 
     ⛔ `errors="replace"` is deliberate: **the worst case is a printed `?`, ⛔ not a dead process.**
+
+    ## 🔴 ⛔ What this function covers: **only what WE print out**
+
+    ⚠️ **⛔ It does ⛔ not cover what we read in.**
+    **A child process's output is decoded by `subprocess` itself, ⛔ and with `text=True`
+    and no `encoding` that means the locale encoding (Traditional-Chinese Windows = `cp950`).**
+
+    🔴 **Measured (2026-08-27, Python 3.14.2): `sensor_scope_and_t0.py` therefore received
+    `returncode == 0` with `stdout` set to `None`** — **the decode blew up inside
+    `subprocess`'s reader thread, the thread died, and the exception ⛔ never reached the
+    main thread.**
+
+    ⛔ **⇒ Every `subprocess.run` that reads output must state
+    `encoding="utf-8", errors="replace"` itself. ⚠️ This function ⛔ cannot help it.**
+    **Watcher: `subprocess_encoding_case()` in `run_selftest.py` (a static check).**
+
+    ⚠️ **⛔ This section was added afterwards: the function used to read as though
+    "encoding has been dealt with", 🔴 which was a true sentence whose scope did not
+    cover the other channel (`R-34`).**
     """
     for stream in (sys.stdout, sys.stderr):
         try:
@@ -147,7 +166,8 @@ def dead_glob_findings(dead, where, root=None):
                         "'Nothing to compare against' and 'everything matched' look the same"))
         else:
             out.append(("WARN", "SCAN_GLOB_MATCHES_NOTHING",
-                        f"{where}: glob '{g}' matched zero files (the directory does not exist "
-                        f"yet) — **it protects nothing right now** "
+                        f"{where}: glob '{g}' matched zero files "
+                        "(⚠️ the directory does not exist, or it exists and holds no file "
+                        "of that extension yet) — **it protects nothing right now** "
                         f"(⚠️ not applicable is not a pass)"))
     return out

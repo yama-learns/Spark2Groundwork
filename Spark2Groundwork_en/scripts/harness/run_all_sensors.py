@@ -32,6 +32,8 @@ SENSORS = [
     ("sensor_scope_and_t0.py", False),
     ("sensor_reference_integrity.py", False),
     ("sensor_clause_sync.py", False),
+    ("sensor_my_rules.py", False),
+    ("sensor_my_index.py", False),
 ]
 
 # ⚠️ **Not in the default suite: their interface is a single file, not a whole project.**

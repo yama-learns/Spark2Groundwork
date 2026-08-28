@@ -269,7 +269,7 @@ off in a config is safer than a gate that gets bypassed.**
 | | After it breaks |
 |---|---|
 | **Framework documents** (`governance/` `policy/` `profiles/` `prompts/` `scripts/` …) | ✅ **Re-download from GitHub and overwrite** |
-| **`ledgers/` `corpus/` `corpus_md/` `handoffs/` `incidents/` `PROJECT.md`** | 🔴 **Nothing anywhere can restore them** |
+| **`ledgers/` `corpus/` `corpus_md/` `handoffs/` `my/` `PROJECT.md`** | 🔴 **Nothing anywhere can restore them** |
 
 **The default `deny` blocks only the second kind, ⛔ never the first** — so a governance agent
 can fully maintain the governance documents, **which is the precondition for a user being able
@@ -282,6 +282,36 @@ to keep this framework alive on their own.**
 2. The **falsification-adjudicated column** in `ledgers/Conjecture_Ledger.md` is still ⛔
    human-only. 🔴 **That column is the only record that a human adjudicated — if the AI can
    fill it, adjudication is just a string.**
+
+### 6.4 🔴 A file may have exactly one owner (v1.4.1)
+
+**An upgrade only recognises the framework's own handful of names (§6.2). ⛔ One thing follows:**
+
+🔴 **A file that mixes "the framework's content" with "your content" will lose one of them at
+the next upgrade — ⛔ and which one is lost depends only on which list that folder is on.**
+
+| Where the file is | Consequence of two owners | The framework's own instance |
+|---|---|---|
+| **On the replaceable list** | 🔴 **What you accumulated is deleted** | `governance/RULES.md` was where projects accumulated their own rules |
+| **On the never-replace list** | 🔴 **The framework's update never arrives** | The two ledgers in `ledgers/` carried sixty lines of framework specification |
+
+⚠️ **⛔ Two directions of one illness. Before v1.4.0 this framework had one of each.**
+
+**⇒ The criterion: does the project add more of the same kind of item to this file, one by one?**
+
+| Answer | Treatment | Instance |
+|---|---|---|
+| **Yes** | **Framework ⊆ a copy under `my/`, plus a comparison sensor** | `RULES.md` ↔ `my/MY_RULES.md` |
+| **No, but framework definitions and project data are mixed** | **Definitions move to the framework side; the data side keeps data plus a one-line pointer** | the two ledgers ↔ `governance/*_LEDGER_SPEC.md`; `Incident_Log.md` ↔ `my/MY_INCIDENTS.md` |
+| **Pure framework content** | **Replaced wholesale** | `file_index.md`, `policy/*`, `profiles/*`, `prompts/*` |
+
+⚠️ **⛔ The criterion exists to stop a good mechanism being applied where it is not needed:
+per-item copies of a ledger would put sixty lines of spec inside the user's data file,
+⛔ and nobody would ever read that copy.**
+
+🔴 **⚠️ One exception: the authorisation settings (`governance_config.json`) do ⛔ not follow row two.**
+**A specification update should reach you; ⛔ what you have authorised is your decision, and the
+framework must not overwrite it (§6.3).**
 
 ---
 
