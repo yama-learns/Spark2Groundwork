@@ -801,6 +801,50 @@ my_index_case("說明檔壞掉：須 INCOMPLETE（⛔ 不得當成「沒有說�
                          (t / "my/MY_INDEX_notes.json").write_text("{壞掉", encoding="utf-8"),
                          None)[-1], 2, "INDEX_NOTES_UNREADABLE", regen=False)
 
+
+# ── 🔴 索引的排序必須跨平台一致（v1.4.2）─────────────────────
+# **實測：`sorted(root.rglob("*"))` 排的是 `Path` 物件，而 `WindowsPath` 的比較會先 casefold。**
+# **⇒ `PROJECT.md` 在 Linux 排在 `corpus/` 前面，在 Windows 排在後面。**
+# 🔴 **v1.4.1 隨附的索引是在 Linux 產生的，於是它在主持人的 Windows 上跑第一次就報過期——
+#    ⛔ 報的不是「索引過期」，是「你的作業系統跟產生它的那台不一樣」。**
+#
+# ⚠️ **⛔ 誠實說明本測試的效力範圍：它只在「檔名不分大小寫」的平台上會亮
+#    （Windows、macOS 預設）。⛔ 在 Linux 上，舊寫法與新寫法的結果相同，所以它抓不到。**
+# **⚠️ 保留它的理由：發布程序的第一步就在 Windows 上跑自測。**
+def index_order_case():
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_idxorder_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        (tmp / "my").mkdir(parents=True, exist_ok=True)
+        (tmp / "apple").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        # 🔴 `Z`（0x5A）< `a`（0x61）：字串排序時 Zed.md 在前；
+        #    ⛔ 而 casefold 之後 apple/ 會跑到前面。
+        (tmp / "Zed.md").write_text("x", encoding="utf-8")
+        (tmp / "apple/x.md").write_text("x", encoding="utf-8")
+        (tmp / "scripts" / "harness").mkdir(parents=True, exist_ok=True)
+        for f in ("tool_my_index.py", "framework_config.py", "_common.py", "upgrade.py"):
+            (tmp / "scripts" / "harness" / f).write_bytes((HERE / f).read_bytes())
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        subprocess.run([PY, str(tmp / "scripts/harness/tool_my_index.py")],
+                       capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", env=env)
+        body = (tmp / "my/MY_INDEX.md").read_text(encoding="utf-8")
+        if "Zed.md" not in body or "apple/x.md" not in body:
+            print("  ❌ 索引排序：兩個樣本檔沒有全部進索引"); bad += 1
+        elif body.index("Zed.md") < body.index("apple/x.md"):
+            print("  ✅ 🔴 索引依字串排序（跨平台一致）"); ok += 1
+        else:
+            print("  ❌ 索引依平台排序 —— ⛔ 同一個專案在兩台機器上會產生不同的索引"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+index_order_case()
+
 upgrade_case()
 
 print("\n" + "=" * 48)

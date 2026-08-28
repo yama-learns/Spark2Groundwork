@@ -840,6 +840,52 @@ my_index_case("a broken notes file: INCOMPLETE (⛔ never 'there are no descript
                          (t / "my/MY_INDEX_notes.json").write_text("{broken", encoding="utf-8"),
                          None)[-1], 2, "INDEX_NOTES_UNREADABLE")
 
+
+# ── 🔴 The index order must be identical across platforms (v1.4.2) ──
+# **Measured: `sorted(root.rglob("*"))` sorts `Path` objects, and `WindowsPath` casefolds first.**
+# **⇒ `PROJECT.md` sorts before `corpus/` on Linux and after it on Windows.**
+# 🔴 **The index shipped with v1.4.1 was generated on Linux, so it reported "stale" on the
+#    principal's Windows machine on the first run — ⛔ reporting not "the index is stale"
+#    but "your operating system is not the one that generated it".**
+#
+# ⚠️ **⛔ Honest about this test's reach: it only lights up on a platform whose filenames are
+#    case-insensitive (Windows, macOS by default). ⛔ On Linux the old and new code agree,
+#    so it cannot fire.**
+# **⚠️ It is kept because the release procedure runs the self-test on Windows as step one.**
+def index_order_case():
+    global ok, bad
+    import shutil, subprocess, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_idxorder_"))
+    try:
+        (tmp / "governance").mkdir(parents=True, exist_ok=True)
+        (tmp / "my").mkdir(parents=True, exist_ok=True)
+        (tmp / "apple").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        # 🔴 `Z` (0x5A) < `a` (0x61): by string order Zed.md comes first;
+        #    ⛔ after casefolding, apple/ jumps ahead of it.
+        (tmp / "Zed.md").write_text("x", encoding="utf-8")
+        (tmp / "apple/x.md").write_text("x", encoding="utf-8")
+        (tmp / "scripts" / "harness").mkdir(parents=True, exist_ok=True)
+        for f in ("tool_my_index.py", "framework_config.py", "_common.py", "upgrade.py"):
+            (tmp / "scripts" / "harness" / f).write_bytes((HERE / f).read_bytes())
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        subprocess.run([PY, str(tmp / "scripts/harness/tool_my_index.py")],
+                       capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", env=env)
+        body = (tmp / "my/MY_INDEX.md").read_text(encoding="utf-8")
+        if "Zed.md" not in body or "apple/x.md" not in body:
+            print("  ❌ index order: not both sample files reached the index"); bad += 1
+        elif body.index("Zed.md") < body.index("apple/x.md"):
+            print("  ✅ 🔴 the index is sorted by string (identical across platforms)"); ok += 1
+        else:
+            print("  ❌ the index is sorted by platform — ⛔ one project, two machines, two indexes"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+index_order_case()
+
 upgrade_case()
 
 print("\n" + "=" * 48)

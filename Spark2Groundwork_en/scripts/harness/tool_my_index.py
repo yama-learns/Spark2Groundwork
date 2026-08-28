@@ -85,8 +85,24 @@ def framework_owned(rel):
 
 
 def collect(root, cfg):
+    """Return the relative paths, **sorted as strings**.
+
+    🔴 **Measured case (2026-08-27, at the moment v1.4.1 was released, the principal's machine):**
+    **the old line was `sorted(root.rglob("*"))` — ⛔ that sorts `Path` objects.**
+    **⚠️ `WindowsPath` comparison casefolds first; `PosixPath` ⛔ does not.**
+    **So `PROJECT.md` sorts before `corpus/` on Linux and after it on Windows.**
+
+    ⛔ **Consequence: the index generated on Linux and shipped with v1.4.1 reported
+    `MY_INDEX_STALE` on the very first run on the principal's Windows machine —
+    and what it reported was ⛔ not "the index is stale" but "your operating system is not
+    the one that generated it".**
+    🔴 **A criterion that fires on a correct state teaches people to ignore it (`R-19`) —
+    and it had already forced a manual workaround mid-release.**
+
+    ⇒ **The sort key is now the relative posix string. ⛔ Never the `Path` object.**
+    """
     files = []
-    for p in sorted(root.rglob("*")):
+    for p in root.rglob("*"):
         if not p.is_file():
             continue
         if excluded(p, root, cfg):
@@ -100,7 +116,8 @@ def collect(root, cfg):
                for g in cfg.get("my_index_exclude", [])):
             continue                      # ⛔ files the framework itself produces
         files.append(rel)
-    return files
+    # ⛔ **Sort strings, ⛔ never Path objects.** See this function's docstring.
+    return sorted(files)
 
 
 def render(root, cfg):

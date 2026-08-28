@@ -1420,3 +1420,54 @@ checks the generated index file.**
 🔴 **⛔ I had aimed the criterion at the wrong object, ⚠️ and the self-test caught it.**
 
 **Self-tests 72 → 78. Sensors 8 → 9.**
+
+---
+
+## #21 | 2026-08-28 | 🔴 A sensor was reporting "your operating system is different"
+
+**Triggering case: the moment v1.4.1 was released. The principal ran step 2 and
+`sensor_my_index.py` reported `MY_INDEX_STALE`. Running `tool_my_index.py` by hand turned it green.**
+
+**⚠️ The principal's report is worth quoting: "I don't know whether this causes a problem,
+so I'm telling you anyway."**
+🔴 **That sentence is why this entry exists — a false alarm pushed him into an action he was
+not sure about, in the middle of a release.**
+
+### Cause
+
+**The old line was `sorted(root.rglob("*"))` — ⛔ that sorts `Path` objects.**
+**⚠️ `WindowsPath` comparison casefolds first; `PosixPath` ⛔ does not.**
+
+| | Linux | Windows |
+|---|---|---|
+| `PROJECT.md` vs `corpus/` | `P`(0x50) < `c`(0x63) → **before** | casefolded, `project` > `corpus` → **after** |
+
+🔴 **The index was generated on Linux and shipped with v1.4.1, so it was bound to report
+stale on Windows.**
+**⛔ What it reported was ⛔ not "the index is stale" but "your operating system is not the one
+that generated it".**
+
+⚠️ **This is the textbook shape of `R-19`: a criterion that fires on a correct state.**
+**⛔ And its real consequence already happened — the principal worked around it and then was
+unsure whether he had done something wrong.**
+
+### What was fixed
+
+**The sort key is now the relative posix string. ⛔ Never the `Path` object.**
+**Python's `str` ordering is code-point ordering on both platforms — ⛔ no platform difference.**
+
+### Paired sample
+
+**`index_order_case()`: the fixture holds `Zed.md` and `apple/x.md`
+(`Z` 0x5A < `a` 0x61, ⛔ while casefolding puts `apple` first), and asserts that `Zed.md`
+appears before `apple/x.md` in the index.**
+
+⚠️ **⛔ Be honest about its reach: it only lights up on a case-insensitive filesystem.**
+**⛔ On Linux the old and new code agree, so it cannot fire there.**
+🔴 **It is kept because the release procedure runs the self-test on Windows as step one —
+⚠️ which is the only place this defect ever shows.**
+
+⚠️ **⛔ This does not claim the same shape has been swept for elsewhere** —
+**"calling `sorted()` on a type whose ordering is platform-dependent" ⛔ has not been inventoried.**
+
+**Self-tests 78 → 79.**

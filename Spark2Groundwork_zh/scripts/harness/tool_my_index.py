@@ -75,8 +75,23 @@ def framework_owned(rel):
 
 
 def collect(root, cfg):
+    """回傳相對路徑清單，**依字串排序**。
+
+    🔴 **實測個案（2026-08-27，v1.4.1 發布當下，主持人的機器）：**
+    **舊版寫的是 `sorted(root.rglob("*"))`——⛔ 那是把 `Path` 物件拿去排序。**
+    **⚠️ `WindowsPath` 的比較會先做 casefold，`PosixPath` ⛔ 不會。**
+    **於是 `PROJECT.md` 在 Linux 上排在 `corpus/` 前面，在 Windows 上排在後面。**
+
+    ⛔ **後果：我在 Linux 產生、隨 v1.4.1 一起發布的索引，
+    在主持人的 Windows 上跑第一次就報 `MY_INDEX_STALE`——
+    而它報的⛔ 不是「索引過期」，是「你的作業系統跟產生它的那台不一樣」。**
+    🔴 **一個對正確狀態報警的判準，會教人忽略它（`R-19`）——
+    而它已經逼主持人在發布途中手動繞過一次。**
+
+    ⇒ **排序的鍵改成「相對路徑的 posix 字串」。⛔ 不排 `Path` 物件。**
+    """
     files = []
-    for p in sorted(root.rglob("*")):
+    for p in root.rglob("*"):
         if not p.is_file():
             continue
         if excluded(p, root, cfg):
@@ -90,7 +105,8 @@ def collect(root, cfg):
                for g in cfg.get("my_index_exclude", [])):
             continue                      # ⛔ 框架自己產生的檔案
         files.append(rel)
-    return files
+    # ⛔ **排字串，⛔ 不排 Path。** 見本函式說明。
+    return sorted(files)
 
 
 def render(root, cfg):

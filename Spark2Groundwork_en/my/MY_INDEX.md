@@ -23,6 +23,8 @@
 |---|---|
 | `.gitattributes` | git's line-ending and binary rules. ⚠️ Same — **mixed ownership**. |
 | `.gitignore` | What stays out of version control. ⚠️ **Mixed ownership**: the framework supplies defaults, you add to them. |
+| `NEXT_SESSION_MEMO.md` | Working state. **Overwritten each round**, ⛔ never appended. The only place in the project allowed to hold 'current progress'. |
+| `PROJECT.md` | **The one file you fill in yourself**: what this project is, whether it is worth doing, ethical lines, the AI's write permissions. |
 | `corpus/BIBLIOGRAPHY.docx` | **This project's citation-format authority.** Export from Zotero/EndNote and paste it in. |
 | `corpus/READ_ME.md` | How to use `corpus/`: put the PDFs you cite here, one file per paper. |
 | `corpus_md/READ_ME.txt` | How to use `corpus_md/`: programmatic full-text extractions, ⛔ never hand-edited. |
@@ -35,8 +37,6 @@
 | `my/MY_RULES.md` | **Your working rules.** §1 is a verbatim copy of the framework's rules; §2 holds your own `P-xx`. |
 | `my/README.txt` | How to use `my/`: everything in this folder is yours and is never replaced by an upgrade. |
 | `my/tools/README.txt` | How to use `my/tools/`: your own scripts go here, ⛔ never in `scripts/`. |
-| `NEXT_SESSION_MEMO.md` | Working state. **Overwritten each round**, ⛔ never appended. The only place in the project allowed to hold 'current progress'. |
-| `PROJECT.md` | **The one file you fill in yourself**: what this project is, whether it is worth doing, ethical lines, the AI's write permissions. |
 
 ## ⚠️ Not yet described
 

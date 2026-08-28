@@ -17,6 +17,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ｜ Versioning:
 
 ---
 
+## [1.4.2] — 2026-08-28
+
+### 🔴 The change / 這一版做的事
+
+**One defect, found by releasing v1.4.1: the file index was sorted by platform, not by name.**
+🔴 **索引的排序取決於作業系統，⛔ 而不是檔名。**
+
+### Fixed / 修正
+
+- 🔴 **`tool_my_index.py` sorted `Path` objects.** ⚠️ **`WindowsPath` comparison casefolds
+  first; `PosixPath` does not** — so `PROJECT.md` sorts before `corpus/` on Linux and after it
+  on Windows.
+  ⛔ **The index shipped with v1.4.1 was generated on Linux, so `sensor_my_index.py` reported
+  `MY_INDEX_STALE` on the first run on a Windows machine.**
+  **⚠️ What it reported was ⛔ not "the index is stale" but "your operating system is not the
+  one that generated it" — and it had already forced a manual workaround mid-release.**
+  🔴 **A criterion that fires on a correct state teaches people to ignore it (`R-19`).**
+  **The sort key is now the relative posix string. ⛔ Never the `Path` object.**
+
+### Self-tests / 自測
+
+**78 → 79.** ⚠️ **The new sample is honest about its reach: it only lights up on a
+case-insensitive filesystem (Windows, macOS). ⛔ On Linux the old and new code agree, so it
+cannot fire there** — it is kept because the release procedure runs the self-test on Windows.
+
+### ⛔ This release does not claim / 本版不宣稱
+
+- ⛔ **That every generated artefact is now reproducible across platforms.** ⚠️ **Only this one
+  was examined. The general shape — "sorted() on a type whose ordering is platform-dependent" —
+  ⛔ has not been swept for.**
+
+---
+
 ## [1.4.1] — 2026-08-27
 
 ### 🔴 The change / 這一版做的事
