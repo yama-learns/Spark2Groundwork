@@ -80,7 +80,7 @@ write directly into your ledgers and corpus.
 
 | | After it breaks |
 |---|---|
-| **Framework documents** (`governance/` `policy/` `prompts/` `scripts/` …) | ✅ **Download and overwrite** |
+| **Framework documents** (`governance/` `prompts/` `scripts/` …) | ✅ **Download and overwrite** |
 | **Your ledgers, corpus, handoff packets** | 🔴 **Nothing anywhere can restore them** |
 
 ⛔ **This is not telling you to withhold permission. It is telling you the difference.**

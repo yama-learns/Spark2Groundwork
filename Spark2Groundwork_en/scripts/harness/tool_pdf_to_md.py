@@ -199,7 +199,16 @@ def convert(pdf: Path, out: Path):
     if errors:
         head += ("<!-- ⚠️ Backend degradation log (**not a harmless implementation detail**: extracts from\n     different backends are not interchangeable):\n     "
                  + "\n     ".join(errors) + "\n-->\n\n")
-    out.write_text(head + body, encoding="utf-8")
+    # 🔴 **`newline="\n"` is ⛔ not optional (`A-20260902-11`).**
+    #    ⚠️ **On Windows `write_text` translates `\n` to `\r\n` by default, so this file lands
+    #    as CRLF and the `md_sha256` recorded below is the hash of the CRLF bytes.**
+    #    ⛔ **And `.gitattributes` carries `*.md text eol=lf`: the commit normalises to LF.**
+    #    🔴 **⇒ On the next clean checkout (a clone onto a second machine / `git checkout` /
+    #    the recovery steps in SETUP §9) the working tree becomes LF and every hash mismatches
+    #    → `CORPUS_MD_MODIFIED` on every file, ⛔ with not one character actually changed.**
+    #    ⚠️ **The failure direction is a false positive — exactly what `R-19` says teaches
+    #    people to ignore a sensor.**
+    out.write_text(head + body, encoding="utf-8", newline="\n")
 
     # ⚠️ `fingerprint` hashes the **source PDF**; `md_sha256` hashes the **extract itself**.
     #    The first proves which PDF this .md came from; the second makes "has this .md been
@@ -223,7 +232,7 @@ def main() -> int:
     args = ap.parse_args()
 
     src_dir, out_dir = ROOT / args.pdf_dir, ROOT / args.out_dir
-    pdfs = sorted(src_dir.glob("*.pdf"))
+    pdfs = sorted(src_dir.glob("*.pdf"), key=lambda p: p.as_posix())
     if not pdfs:
         print(f"[FAIL] SCAN_GLOB_MATCHES_NOTHING: no PDFs in {args.pdf_dir}/"
               " — a place that is never scanned has no sensor over it")
@@ -268,7 +277,8 @@ def main() -> int:
     by_src = {r["src"]: r for r in existing}
     by_src.update({r["src"]: r for r in manifest})
     mf.write_text(json.dumps(sorted(by_src.values(), key=lambda r: r["src"]),
-                             ensure_ascii=False, indent=2), encoding="utf-8")
+                             ensure_ascii=False, indent=2),
+                  encoding="utf-8", newline="\n")
     print(f"\n  manifest: {mf.relative_to(ROOT)} ({len(by_src)} entries)")
 
     # ── 孤兒檢查：manifest 有紀錄但 md 不在，或 md 在而 manifest 沒有 ──

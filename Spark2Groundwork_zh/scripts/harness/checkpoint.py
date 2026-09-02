@@ -41,18 +41,23 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import _force_utf8                            # noqa: E402
 _force_utf8()
 
+# upgrade.py 只以這個精確標記辨認支援 tool mode 的同版 checkpoint。
+# 讀標記不執行候選程式，因此不會為了「探測相容性」反而先寫入專案。
+CHECKPOINT_TOOL_API = "spark2groundwork-checkpoint-tool-v1"
+
 MSG = {
  "title_human": "  記錄快照［人工檢查點：我看過了］",
  "title_ai":    "  記錄快照［AI 自動檢查點，⛔ 未經人工複核］",
+ "title_tool":  "  建立還原點［工具自動，⛔ 未經人工複核］",
  "usage": """用法：
   人工檢查點： python3 scripts/harness/checkpoint.py
   AI 檢查點：  python3 scripts/harness/checkpoint.py --mode ai \\
                    --role <角色> --model <型號> --topic <主題>
 
   <角色>  單一 AI：agent ｜ 多角色：governance ｜ research ｜ audit
-          ⛔ 不得自創。取值定義處：policy/HANDOFF.md §2
+          ⛔ 不得自創。取值定義處：governance/HANDOFF.md §2
   <型號>  具體型號，⛔ 不得寫平台名或家族名
-          定義處：policy/MODEL_IDENTITY.md
+          定義處：governance/MODEL_IDENTITY.md
   <主題>  一個詞，本輪做了什麼""",
  "wrong_folder": """[FAIL] 這不是專案根目錄，⛔ 未寫入任何東西。
        找不到：{missing}
@@ -87,7 +92,18 @@ MSG = {
  "committed_human": "  ✅ 已建立新的檢查點。",
  "committed_ai": "  ✅ 已建立 AI 檢查點：[{role}/{model}-{topic}]",
  "tag_moved": "  ✅ 完成。reviewed 基準已移到最新的檢查點。",
- "tag_not_moved": "  ⛔ reviewed 標籤**未移動**——AI 自己存的檔不算你看過。",
+ "tag_not_moved": "  ⛔ reviewed 標籤**未移動**——⛔ 程式自己存的檔不算你看過。",
+ "tag_failed": """[FAIL] 檢查點（提交）已經建立，⛔ **但 `reviewed` 標籤沒有移動。**
+       🔴 **⇒ 人工審閱基準仍然停在原處——⛔ 這一次「我看過了」沒有被記錄下來。**
+       ⚠️ **⛔ 不要當成已經完成**：下一次「查看變更」會以舊基準比較，
+       **它會把你這一輪已經看過的東西再列一次，⛔ 而它不會說標籤沒動過。**
+       git tag 退出碼：{rc}；詳見 {log}
+       → 最常見的原因：已經存在名為 `reviewed/<某某>` 的標籤。
+         **Git ⛔ 不允許 `reviewed` 與 `reviewed/…` 同時存在。**
+         查：`git tag -l "reviewed*"`　→ 刪掉那個帶斜線的，再重跑一次。""",
+ "need_tool_args": """[FAIL] `--mode tool` 需要 `--tool-id` 與 `--operation`。
+       ⚠️ **一個匿名的工具檢查點，在歷史裡與人按的分不開。**""",
+ "committed_tool": "  ✅ 已建立還原點（工具：{tool}／{op}）——⛔ **這不是人工審閱。**",
  "recent": "\n最近 5 個檢查點：",
 }
 
@@ -149,7 +165,25 @@ def sweep_locks(root, log):
 
 def main(MSG):
     ap = argparse.ArgumentParser(add_help=False)
-    ap.add_argument("--mode", choices=("human", "ai"), default="human")
+    # 🔴 **`tool` 是 v1.4.4 新增的第三種身分。**
+    #    ⚠️ **觸發個案（Codex 覆核，2026-09-02）：`upgrade.py` 自 v1.4.1 起以
+    #    `checkpoint.py --root <root>` 呼叫，⛔ 沒有傳 `--mode`，於是走 human 預設——**
+    #    🔴 **一次框架升級就會把 `reviewed` 標籤移到升級前的提交，並印「我看過了」。**
+    #    **⇒ 使用者「還沒審閱」的 AI 工作，因為升級而從 `review_changes.py` 的清單消失。**
+    #
+    #    ⛔ **為什麼不叫工具走 `ai` 模式：** `ai` 強制要求 `--role` 與具體 `--model`，
+    #    **而一支本地工具⛔ 不是 `VALID_ROLES` 的任何一個，也沒有型號**——
+    #    ⚠️ **要它走 `ai`，就是要它虛構一個型號，⛔ 而 `MODEL_IDENTITY.md` 存在的理由
+    #    正是禁止那件事。**
+    #
+    #    ⚠️ **`--mode` 目前仍有預設值 `human`，⛔ 這是已知代價：**
+    #    **改成必填會讓舊專案的 `.bat`／`.command` 立刻壞掉。**
+    #    🔴 **⇒ 必填留到 v1.5.0，與啟動器同輪改。**
+    ap.add_argument("--mode", choices=("human", "ai", "tool"), default="human")
+    ap.add_argument("--tool-id", default=None,
+                    help="tool 模式必填：哪一支工具（例如 upgrade）")
+    ap.add_argument("--operation", default=None,
+                    help="tool 模式必填：在做什麼（例如 apply-governance）")
     ap.add_argument("--role", default=None)
     ap.add_argument("--model", default=None)
     ap.add_argument("--topic", default=None)
@@ -164,7 +198,9 @@ def main(MSG):
     log = root / "git-checkpoint.log"
 
     print("=" * 46)
-    print(MSG["title_ai"] if a.mode == "ai" else MSG["title_human"])
+    # 🔴 **標題也要分身分：⛔ 一個工具跑出「我看過了」的橫幅，
+    #    與它移動 `reviewed` 標籤是同一個錯誤，只是早一行。**
+    print(MSG["title_" + a.mode])
     print("=" * 46)
 
     # ── 前置 1：這是不是專案根目錄 ─────────────────────────────────
@@ -182,6 +218,10 @@ def main(MSG):
         print(MSG["no_git"]); return 1
 
     # ── 前置 3：AI 模式的三個必填參數 ──────────────────────────────
+    if a.mode == "tool":
+        # ⚠️ **工具身分也要具體：⛔ 一個匿名的「工具」在歷史裡與人分不開。**
+        if not (a.tool_id and a.operation):
+            print(MSG["need_tool_args"]); print(MSG["usage"]); return 1
     if a.mode == "ai":
         if not (a.role and a.model and a.topic):
             print(MSG["need_args"]); print(MSG["usage"]); return 1
@@ -244,23 +284,51 @@ def main(MSG):
             msg = (f"auto: {utcstamp('%Y-%m-%d %H:%MZ')} "
                    f"[{a.role}/{a.model}-{a.topic}] -- AI auto checkpoint, NOT human-reviewed")
             ident = ["-c", "user.name=AI agent", "-c", "user.email=agent@local"]
+        elif a.mode == "tool":
+            msg = (f"tool: {utcstamp('%Y-%m-%d %H:%MZ')} "
+                   f"[{a.tool_id}/{a.operation}] -- automatic restore point, "
+                   "NOT human-reviewed")
+            ident = ["-c", "user.name=local tool", "-c", "user.email=tool@local"]
         else:
             msg = f"snapshot {utcstamp('%Y-%m-%d %H:%MZ')}"
             ident = ["-c", "user.name=researcher", "-c", "user.email=me@local"]
         rc, out = run(["git"] + ident + ["commit", "-q", "-m", msg], root, log)
         if rc != 0:
             print(MSG["commit_failed"].format(log=log.name)); return 2
-        print(MSG["committed_ai"].format(role=a.role, model=a.model, topic=a.topic)
-              if a.mode == "ai" else MSG["committed_human"])
+        if a.mode == "ai":
+            print(MSG["committed_ai"].format(role=a.role, model=a.model, topic=a.topic))
+        elif a.mode == "tool":
+            print(MSG["committed_tool"].format(tool=a.tool_id, op=a.operation))
+        else:
+            print(MSG["committed_human"])
 
     # ── reviewed 標籤 ────────────────────────────────────────────
     # ⚠️ AI 模式 ⛔ 不移動標籤——「AI 自己存的檔不算你看過」，這個區分是刻意的。
     # ⚠️ 人工模式即使「無變更」也要移動——AI 可能已經自己提交過那些工作，
     #    而人按下這一支的意思就是「我看過了」。
-    if a.mode == "ai":
+    if a.mode != "human":
+        # 🔴 **`ai` 與 `tool` 都⛔ 不得移動 `reviewed`。**
+        #    **⛔ 那個標籤是「人看過了」的唯一載體，⛔ 而程式不能替人簽名。**
         print(MSG["tag_not_moved"])
     else:
-        run(["git", "tag", "-f", "reviewed"], root, log)
+        # 🔴 **`git tag -f` 會失敗，⛔ 而它失敗時這支曾經照樣印「完成」。**
+        #    ⚠️ **實測反例（Codex，2026-09-02，Windows）：專案裡先存在標籤
+        #    `reviewed/child`，Git 就無法再建立 `reviewed`（ref 命名空間衝突），
+        #    `git tag -f reviewed` 回 128——⛔ 而本程式仍然 exit 0 並印出
+        #    「reviewed 基準已移到最新的檢查點」，實際上那個標籤根本不存在。**
+        # 🔴 **⇒ 人工檢查點的後置條件⛔ 不是「commit 成功」，
+        #    而是「`reviewed` 確實存在，且確實指向現在的 HEAD」。**
+        #    ⚠️ **只檢查退出碼還不夠：要讀回來比對。**
+        #    **`R-22`：沉默不是通過；⛔ 而一個沒有讀回驗證的寫入就是沉默。**
+        rc_tag, _ = run(["git", "tag", "-f", "reviewed"], root, log)
+        rc_head, head = run(["git", "rev-parse", "--verify", "HEAD^{commit}"], root, log)
+        rc_rev, tagged = run(["git", "rev-parse", "--verify", "reviewed^{commit}"], root, log)
+        if (rc_tag != 0 or rc_head != 0 or rc_rev != 0
+                or not head.strip() or head.strip() != tagged.strip()):
+            print(MSG["tag_failed"].format(rc=rc_tag, log=log.name))
+            with log.open("a", encoding="utf-8") as f:
+                f.write(f"[{utcstamp('%Y-%m-%dT%H:%M:%SZ')}] ---- end rc=2 (tag) ----\n")
+            return 2
         print(MSG["tag_moved"])
 
     _, recent = run(["git", "--no-pager", "log", "--oneline", "-5"], root, log)

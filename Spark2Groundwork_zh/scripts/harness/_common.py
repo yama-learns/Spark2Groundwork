@@ -113,6 +113,8 @@ def _glob_dir(root, g):
     if "*" not in g:
         return None
     head = g.split("*", 1)[0]
+    if not head:
+        return root
     return (root / head) if head.endswith("/") else (root / head).parent
 
 
@@ -140,6 +142,7 @@ def dead_glob_findings(dead, where, root=None):
     → **判準改為結構性的：目錄在不在。⛔ 不需要任何歷史資訊。**
     """
     out = []
+    cfg = load(root) if root is not None else None
     for g in dead:
         # ⚠️ **判準收緊過兩次，兩次都是自測當場抓到的：**
         #    ① 首版「目錄存在即崩潰」→ 一個剛建好還沒用的目錄被判 INCOMPLETE。
@@ -150,7 +153,8 @@ def dead_glob_findings(dead, where, root=None):
         d = _glob_dir(root, g) if root is not None else None
         suffix = pathlib.Path(g).suffix
         collapsed = bool(d and d.is_dir() and suffix
-                         and any(f.is_file() for f in d.rglob("*" + suffix)))
+                         and any(f.is_file() and not excluded(f, root, cfg)
+                                 for f in d.rglob("*" + suffix)))
         if collapsed:
             out.append(("INCOMPLETE", "COVERAGE_COLLAPSE",
                         f"{where} 的 glob「{g}」：**目錄存在，但掃到 0 個檔**"

@@ -157,7 +157,7 @@
 
 ```json
 "write_scopes": {
-  "governance": ["governance", "policy", "scripts", "my",
+  "governance": ["governance", "scripts", "my",
                  "file_index.md", "NEXT_SESSION_MEMO.md"],
   "research":   ["corpus_md", "RESEARCH_MEMO.md"],
   "audit":      ["scratch"],
@@ -166,6 +166,14 @@
 ```
 
 ⚠️ **`audit` 只有沙盒是刻意的：正式報告寫進 `handoffs/`（`_shared`）。**
+
+🔴 **`governance` 的 `my` 寫入範圍也是刻意的。** 治理角色要能維護本專案的
+`my/MY_RULES.md`、`my/MY_INCIDENTS.md`、`my/MY_INDEX_notes.json` 與 `my/tools/`；
+自建工具屬於專案，⛔ 不放進升級時整包替換的 `scripts/`。這是寫入權，不是裁決權：
+規則是否採用仍須由主持人決定。
+
+⚠️ **舊專案升級後要人工檢查 `governance_config.json`。** 若治理角色的
+`write_scopes` 沒有 `my`，請依主持人的授權補上；升級不會覆寫這份專案設定。
 
 🔴 **⚠️ ⛔ 不要改 `scripts/harness/framework_config.py`。**
 **那是框架檔案，升級時整包替換——⛔ 改在那裡的設定會消失，而且不會有任何訊息。**

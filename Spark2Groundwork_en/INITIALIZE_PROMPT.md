@@ -1,6 +1,7 @@
 # Initialisation Prompt (**the first thing you say to your AI**)
 
-> **Usage: paste everything inside the box below, together with your idea, to your AI.**
+> **Usage: first put your idea in `FIRST_IDEA.md` beside this file, then paste everything
+> inside the box below to an AI that can read this project.**
 
 ---
 
@@ -25,12 +26,14 @@ Required reading:
   governance/Incident_Log.md          <- required on first participation
   ledgers/Conjecture_Ledger.md §0
   ledgers/Claim_Ledger.md §0-§1
+  PROJECT.md
+  FIRST_IDEA.md
 
 ⛔ Do not begin any substantive work until those three are done.
 
 === Step 2: decompose, do not verify ===
 
-Then run prompts/TEMPLATE_decompose.txt against my idea.
+Then follow the decomposition rules in `FIRST_IDEA.md` and decompose the idea at its end.
 
 ⛔ Do not search the literature this round.
 ⛔ Do not evaluate whether the idea is good.

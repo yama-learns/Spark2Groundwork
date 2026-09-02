@@ -44,15 +44,16 @@
 | **猜想台帳的狀態與門檻** | `governance/CONJECTURE_LEDGER_SPEC.md` |
 | **一份文件只能有一個主人** | `governance/WORKFLOW_CONSTITUTION.md` §6.4 |
 | **退出碼語意的機械實作** | `scripts/harness/_common.py`（`emit`）——⚠️ **語意的定義處是憲章 §7.4，這裡是它的唯一實作** |
-| 交接封包規格 | `policy/HANDOFF.md` |
-| **專案身分、值得做嗎、倫理紅線、檢索關鍵詞** | 🔴 **`PROJECT.md`（根目錄，使用者唯一需親筆的檔案）** |
+| 交接封包規格 | `governance/HANDOFF.md` |
+| **專案身分、值得做嗎、倫理紅線、檢索關鍵詞** | 🔴 **根目錄 `PROJECT.md`（使用者填寫）** |
+| **第一個待拆解構想與拆解規則** | 🔴 **根目錄 `第一個想法.md`（專案專屬；升級不替換）** |
 | **本專案實際發生過的事故** | `my/MY_INCIDENTS.md` |
 | **AI 寫入權限由誰決定** | `governance/WORKFLOW_CONSTITUTION.md` §6.3 |
 | **治理的成本上限與三問稽核** | `governance/WORKFLOW_CONSTITUTION.md` §10 |
 | **操作性目錄**（`scratch/`／`archive/`／`_to_delete/`） | `governance/WORKFLOW_CONSTITUTION.md` §6.2 |
-| 書目與來源 | `policy/SOURCES.md` |
-| 外部工具 | `policy/EXTERNAL_TOOLS.md` |
-| 模型身分 | `policy/MODEL_IDENTITY.md` |
+| 書目與來源 | `governance/SOURCES.md` |
+| 外部工具 | `governance/EXTERNAL_TOOLS.md` |
+| 模型身分 | `governance/MODEL_IDENTITY.md` |
 
 ---
 
@@ -61,7 +62,7 @@
 | 類 | 檔案 |
 |---|---|
 | **狀態**（每輪覆寫） | `NEXT_SESSION_MEMO.md` |
-| **規格**（罕有變更） | `governance/*`、`policy/*`、`profiles/*`、`prompts/*` |
+| **規格**（罕有變更） | `governance/*`、`profiles/*`、`prompts/*` |
 | **資料**（只增不改寫） | `ledgers/*`、`handoffs/*`、`SENSOR_CHANGELOG.md` |
 | **索引** | `file_index.md`（本檔） |
 
@@ -91,6 +92,7 @@ python scripts/harness/run_selftest.py
 | `tool_sync_my_rules.py` | 把框架新增的規則原句補進 `my/MY_RULES.md`（**不是感測器**） |
 | `sensor_my_index.py` | 🔴 **`my/MY_INDEX.md` 是不是過期的；說明有沒有指向不存在的檔案** |
 | `tool_my_index.py` | 產生 `my/MY_INDEX.md`（**不是感測器**）——判準是「框架⛔ 不擁有的每一樣東西」 |
+| `sensor_version_consistency.py` | 🔴 **設定所列的框架套件是不是同一版**——⚠️ 「換到一半」⛔ 不會產生任何錯誤訊息 |
 | `tool_pdf_to_md.py` | PDF → Markdown 程式化提取（環②的語料庫來源，**不是感測器**） |
 | `checkpoint.py` | 人工／AI 檢查點的**唯一定義處**（`.bat`／`.command` 只是薄殼） |
 | `review_changes.py` | 「上次我看過之後改了什麼」的**唯一定義處** |

@@ -17,6 +17,229 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ｜ Versioning:
 
 ---
 
+## [1.4.4] — 2026-09-03
+
+> 🔴 **`v1.4.3` 從未發布。** 它在發布前的覆核中被發現有五項缺陷，其中三項是紅級；
+> 主持人裁決退回其中的 `--adopt` 寫入路徑，其餘內容改以 `v1.4.4` 發布。
+> **⇒ 你不會在任何地方看到 `v1.4.3`，⛔ 那不是遺漏。**
+>
+> 🔴 **`v1.4.3` was never released.** Pre-release review found five defects in it, three of
+> them red; the principal ruled its `--adopt` write path back out and the rest ships as
+> `v1.4.4`. **⇒ There is no `v1.4.3` anywhere; ⛔ that is not an omission.**
+
+### 🔴 The change / 這一版做的事
+
+**Preserve wholesale folder replacement without letting it erase project-owned files.**
+**保留整包替換，同時讓專案專屬檔不再住在替換目標內。**
+
+### Changed / 變更
+
+- The filled decomposition prompt moved from `prompts/TEMPLATE_decompose.txt` to the project
+  root as `FIRST_IDEA.md` / `第一個想法.md`. It is now project-owned beside `PROJECT.md` and
+  never appears in the replaceable-file list.
+- `upgrade.py diff` now lists target-only files. `apply` refuses the replacement before making
+  a checkpoint or writing anything until those files are moved out. The generated-state
+  exception is restricted to the exact package path `scripts/harness/harness_status.json`;
+  a project-owned namesake anywhere else still blocks replacement.
+- Multi-agent guidance makes `my/` part of the governance role's scope, including project rules,
+  incidents, index descriptions, and `my/tools/`; old projects must migrate
+  `governance_config.json` by hand because upgrades never overwrite authorisation.
+- The update buttons run the read-only diff automatically when `_upgrade/` exists and preserve
+  the Python program's exit code.
+- Windows installations may omit `.command`; macOS installations may omit `.bat`. A public
+  package carrying both is still scanned in full. Routine diff omits a missing foreign launcher,
+  while an explicit `apply <exact filename>` remains available for cross-platform packaging.
+- The migration checklist now applies to both programmatic and no-code wholesale replacement.
+  It separates program-only checkpoint guarantees from the manual backup route and gives a
+  no-code procedure for synchronising new public rules without replacing project-owned
+  `MY_RULES.md`.
+- 🔴 **`policy/` retired: its four documents moved into `governance/`.** The upgrader now
+  carries a retired-package list — it ⛔ never deletes your files, but `check`, `diff` and every
+  successful `apply` name the orphan folder and say where its contents went. Asking to
+  `apply policy` returns a message that says so, ⛔ not a generic "not a framework item".
+  🔴 **`policy/` 退役，四份文件併入 `governance/`。** 升級工具⛔ 不刪你的檔案，但會逐一列名。
+- 🔴 **The Chinese edition's `讀我` files are now `說明書`; the English edition's `READ_ME`
+  files are now `README`.** "讀我" was a literal translation of README, ⛔ not how the thing is
+  named in Chinese. Index descriptions were re-keyed in the same round.
+- **A new tenth sensor, `sensor_version_consistency.py`,** compares the framework packages
+  against each other. 🔴 **Project D ran for weeks with `policy/` at v1.3.0 and the rest at
+  v1.4.2, all sensors green** — "half an upgrade" produced no error anywhere.
+- **`R-34` gains a clause** (`B-4`): the *scope* of an authoritative statement is itself
+  something to check. "This tool cannot do X" being true does ⛔ not make "no tool can do X" true.
+- **Counts of the replaceable list were removed from the prose entirely.** They had already
+  drifted twice (nine → 16 → 15). ⛔ The list is the authority; a number restating it is not.
+- Every path sort in the harness now passes an explicit key. Re-counting found **seven** such
+  sites, ⛔ not the six recorded after v1.4.2 — `framework_config.resolve_globs()` was missed.
+- 🔴 **The version sensor no longer claims which version is newest.** It compared version strings
+  with a string sort, which ranks `v1.9.0` above `v1.10.0`. More fundamentally, the sensor cannot
+  see `_upgrade/`, so it has no way to know the target — that is `upgrade.py diff`'s job. It now
+  reports the disagreement and points there.
+- **The manual, no-code upgrade route now covers the retired `policy/` folder.** A folder that
+  retired in the new version has no same-named replacement to put in, so it stays quietly in the
+  project; the program route names it, ⛔ and the manual route said nothing.
+- **The release version gate now fixes its own output encoding** and ships a `--selftest` that
+  runs it under three non-UTF-8 output channels. It crashed with `UnicodeEncodeError` on the
+  Traditional Chinese Windows console it exists to run on — ⛔ **a gate that cannot run is not
+  a gate.**
+- **When a rule carries an override marker with no reason, the sync tool now says the sensor
+  will FAIL on it** instead of reporting it as a recorded override.
+- 🔴 **A program had been signing a person's name since v1.4.1.** `upgrade.py` called the
+  checkpoint program without a mode, so it fell to the human default, which moves the `reviewed`
+  tag and prints "I have looked at this". **The consequence was not a moved tag: work an AI had
+  finished and a person had not reviewed silently dropped off "what changed since I last looked",
+  because the user upgraded the framework.** Reproduced on the released `v1.4.2` tag. The
+  checkpoint program now has a third identity, `tool`, and ⛔ neither `tool` nor `ai` may move
+  that tag or print a human-review banner. **⛔ A tag that was already moved does not move back
+  on its own — SETUP explains how to check and reset it.**
+- 🔴 **The rule-sync tool reports drift line by line, ⛔ and never writes over an existing word.**
+  🔴 **"The framework revised an existing rule" previously had no prescribed action at all** —
+  the sensor reported a FAIL nothing could fix. An `--adopt` flag that overwrote drifted rules
+  for you was built for `v1.4.3` and **ruled back out before release**: it wrote before printing
+  its own "preview", claimed a checkpoint existed without checking, and still wrote when the
+  checkpoint program had explicitly failed. **What was kept is the line-by-line difference — with
+  nothing doing it for you, that is what tells you which lines to paste.** ⛔ Marked overrides are
+  never listed as drift, and that criterion is shared with the sensor rather than re-implemented.
+
+### Fixed / 修正
+
+- A root glob such as `*.command` resolved to the parent directory, so a neighbouring project's
+  launcher could manufacture `COVERAGE_COLLAPSE`. The secondary collapse check also ignored
+  `excluded_dirs`, allowing files under `_upgrade/` to manufacture the same false result.
+- `tool_my_index.py --help` and unknown arguments used to continue into index generation;
+  argument parsing now completes before any write.
+- `tool_sync_my_rules.py` ignored `--root`, `--help`, and unknown arguments and could therefore
+  write to the project containing the tool instead of the selected project. It now parses all
+  arguments before I/O and confines writes to the resolved root.
+- Every replaceable framework directory now carries `_VERSION`, `docs/` included; `CITATION.cff` is
+  aligned to v1.4.4. A version marker is explicitly documented as a label, not proof that the
+  package contents are complete.
+- 🔴 **A human checkpoint used to print "reviewed baseline moved" without checking whether
+  `git tag -f reviewed` had worked.** With a `reviewed/child` tag present, Git cannot create
+  `reviewed` at all and returns 128 — **⛔ and the program still exited 0.** It now checks the
+  exit code, reads the tag back, compares it against `HEAD`, and on any failure exits non-zero
+  saying the commit was made ⛔ and the baseline did not move.
+- 🔴 **The upgrade called a checkpoint commit a receipt without proving the commit contained
+  the files it was about to delete.** An ignored same-path hand edit reproduced the failure:
+  checkpoint exit 0, no pre-image in its tree, replacement still proceeded, and the edit was
+  lost. `apply` now verifies every existing non-transient overwrite path against the checkpoint
+  through Git's own filters and fails closed on ignored, untracked, `assume-unchanged`,
+  `skip-worktree`, type-mismatched, or target-only content.
+- **Upgrade receipts are now durable and usable without raw Git commands.** Each receipt pins
+  both checkpoint and authoritative manifest under `refs/spark2groundwork/restore/`, with a JSON
+  mirror in Git's private directory. `receipts`, `receipt-diff`, and single-file `restore`
+  validate the receipt before use; restore creates an undo receipt first and never moves
+  `reviewed`. A downloaded v1.4.4 upgrader uses the checkpoint peer from the same download when
+  targeting an older project, so `scripts/` can bootstrap without calling the old checkpoint
+  CLI. Receipts have no automatic cleanup in v1.4.4.
+- **That restore path now uses the same compatible-peer resolver as apply.** It prefers the
+  `checkpoint.py` beside the running upgrader, then a compatible project copy, and recognises
+  compatibility by reading an exact tool-API marker without executing the candidate. If no peer
+  matches, it writes nothing and tells the user to download the complete same-edition,
+  same-version package. A receipt is durable inside this Git repository; ordinary clone or file
+  backup does not carry its private ref automatically.
+- 🔴 **A Chinese package could overwrite an English project, or the reverse, with exit 0.** Apply
+  now derives a v1.4.4 edition fingerprint from the three language-specific launchers. Complete
+  Windows-only, macOS-only, and dual-platform layouts pass; cross-edition, mixed, and incomplete
+  signatures fail before checkpoint, receipt, or replacement. Other project-owned launchers are
+  ignored. A formal package edition field is deferred to v1.5.0.
+- 🔴 **The reset instructions for already-affected projects only covered `snapshot …`.** On a
+  clean working tree — the common case — the old upgrader moved the tag onto an existing `auto:`
+  commit instead, ⛔ and `auto:` is also what a legitimate human review looks like. SETUP now
+  walks three steps, says outright which evidence proves nothing, and ⛔ tells you not to guess
+  or reset when neither step can tell.
+- `--adopt` had been removed from the program while three pieces of current instruction still
+  told users to add it. Those are cleared, and a static scan now fails on any withdrawn flag
+  that survives in current instructions without being marked as withdrawn.
+- 🔴 **The extraction tool wrote files whose own hash it then recorded, without fixing the line
+  ending.** On Windows those files land as CRLF while `.gitattributes` normalises the repository
+  copy to LF — so the next clean checkout makes every recorded hash mismatch and
+  `CORPUS_MD_MODIFIED` fires on the whole corpus, **with not one character changed**. The tool
+  now writes with `newline="\n"`; a project that has already run it should run it once more.
+  A static check requires every module that computes hashes to fix its line endings, and is
+  itself paired with a planted violation and a must-not-flag sample.
+- **The Claim Ledger sensor re-hashes every extract on every run, and never said so.** Its stats
+  line was empty, so two separate reviewers seven days apart concluded no sensor was comparing
+  the manifest. The count is now printed, including as `0` when the corpus is empty.
+- **Three failure families were added to the incident log** — two writers sharing one
+  identifier space where **each allocation looks successful locally and the collision is only
+  visible after the merge** (measured three times in one day; "re-read before allocating" does
+  not stop it), a batch edit that succeeds while
+  doing the wrong thing (**a diff cannot catch it**), and a constant tuned for one environment
+  copied verbatim into another (**both sides are textually identical, so every consistency
+  check reports consistent**) — along with two new variants of "index as authority": measuring
+  a proxy and treating it as the fact, and reading a scoped statement as a universal one.
+- **The index tool called a file inside the exclude list "does not exist".** It asked only
+  whether the scan had seen the path and never looked at the disk, so a real file under an
+  excluded folder was reported as moved or renamed — and deleting the note, which the message
+  invites, does not fail, so nobody finds out. Present-but-excluded is now its own WARN.
+  **索引工具把「在排除範圍內的檔案」說成「檔案不存在」。** 它只問掃描有沒有看到，
+  ⛔ 從來沒看過磁碟。⇒ 現在先 `exists()`，兩種情形給兩個代碼。
+- **Constitution §6.1 contradicted general rule 2 nine lines below it and §6.3.** "In every
+  situation, ledgers are in no AI's output area" against "that is a default, not a
+  prohibition" and "the user may authorise anything; `deny` is the mechanical counterpart" —
+  all three in one T0 document. The first is now stated as a default governed by `deny`. What
+  is not fixed: a project's ruling on a framework clause still has nowhere to live that an
+  upgrade will not overwrite.
+  **憲章 §6.1 與同節第 2 條通則及 §6.3 直接矛盾，三句話在同一份 T0 裡。**
+- **The edition gate refused without saying what it saw.** It reads only the twelve framework
+  launcher names and not who put them there, so a legitimate Chinese project owning a file
+  called `snapshot.bat` read as "mixed" and the whole upgrade was refused — while the message
+  asked for a fresh download, which was never the cause. The refusal now lists the launchers
+  found on each side with their edition. The decision itself is unchanged: the inventory runs
+  only on the failure path.
+  **語言版本閘門被擋下時不說它看到了什麼。** 它只讀那十二個框架啟動器檔名、不看是誰放的，
+  ⇒ 一個自有 `snapshot.bat` 的合法中文專案會被判「混合」而整次拒絕，⛔ 而訊息叫人重新下載
+  套件——那從來不是原因。現在會逐一列出兩側看到的檔名與所屬版本；**判定邏輯未變。**
+- **A rule citation in the framework's own source pointed at a rule that does not exist.**
+  `anchor_norm.py` cited `R-43` twice while `RULES.md` ends at `R-35`; both statements are in
+  fact `R-27`. No sensor checks rule-ID references — one checks files, another checks sections —
+  so it survived every green run. The English edition never carried the citation at all.
+  **框架自己的原始碼引用了一條不存在的規則。** `anchor_norm.py` 兩處寫 `R-43`，
+  ⛔ 而 `RULES.md` 只到 `R-35`；那兩句其實都是 `R-27`。⛔ **沒有任何一支感測器在查規則 ID 引用**
+  （一支查檔案、一支查章節），⇒ 它在每一次全綠中存活。英文版⛔ 從來沒有這個引用。
+
+### Self-tests / 自測
+
+**79 → 159. Sensors 9 → 10.** New paired cases cover parent-directory and excluded-directory
+glob contamination, real collapse preservation, optional foreign launchers on Windows and
+macOS, no-write CLI help/error paths for both index and rule-sync tools, exact `--root`
+confinement, exact-path transient filtering, target-only refusal before a checkpoint,
+successful wholesale replacement after project data is moved out, routine-omit/explicit-apply
+launcher behaviour, a static AST check that no path sort omits its key, version consistency
+across packages (including that the sensor's package list and the upgrader's list are the same
+names), the `reviewed` tag staying put under `tool` and `ai` while human mode still moves it,
+a human checkpoint refusing to report success when the tag cannot be created, an upgrade
+refusing to overwrite when it cannot name its own restore point, a static scan for withdrawn
+CLI flags surviving in current instructions, and the retired-package list (must list a
+surviving orphan, ⛔ must stay silent for a clean new project, ⛔ must not overlap the
+replaceable list). Receipt cases additionally cover ignored same-path content, both Git index
+hiding flags, tracked hand edits, CRLF normalisation, persistent ref/manifest integrity,
+single-file diff/restore with an undo receipt, stable `reviewed`, path confinement, missing-file
+refusal, exact transient scope, target-only empty directories, manifest tampering, same-edition
+Windows/macOS/dual layouts, cross/mixed/missing edition rejection before any write, post-bootstrap
+restore through the downloaded peer, and missing-compatible-peer restore refusal.
+
+⚠️ **Worth recording: an existing sample went red the moment the receipt gate was added, and
+the tool was right — its fixture had no git repository at all.** 🔴 **The fixture was fixed,
+⛔ not the assertion.**
+
+### ⛔ This release does not claim / 本版不宣稱
+
+- Native macOS execution of `.command` has not been run in this Windows maintenance environment.
+- F-08 (ledger anchors and index wording in Project D) is outside v1.4.4.
+- Unknown CLI arguments still use argparse's exit code 2; harmonising tool errors with the
+  framework's PASS/FAIL/INCOMPLETE semantics is deferred to v1.5.0.
+- Project D's `FIRST_IDEA` / `_human` permission semantics are deferred to v1.5.0, and this
+  correction does not update Project D.
+- 🔴 **`corpus_md/` was ⛔ not merged into `corpus/` in this release.** `policy/` is a framework
+  folder the framework can move on its own; `corpus_md/` holds user data that only a person can
+  move. ⛔ Different risk, so they were deliberately split across two versions — the merge is v1.5.0.
+- ⛔ **An existing project's empty `policy/` folder is not removed by anything.** The upgrader
+  names it; deleting it is the user's action.
+- Green sensors do not prove substantive research correctness.
+
+---
+
 ## [1.4.2] — 2026-08-28
 
 ### 🔴 The change / 這一版做的事

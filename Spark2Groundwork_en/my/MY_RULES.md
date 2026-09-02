@@ -82,6 +82,14 @@ number of bottom lines to the `R-xx` series from then on.
 　　③ Filesystem `unlink` was denied → declared "my tools cannot delete files" → **written into
 　　　 three deliverables**, while a second, permission-gated channel went unenumerated.
 　　　 The user caught it a third time.
+　　⚠️ **The scope of an authoritative statement is itself something to check (`B-4`, 2026-09-01):**
+　　"this tool cannot do X" is true; it does ⛔ not follow that "no tool can do X".
+　　🔴 **Triggering case ④: an auditor's system prompt stated plainly that `device_bash`
+　　　 cannot delete files, and that sentence was true; he therefore did not check further,
+　　　 and read a bounded statement as a universal one about his own capability.**
+　　⛔ **The first three are "did not check the tool list"; the fourth is "checked one
+　　　 authoritative statement, and it covered only one channel"** —
+　　　 ⚠️ **two different actions, so they are written down separately.**
 　　⛔ **None of the three was a wrong check. All three were a missing check.**
 　　All three were caught by a human — see `governance/Incident_Log.md` §3.
 
@@ -94,7 +102,7 @@ number of bottom lines to the `R-xx` series from then on.
 　　　 inferences…): "none" is allowed, **but state which directions you looked in and found
 　　　 nothing.**
 　　⛔ **This clause is the single home of all of the above.** `governance/Audit_Protocol.md`
-　　§2 and §5, and `policy/HANDOFF.md` §3.1 and §3.2, each **cite** it; ⛔ none restates it
+　　§2 and §5, and `governance/HANDOFF.md` §3.1 and §3.2, each **cite** it; ⛔ none restates it
 　　(constitution §3.2).
 　　⚠️ **Why it is a rule rather than prose in four places:** the same principle was written out
 　　**verbatim** in several documents, each with a different preceding sentence and a complete

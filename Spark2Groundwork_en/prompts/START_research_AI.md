@@ -37,7 +37,7 @@ handoffs/       (shared — ⛔ your filenames must start with research_)
 
 ```
 ledgers/                                          ← the two ledgers. ⛔ No AI writes to them
-governance/  policy/  profiles/  prompts/  scripts/   ← the governance role's territory
+governance/  profiles/  prompts/  scripts/   ← the governance role's territory
 PROJECT.md                                        ← the user's project settings
 corpus/                                           ← source PDFs; only the user puts things there
 ```

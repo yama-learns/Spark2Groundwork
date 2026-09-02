@@ -36,7 +36,8 @@ from collections import defaultdict
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import cli, emit, dead_glob_findings          # noqa: E402
-from framework_config import resolve_globs, excluded       # noqa: E402
+from framework_config import (resolve_globs, excluded,
+                              active_launcher_globs)       # noqa: E402
 
 # 🔴 **門檻以「資訊長度」計，⛔ 不以字元數計。**
 #
@@ -183,8 +184,9 @@ def main():
     #     ⚠️ **掃描範圍取的是程式碼範圍，不是治理文件範圍。** `sensor_reference_integrity`
     #     之所以存在，就是因為「`.py` 檔頭從來沒被掃過」——⛔ **但它只補了「檔案」引用。
     #     「章節」引用的同一個洞一直開著，而補完的那一半讓它看起來補完了。**
+    launchers = active_launcher_globs(cfg.get("launcher_globs", []), root)
     ref_globs = (cfg.get("code_globs", ["scripts/**/*.py", "scripts/**/*.sh"])
-                 + cfg.get("launcher_globs", [])
+                 + launchers
                  + cfg["governance_globs"])
     # ⛔ **這一組 glob 的「空 glob」回報只有一個定義處：`sensor_reference_integrity`。**
     #    在這裡再報一次，只會讓噪音加倍而不增加任何資訊——

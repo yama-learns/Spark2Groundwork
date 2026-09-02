@@ -18,6 +18,7 @@ hand-written one nobody updated** — **both look complete while missing half th
     MY_INDEX_MISSING        the index has never been generated       INCOMPLETE
     MY_INDEX_STALE          regenerating gives a different result    FAIL
     INDEX_NOTE_DANGLING     a description points at a missing file   FAIL
+    INDEX_NOTE_EXCLUDED     the file is there, ⛔ just excluded        WARN
 
 ⚠️ **`INDEX_NOTE_DANGLING` is a dangling reference** — **the file was moved or renamed
 ⛔ and the description stayed behind.**
@@ -75,6 +76,19 @@ def main():
                          " — **it was moved or renamed and the description stayed behind**"))
     if dangling:
         stats["🔴 notes pointing at missing files"] = len(dangling)
+
+    # ⚠️ **The file is there, just outside the scan** — ⛔ that is ⛔ not a dangling
+    #    reference and ⛔ must not FAIL. 🔴 **⛔ Nor may it be silent:** a note that will
+    #    never appear in the index is something the user has a right to know about.
+    excluded = st.get("described but excluded", [])
+    for e in excluded:
+        findings.append(("WARN", "INDEX_NOTE_EXCLUDED",
+                         f"`{e}` has a description and the file does exist, "
+                         "⛔ but `my_index_exclude` keeps it out of the index"
+                         " — **⇒ keeping the description is fine, ⛔ but the index "
+                         "will never list it**"))
+    if excluded:
+        stats["described but excluded from the index"] = len(excluded)
 
     if st["files"] == 0:
         findings.append(("WARN", "MY_INDEX_EMPTY",

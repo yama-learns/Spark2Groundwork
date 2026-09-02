@@ -39,7 +39,8 @@ from collections import defaultdict
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import cli, emit, dead_glob_findings          # noqa: E402
-from framework_config import resolve_globs, excluded       # noqa: E402
+from framework_config import (resolve_globs, excluded,
+                              active_launcher_globs)       # noqa: E402
 
 # ⚠️ **Length bounds are language-dependent and must not be copied across languages.**
 #    The Chinese edition used 24..80 characters. Ported unchanged to English, a rule sentence
@@ -211,8 +212,9 @@ def main():
     #     exists because `.py` headers were never scanned — ⛔ but it only fixed *file*
     #     references. **The same hole was still open for *section* references, and the half
     #     that was fixed made it look closed.**
+    launchers = active_launcher_globs(cfg.get("launcher_globs", []), root)
     ref_globs = (cfg.get("code_globs", ["scripts/**/*.py", "scripts/**/*.sh"])
-                 + cfg.get("launcher_globs", [])
+                 + launchers
                  + cfg["governance_globs"])
     # ⛔ **The dead-glob report for this exact glob set has one home: `sensor_reference_integrity`.**
     #    Emitting it here too would double the noise for zero information — **and a finding with

@@ -131,8 +131,9 @@ that means the same thing: "add a folder", "link a folder", "project instruction
 
 ### 4.1 Fill in `PROJECT.md`
 
-🔴 **This is the only file you have to write yourself.**
-Everything else is looked after by the AI — **you do not need to open those files.**
+🔴 **This is one of the two project files you fill in yourself.**
+The other is `FIRST_IDEA.md` beside it. Every other governance document is looked after by
+the AI — **you do not need to open those files.**
 
 ⚠️ **The three questions in §1.1 must be answered by you. ⛔ Do not have the AI answer them:**
 
@@ -149,7 +150,16 @@ These three exist to stop **your research agenda quietly being taken over by the
 If you cannot answer the third, what you are working on may be the question the AI finds easy,
 rather than the question you wanted to ask.
 
-### 4.2 Put your papers in `corpus/`
+### 4.2 Fill in `FIRST_IDEA.md`
+
+**Open `FIRST_IDEA.md` at the project root, beside `PROJECT.md`, and replace the placeholder
+at the bottom with your complete idea.** Keep the decomposition rules above it; the AI reads
+the whole file in the first round.
+
+🔴 **This is a project-owned file.** It deliberately does not live in `prompts/`: that is a
+framework folder replaced wholesale on upgrade, while your idea must never be overwritten.
+
+### 4.3 Put your papers in `corpus/`
 
 **Put every PDF you intend to cite into the `corpus/` folder.**
 One file per paper; a filename like "FirstAuthor_Year_keyword.pdf" works well.
@@ -158,7 +168,7 @@ One file per paper; a filename like "FirstAuthor_Year_keyword.pdf" works well.
 in the source. If the source is not in the project, that check cannot run —
 ⛔ **and "could not check" is not the same as "no problem".**
 
-### 4.3 Build your bibliography
+### 4.4 Build your bibliography
 
 `corpus/` contains a file called **`BIBLIOGRAPHY.docx`**. It is blank right now.
 
@@ -187,7 +197,7 @@ identifier.**
 ⚠️ If you later connect your AI directly to Zotero, that is fine —
 **but keep this file anyway, as an offline copy to compare against.**
 
-### 4.4 Make your first checkpoint
+### 4.5 Make your first checkpoint
 
 **Windows:** double-click `snapshot.bat`
 **Mac:** double-click `snapshot.command`
@@ -266,7 +276,9 @@ your ledgers are still empty, and the checks are pointing out the unfilled field
 
 ## Step 6: hand your idea to the AI (about 5 minutes)
 
-**Open `INITIALIZE_PROMPT.md` and paste the whole thing to your AI, along with your idea.**
+**First make sure `FIRST_IDEA.md` is filled in. Then paste all of `INITIALIZE_PROMPT.md` to an
+AI that can read this project folder.** It reads `FIRST_IDEA.md` directly; you do not need to
+copy the idea into the message again.
 
 That prompt asks the AI to:
 
@@ -343,6 +355,10 @@ filling in the page number forces you to actually turn to that page —
 **Press the "check update" button.** It tells you which version you have and which is the
 latest on GitHub.
 
+⚠️ **A version marker only says what a folder calls itself; it does not prove the contents
+are complete.** Once the new version is in `_upgrade/`, pressing the button again automatically
+follows the check with a read-only diff. Neither step writes project files.
+
 **To upgrade, three steps:**
 
 1. Download the new ZIP from GitHub and unzip it into an `_upgrade/` folder inside your project
@@ -352,25 +368,186 @@ latest on GitHub.
    python3 scripts/harness/upgrade.py apply governance
    ```
 
-🔴 **It only replaces the things it recognises**: the five folders
-`governance`, `policy`, `profiles`, `prompts`, `scripts`,
-and the four files `README.md`, `SETUP.md`, `INITIALIZE_PROMPT.md`, `file_index.md`.
+🔴 **It only replaces the things it recognises**: the folders `governance`, `profiles`,
+`prompts`, `scripts` and `docs`, plus the four root guides and the platform launchers.
 
-⛔ **Everything else is left alone** — including `PROJECT.md`, `ledgers/`, `corpus/`,
+⛔ **Everything else is left alone** — including `PROJECT.md`, `FIRST_IDEA.md`, `ledgers/`, `corpus/`,
 `my/`, **and any folder you made yourself** (notes, figures, submitted drafts,
 whatever you like).
 
 ⚠️ **This is worth stating plainly, because it is often read the other way round:**
 **what protects your material is not a list of protected things — it is the list of
 replaceable ones.**
-🔴 **The tool recognises those nine names and refuses everything else**, so **you never have
+🔴 **The tool recognises only the names listed above and refuses everything else**, so **you never have
 to register the folders you create.**
 
-⚠️ **It makes a checkpoint for you before overwriting anything**, so if you had edited a file
-inside that part by hand, **"review changes" will get your edits back.**
+🔴 **Even inside a replaceable framework folder, the program stops and names every file absent
+from the new source.** It does not guess ownership and does not make a checkpoint. Move
+project-owned files out, then run it again.
 
-⛔ **There is no "replace everything at once" option** — that would leave you unable to tell
-which part caused a problem.
+⚠️ **On the program route above, every `apply` makes a checkpoint before overwriting; a failed
+checkpoint means no replacement.** There is deliberately no "replace everything" command:
+replace one package at a time.
+
+Routine `diff` on Windows does not ask for an absent `.command`, and macOS does not ask for an
+absent `.bat`. **If you deliberately need a cross-platform project, you may still apply the
+exact full filename, for example `upgrade.py apply snapshot.command`.** This explicit action is
+an intentional escape hatch, not a routine diff item.
+
+### Upgrading from v1.4.2 or earlier (both routes)
+
+Whether you use the program or the manual route below, check at least these four places:
+
+1. Move the filled `prompts/TEMPLATE_decompose.txt` to project root and rename it `FIRST_IDEA.md`.
+2. Move tools you created under `scripts/` to `my/tools/`; the governance AI may maintain that
+   location when the principal authorises it.
+3. In a multi-agent project, inspect `governance_config.json` by hand. If the principal has
+   authorised the governance role to maintain project rules, incidents, index descriptions,
+   and self-written tools, that role's `write_scopes` must include `my`. Upgrades never replace
+   this setting.
+4. 🔴 **`policy/` retired in v1.4.4** and its four documents (`SOURCES.md`,
+   `MODEL_IDENTITY.md`, `HANDOFF.md`, `EXTERNAL_TOOLS.md`) moved into `governance/`.
+   **⛔ The new version has no folder of that name, so wholesale replacement ⛔ never touches
+   your old `policy/` — it simply stays where it is.**
+   → **First confirm the new `governance/` really does contain those four**, then move your old
+   `policy/` out of the project (or delete it).
+   ⚠️ **⛔ Neither the program nor the framework deletes it for you**; the program route only
+   names it after `check`, `diff` and every successful `apply`.
+   **⇒ The manual route has no such reminder, which is why it is written here.**
+
+After every replacement of `governance`, bring `my/MY_RULES.md` up to date with the new public
+rules: run `python3 scripts/harness/tool_sync_my_rules.py`.
+**It appends missing entries verbatim and ⛔ never overwrites a single existing word in your file.**
+
+On a strictly no-code route, copy each missing `R-xx` entry verbatim from the new
+`governance/RULES.md` and insert it before the `FRAMEWORK_RULES_END` comment in `MY_RULES.md`.
+**Never replace the whole `MY_RULES.md`; that would erase project rules and overrides.**
+
+#### 🔴 v1.4.4 revises `R-34`, and this one needs your hands
+
+**This is the first time this framework has revised a rule that had already shipped.**
+⚠️ **⇒ Your copy in `my/MY_RULES.md` will differ from the new one, and the sensor will report
+`RULE_TEXT_DRIFT`.**
+
+**What to do:**
+
+1. Run `python3 scripts/harness/tool_sync_my_rules.py`
+2. It prints a **line-by-line difference**; the `+` lines are the new sentences
+3. **Paste those lines verbatim into `R-34`'s body in `my/MY_RULES.md`**
+4. Run it again and confirm the drift is gone
+
+⛔ **⛔ No tool will do step 3 for you, and that is deliberate.**
+🔴 **A tool that overwrote your rules file automatically was found, in this version's own
+review, to still write when the checkpoint program had failed — ⇒ the whole write path was
+ruled back out.** ⚠️ **A difference you can read is worth more than an automatic overwrite that
+saves ten seconds.**
+
+⚠️ **If you changed that rule on purpose** (rather than the framework revising it), add a line
+inside its body with `[project override]` and your reason — ⛔ the sensor will then stop
+reporting it.
+
+#### 🔴 v1.4.4 needs your hands for one more thing: check the `reviewed` baseline
+
+**v1.4.1 and v1.4.2 had a defect: `upgrade.py apply` moved the `reviewed` tag onto the
+pre-upgrade commit and printed "human review point: I have looked at this" — ⛔ when you had
+pressed no such button.**
+
+🔴 **The consequence is ⛔ not that a tag moved; it is that "review changes" lost its baseline:**
+**if an AI had finished work you had not yet reviewed when you upgraded, those changes vanished
+from "what changed since I last looked".**
+
+⚠️ **v1.4.4 fixes it (the upgrader now calls with `--mode tool`, and ⛔ neither `tool` nor `ai`
+touches that tag).** ⛔ **But a tag that was already moved does not move back on its own** —
+**⇒ only you can judge this one.**
+
+**How to check — three steps, ⛔ and "cannot tell" is itself one of the answers:**
+
+**Step 1: see what kind of commit the tag is sitting on**
+
+```
+git log --oneline -1 reviewed
+```
+
+| Message starts with | What it means |
+|---|---|
+| `snapshot …` | A human checkpoint commit. ⚠️ **You may have pressed it, or an upgrade may have pressed it for you** — go to step 2 |
+| `auto: …` | A commit the AI made. ⚠️ **This ⛔ does not prove anything is wrong**: pressing "snapshot" after the AI finishes lands the tag here legitimately — go to step 2 |
+| `tool: …` | A v1.4.4-or-later tool restore point. 🔴 **This is always wrong**: `tool` mode ⛔ never moves the tag, ⇒ it cannot have arrived here by itself |
+| anything else (`release:`, your own commits …) | ⚠️ This step cannot tell — go to step 2 |
+
+🔴 **⛔ Do not use "what the message starts with" as the only criterion.**
+⚠️ **The second row is why: `auto:` is both a result of this defect and a result of the normal
+flow, ⛔ and the two look identical.**
+**⚠️ And when the working tree was clean at upgrade time — the common case — `auto:` is exactly
+what the old upgrader left behind.**
+
+**Step 2: read `git-checkpoint.log`**
+
+```
+grep -n "mode=human" git-checkpoint.log        # macOS/Linux
+Select-String "mode=human" git-checkpoint.log  # Windows PowerShell
+```
+
+**Every entry carries a UTC time. Line them up against the times you remember pressing the
+button:**
+
+- **A `mode=human` entry whose time falls exactly when you ran the upgrade, at a moment you
+  pressed nothing** → 🔴 **that is the forged one, ⇒ the tag's current position is not
+  trustworthy.**
+- **There is no `git-checkpoint.log`** (it ⛔ does not ship with the framework; your project
+  grows its own) → this route is closed, go to step 3.
+
+⚠️ **⛔ Do not go looking for a record of when the tag moved and who moved it — Git ⛔ keeps no
+reflog for a tag like this** (`core.logAllRefUpdates` covers branches, remotes and notes by
+default). **⚠️ Written down here so you do not hunt for something that does not exist.**
+
+**Step 3: when neither step could tell**
+
+🔴 **⛔ Do not guess, ⛔ and do not "just reset it and see".**
+**The conservative move is to drop the baseline back to a point you are certain about, and read
+forward from there:**
+
+```
+git log --oneline -30                       # what this stretch of history looks like
+git diff <the commit you are sure about>    # everything from there to now
+```
+
+⚠️ **The cost is that you re-read some things you had already read.**
+🔴 **⛔ The cost in the other direction is a stretch of work you never read dropping out of every
+list from now on — ⛔ and that one is irreversible.**
+
+⛔ **⛔ Do not do this part with the review-changes button** —
+**that button's baseline is `reviewed`, ⛔ and `reviewed` is the thing you currently doubt.**
+
+**Once you have decided — two ways to handle it, pick one:**
+
+| | What to do | When to pick it |
+|---|---|---|
+| **[A]** | **Re-read with the `git diff <commit you are sure about>` from step 3, then press "snapshot"** | 🔴 **Recommended.** You see everything from that safe baseline to now, and only then move the baseline forward |
+| [B] | `git tag -f reviewed <the commit you are sure you reviewed>` | ⚠️ You remember exactly how far you had got; ⛔ **only move the baseline backward, never forward** |
+
+⛔ **⛔ Leaving it alone is not recommended** — **an "I have looked at this" pointing somewhere
+you have not looked is worse than no tag at all: without a tag, "review changes" falls back to
+`HEAD` and says so, ⚠️ while a wrong tag says nothing.**
+
+### 9.1 Wholesale replacement without running code
+
+You can avoid the upgrade program entirely: back up the project, then move one old framework
+folder aside and put the new folder of the same name in its place. **Before moving the old
+folder, move every project-owned file out of it.**
+
+Leave `governance_config.json`, `my/`, `PROJECT.md`, `FIRST_IDEA.md`, ledgers and corpora in
+place. A Windows project may keep only `.bat`; a macOS project may keep only `.command`.
+
+🔴 **⚠️ The manual route has one trap, and it comes from the "folder of the same name" method
+itself:** a folder that has **retired** in the new version ⛔ has no same-named replacement to
+put in — **⇒ it stays quietly in your project, still looking like part of the framework.**
+**⛔ Item 4 of "Upgrading from v1.4.2 or earlier" above is exactly that case, ⚠️ and that
+section is worth re-reading on every upgrade.**
+
+⚠️ **This manual route makes no automatic checkpoint, and no program prevents you from replacing
+several packages at once.** The full-project backup above is your recovery source. Still replace
+one package at a time and inspect it before continuing.
 
 ---
 

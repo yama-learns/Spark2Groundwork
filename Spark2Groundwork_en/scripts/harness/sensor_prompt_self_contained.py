@@ -22,7 +22,7 @@ clause spelled out used it **12 times**.
 | **② Deep Research clause list** | LANG / VENUE-TYPE / NO-DOI / PASS A / PASS B / title accuracy / NONE RETRIEVED / OUTPUT CONTRACT | ⚠️ **only under `--profile deep-research`** |
 
 ⚠️ **The old version ran ② against every prompt. Measured consequence:**
-`prompts/TEMPLATE_decompose.txt` is a **fully self-contained** decomposition prompt whose
+Root `FIRST_IDEA.md` is a **fully self-contained** decomposition prompt whose
 opening line says verbatim "⛔ do not search the literature this round" —
 **a prompt that forbids literature search cannot and should not carry bilingual search
 clauses. It FAILed, and it would keep FAILing after assembly, forever.**
@@ -39,12 +39,12 @@ official note telling the reader the FAIL is correct and can be ignored.**
 | **Content slot** | `<<<PASTE YOUR IDEA IN FULL>>>` | ✅ **Not a defect** — the user fills it at use time |
 | **Fill-in slot** | `<<<FILL IN: one sentence>>>` | ⚠️ **WARN** — a reminder, not a blocker |
 
-⚠️ **The old version treated all three as defects**, so `TEMPLATE_decompose.txt` FAILed on
+⚠️ **The old version treated all three as defects**, so `FIRST_IDEA.md` FAILed on
 `<<<PASTE YOUR IDEA IN FULL>>>` — **a placeholder that is supposed to stay there.**
 
 ## 🔴 Quoting a prohibition is not breaking it
 
-**Measured case:** `TEMPLATE_decompose.txt` contains the line
+**Measured case:** `FIRST_IDEA.md` contains the line
 "⛔ Do not write 'pending', 'see below', or similar in the falsification field",
 **and the sensor flagged the 'see below' inside it as a cross-prompt reference.**
 
@@ -100,7 +100,7 @@ POLLUTION = [
 
 # ⚠️ **These three patterns are calibrated against the framework's own shipped templates.**
 #    ⛔ If one of them fires on a well-formed prompt, the pattern is wrong, not the prompt
-#    (`R-19`). **Calibration reference: `prompts/TEMPLATE_decompose.txt`,
+#    (`R-19`). **Calibration reference: root `FIRST_IDEA.md`,
 #    `TEMPLATE_adversarial.txt` (and `TEMPLATE_prior_art.txt` once assembled).**
 GENERIC_HINTS = [
     ("hallucination guard", r"(?i)uncertain|do not invent|do not make (?:it |them )?up"

@@ -27,7 +27,7 @@ conversation.**
 **You may write to:**
 
 ```
-governance/     policy/     scripts/     my/
+governance/     scripts/     my/
 file_index.md   NEXT_SESSION_MEMO.md
 handoffs/       (shared — ⛔ your filenames must start with governance_)
 ```

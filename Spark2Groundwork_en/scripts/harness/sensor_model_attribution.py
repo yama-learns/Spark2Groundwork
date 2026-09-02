@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Sensor: model attribution (on demand)
 
-**Rule source:** `policy/MODEL_IDENTITY.md` §3.4 (an artefact's author field must name the
-concrete model) and §3.6 rule 2 (a platform name is not a model); `policy/HANDOFF.md` §3
+**Rule source:** `governance/MODEL_IDENTITY.md` §3.4 (an artefact's author field must name the
+concrete model) and §3.6 rule 2 (a platform name is not a model); `governance/HANDOFF.md` §3
 (the first of the five required items in a handoff packet).
 
 ## Checks
@@ -17,7 +17,7 @@ concrete model) and §3.6 rule 2 (a platform name is not a model); `policy/HANDO
 
 **The old version carried two hard-coded whitelists** (`GRANDFATHERED`, 13 entries;
 `FROZEN_HANDOFFS`, 12), every one of them **a filename from another project** — one under an `mve/` directory, one a
-git-policy document under `policy/`, and so on — **none of which exists in this framework.**
+git-policy document under another directory, and so on — **none of which exists in this framework.**
 ⚠️ **Those filenames are deliberately not written out here**: writing them would make them
 dangling references in this very file. **"Do not instantiate a defect while describing it"**
 (predecessor projects hit this same mechanism three times).
@@ -55,7 +55,7 @@ so `R-21` is not violated — same as the role whitelist in `ai_checkpoint.sh`).
 
 ## ✅ "Cannot read" is the correct answer, ⛔ not a defect
 
-`policy/MODEL_IDENTITY.md` §3.6.3 rule 1 says verbatim that when the marker is not in visible
+`governance/MODEL_IDENTITY.md` §3.6.3 rule 1 says verbatim that when the marker is not in visible
 context, **the only correct output** is `[Model: cannot read -- ...]`.
 ⛔ **FAILing it would push the next model back to writing a platform name, and §3.6 rule 2
 says that is worse than leaving it blank.**
@@ -117,7 +117,7 @@ def main():
             missing += 1
             findings.append(("FAIL", "MODEL_ATTRIBUTION_MISSING",
                              f"{p.relative_to(root)} has no model field in its header "
-                             f"-- `policy/HANDOFF.md` §3: a missing item means not delivered"))
+                             f"-- `governance/HANDOFF.md` §3: a missing item means not delivered"))
             continue
         if UNREADABLE.search(who):
             # ✅ This is the only correct output per MODEL_IDENTITY §3.6.3 rule 1
@@ -133,7 +133,7 @@ def main():
                              f"{p.relative_to(root)}: '{who[:40]}' is not a concrete model "
                              f"-- **a platform or family name is worse than a blank: it reads "
                              f"like an answer and stops the next reader from asking** "
-                             f"(`policy/MODEL_IDENTITY.md` §3.6.3 rule 2)"))
+                             f"(`governance/MODEL_IDENTITY.md` §3.6.3 rule 2)"))
 
     stats = {"artefacts scanned": len(files), "no model field": missing,
              "family/platform only": vague, "declared unreadable": unread}

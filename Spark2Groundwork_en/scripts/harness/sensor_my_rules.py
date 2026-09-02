@@ -82,6 +82,29 @@ def parse(text):
     return items
 
 
+
+def is_override(body_text, marker):
+    """Return `(marker present, reason long enough)`. 🔴 **The single home of this criterion.**
+
+    ⚠️ **The marker must be on a line of its own (`i > 0`), ⛔ never on the clause line.**
+    🔴 **Measured (this sensor's own paired sample):** when the same line was allowed,
+    "`**R-19** [project override] <the original clause>`" passed — **because there really
+    was text after the marker, and that text was the clause itself, not a reason.
+    ⛔ The criterion was therefore inert.**
+
+    ⛔ **`tool_sync_my_rules.py` reads this same function** —
+    ⚠️ **if the two criteria ever differ you get "the sensor calls it an override while the
+    tool lists it as outstanding".**
+    ⚠️ **(During v1.4.3's development that tool had an `--adopt` [withdrawn] that rewrote
+    drifted rules for you; ⛔ the whole write path was ruled back out in v1.4.4. ⇒ Neither
+    side writes anything now, ⛔ and the reason for sharing one criterion is unchanged.)**
+    """
+    body = body_text.split("\n")
+    line = next((l for i, l in enumerate(body) if marker in l and i > 0), None)
+    if line is None:
+        return False, False
+    return True, len(line.split(marker, 1)[1].strip()) >= 6
+
 def main():
     root, cfg, as_json, name = cli("my_rules")
     findings, stats = [], {}
@@ -124,15 +147,14 @@ def main():
         #    "`**R-19** [project override] <the original clause>`" pass — **because there IS
         #    text after the marker, and that text is the clause itself, not a reason.
         #    ⛔ The criterion would be decorative.**
-        body = my[rid].split("\n")
-        line = next((l for i, l in enumerate(body) if marker in l and i > 0), None)
-        if line is None:
+        marked, has_reason = is_override(my[rid], marker)
+        if not marked:
             findings.append(("FAIL", "RULE_TEXT_DRIFT",
                              f"{rid} differs between the two and carries no {marker} — "
                              "**the framework's text is the definition. ⛔ To change it, "
                              "add a `P-xx` that tightens it**"))
             continue
-        if len(line.split(marker, 1)[1].strip()) < 6:
+        if not has_reason:
             findings.append(("FAIL", "OVERRIDE_WITHOUT_REASON",
                              f"{rid} is marked {marker} with ⛔ no reason on that line — "
                              "**an exemption is allowed, ⛔ but it has to be visible**"))

@@ -7,7 +7,7 @@
 | `START_治理AI.md` | 指派一個 AI 當**治理**角色時，開工第一則訊息貼這份 |
 | `START_研究AI.md` | 指派一個 AI 當**研究**角色時，開工第一則訊息貼這份 |
 | `START_審計AI.md` | 指派一個 AI 當**審計**角色時，開工第一則訊息貼這份 |
-| `TEMPLATE_decompose.txt` | 把一個構想**拆成可證偽的猜想**（第一輪要做的事） |
+| 根目錄 `第一個想法.md` | 把一個構想**拆成可證偽的猜想**（專案專屬，第一輪要做的事） |
 | `TEMPLATE_prior_art.txt` | 先行技術檢索：**這件事有沒有人做過** |
 | `TEMPLATE_adversarial.txt` | 對抗審計：**請攻擊我的產出** |
 | `_COMMON_BLOCKS.md` | 零件盒。想自己組一份新 prompt 時用 |
@@ -41,7 +41,7 @@ python3 scripts/harness/sensor_prompt_self_contained.py <檔> --profile deep-res
 
 ⚠️ **這個參數是刻意分開的。**
 **檢索專用的條款（雙語檢索、書目標籤那些）只對檢索 prompt 有意義**——
-**⛔ 把它們套用到 `TEMPLATE_decompose.txt` 這種「這一輪不要查文獻」的 prompt 上，
+**⛔ 把它們套用到根目錄 `第一個想法.md` 這種「這一輪不要查文獻」的 prompt 上，
 它會被判 FAIL，而且永遠改不好。**
 
 ---

@@ -36,7 +36,7 @@
     "",
     "範例（三角色）：",
     "  \"write_scopes\": {",
-    "    \"governance\": [\"governance\", \"policy\", \"scripts\", \"my\", \"file_index.md\"],",
+    "    \"governance\": [\"governance\", \"scripts\", \"my\", \"file_index.md\"],",
     "    \"research\":   [\"corpus_md\", \"RESEARCH_MEMO.md\"],",
     "    \"audit\":      [\"scratch\"],",
     "    \"_shared\":    [\"handoffs\"]",

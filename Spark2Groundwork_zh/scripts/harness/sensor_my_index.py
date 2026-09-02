@@ -18,6 +18,7 @@
     MY_INDEX_MISSING        索引還沒產生過                      INCOMPLETE
     MY_INDEX_STALE          重新產生的結果與檔案不同             FAIL
     INDEX_NOTE_DANGLING     說明指向一個不存在的檔案             FAIL
+    INDEX_NOTE_EXCLUDED     檔案在，⛔ 只是被索引排除            WARN
 
 ⚠️ **`INDEX_NOTE_DANGLING` 是懸空引用**——**檔案被搬走或改名，⛔ 而說明留在原地。**
 **它與 `sensor_reference_integrity.py` 擋的是同一種東西，⛔ 只是對象不同。**
@@ -73,6 +74,17 @@ def main():
                          "——**檔案被搬走或改名了，而說明留在原地**"))
     if dangling:
         stats["🔴 說明指向不存在的檔案"] = len(dangling)
+
+    # ⚠️ **檔案在、只是不在掃描範圍內**——⛔ 那⛔ 不是懸空引用，⇒ ⛔ 不得判 FAIL。
+    #    🔴 **⛔ 而它也不能靜默**：一筆永遠不會出現在索引裡的說明，使用者有權知道。
+    excluded = st.get("有說明但被排除", [])
+    for e in excluded:
+        findings.append(("WARN", "INDEX_NOTE_EXCLUDED",
+                         f"`{e}` 有說明，檔案也確實存在，"
+                         "⛔ 而 `my_index_exclude` 把它排除在索引之外"
+                         "——**⇒ 說明留著沒問題，⛔ 而索引不會列出它**"))
+    if excluded:
+        stats["有說明但被索引排除"] = len(excluded)
 
     if st["檔案"] == 0:
         findings.append(("WARN", "MY_INDEX_EMPTY",

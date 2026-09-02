@@ -7,7 +7,7 @@
 | `START_governance_AI.md` | Paste as the first message when you put an AI in the **governance** role |
 | `START_research_AI.md` | Paste as the first message when you put an AI in the **research** role |
 | `START_audit_AI.md` | Paste as the first message when you put an AI in the **audit** role |
-| `TEMPLATE_decompose.txt` | Break an idea into **falsifiable conjectures** (the first round's job) |
+| Root `FIRST_IDEA.md` | Break an idea into **falsifiable conjectures** (project-owned; the first round's job) |
 | `TEMPLATE_prior_art.txt` | Prior-art search: **has anyone already done this?** |
 | `TEMPLATE_adversarial.txt` | Adversarial audit: **please attack my output** |
 | `_COMMON_BLOCKS.md` | The parts bin, for when you want to build a prompt of your own |
@@ -44,7 +44,7 @@ python3 scripts/harness/sensor_prompt_self_contained.py <file> --profile deep-re
 
 ⚠️ **Keeping that separate is deliberate.**
 **The search-specific clauses (bilingual passes, bibliographic tags) only mean something for a
-search prompt** — **⛔ applied to a prompt like `TEMPLATE_decompose.txt`, which says "do not
+search prompt** — **⛔ applied to a prompt like root `FIRST_IDEA.md`, which says "do not
 search the literature this round", they produce a FAIL that can never be fixed.**
 
 ---

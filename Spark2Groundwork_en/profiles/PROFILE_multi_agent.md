@@ -171,7 +171,7 @@ three hands: someone proposed it, someone costed it, someone decided.**
 
 ```json
 "write_scopes": {
-  "governance": ["governance", "policy", "scripts", "my",
+  "governance": ["governance", "scripts", "my",
                  "file_index.md", "NEXT_SESSION_MEMO.md"],
   "research":   ["corpus_md", "RESEARCH_MEMO.md"],
   "audit":      ["scratch"],
@@ -180,6 +180,16 @@ three hands: someone proposed it, someone costed it, someone decided.**
 ```
 
 ⚠️ **Giving `audit` only a sandbox is deliberate: real reports go to `handoffs/` (`_shared`).**
+
+🔴 **`my` in the governance role's write scope is deliberate too.** That role must be able to
+maintain this project's `my/MY_RULES.md`, `my/MY_INCIDENTS.md`,
+`my/MY_INDEX_notes.json`, and `my/tools/`. Project-built tools live there, ⛔ not under
+wholesale-replaced `scripts/`. Write access is not adjudication authority: the principal still
+decides whether a rule is adopted.
+
+⚠️ **After upgrading an older project, inspect `governance_config.json` by hand.** If the
+governance role's `write_scopes` lacks `my`, add it when the principal authorises that scope;
+an upgrade never overwrites this project-owned setting.
 
 🔴 **⚠️ ⛔ Do not edit `scripts/harness/framework_config.py`.**
 **That is a framework file, replaced wholesale on upgrade — ⛔ settings changed there

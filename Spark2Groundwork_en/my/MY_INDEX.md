@@ -13,7 +13,7 @@
 > on upgrade.**
 
 
-**16 files | 16 described | 0 not yet described**
+**17 files | 17 described | 0 not yet described**
 
 ---
 
@@ -23,11 +23,12 @@
 |---|---|
 | `.gitattributes` | git's line-ending and binary rules. ⚠️ Same — **mixed ownership**. |
 | `.gitignore` | What stays out of version control. ⚠️ **Mixed ownership**: the framework supplies defaults, you add to them. |
+| `FIRST_IDEA.md` | **One of the project files you fill in yourself**: the original idea and decomposition rules for the AI's first round. ⛔ Never replaced on upgrade. |
 | `NEXT_SESSION_MEMO.md` | Working state. **Overwritten each round**, ⛔ never appended. The only place in the project allowed to hold 'current progress'. |
-| `PROJECT.md` | **The one file you fill in yourself**: what this project is, whether it is worth doing, ethical lines, the AI's write permissions. |
+| `PROJECT.md` | **One of the project files you fill in yourself**: what this project is, whether it is worth doing, ethical lines, the AI's write permissions. |
 | `corpus/BIBLIOGRAPHY.docx` | **This project's citation-format authority.** Export from Zotero/EndNote and paste it in. |
-| `corpus/READ_ME.md` | How to use `corpus/`: put the PDFs you cite here, one file per paper. |
-| `corpus_md/READ_ME.txt` | How to use `corpus_md/`: programmatic full-text extractions, ⛔ never hand-edited. |
+| `corpus/README.md` | How to use `corpus/`: put the PDFs you cite here, one file per paper. |
+| `corpus_md/README.txt` | How to use `corpus_md/`: programmatic full-text extractions, ⛔ never hand-edited. |
 | `governance_config.json` | **Permission settings**: where the AI does not write, and each role's scope. ⛔ Never replaced by an upgrade. |
 | `handoffs/README.txt` | How to use `handoffs/`: handoff packets go here, append-only. |
 | `ledgers/Claim_Ledger.md` | **Claim ledger**: which sentence rests on which passage. Spec in `governance/CLAIM_LEDGER_SPEC.md`. |

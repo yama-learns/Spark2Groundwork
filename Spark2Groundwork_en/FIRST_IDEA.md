@@ -1,3 +1,9 @@
+# First Idea (project-owned file)
+
+> **This file belongs to your project and sits beside `PROJECT.md`; framework upgrades never
+> replace it.** Replace the placeholder at the bottom with your full idea, then have the AI
+> read this entire file.
+
 Your task: split the idea below into conjectures that can be tested independently.
 
 ⛔ Do not search the literature this round.

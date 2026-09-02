@@ -36,8 +36,21 @@ if [ -z "$PY" ]; then
   exit 1
 fi
 
-"$PY" "scripts/harness/upgrade.py" "$@"
+if [ "$#" -eq 0 ]; then
+  "$PY" "scripts/harness/upgrade.py" check
+  RC=$?
+  if [ -d "_upgrade" ]; then
+    echo
+    "$PY" "scripts/harness/upgrade.py" diff
+    DIFF_RC=$?
+    [ "$DIFF_RC" -ne 0 ] && RC=$DIFF_RC
+  fi
+else
+  "$PY" "scripts/harness/upgrade.py" "$@"
+  RC=$?
+fi
 echo
 echo "==========================================================="
 printf "Press Return to close this window. "
 read -r _
+exit "$RC"

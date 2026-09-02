@@ -125,7 +125,7 @@ handoff packet) must carry a **specific model identifier** in its author field.
 - ❌ `**Created:** Claude, 2026-07-29`
 
 **Why:** this is the only basis for attribution and traceability after the fact.
-If the model-performance record in `policy/HANDOFF.md` cannot be tied to specific artefacts,
+If the model-performance record in `governance/HANDOFF.md` cannot be tied to specific artefacts,
 **the whole table degrades into impressions.**
 
 > 🔴 **⚠️ Only half of this section has a mechanical defence (stated explicitly from v1.4.1).**

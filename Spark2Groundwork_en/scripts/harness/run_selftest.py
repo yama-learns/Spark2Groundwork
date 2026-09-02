@@ -221,7 +221,7 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
             (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
         (tmp / "governance_config.json").write_text(json.dumps({
             "write_scopes": scopes if scopes is not None else {
-                "governance": ["governance", "policy"], "_human": ["ledgers"]},
+                "governance": ["governance", "profiles"], "_human": ["ledgers"]},
             "deny": deny if deny is not None else ["ledgers"]},
             ensure_ascii=False), encoding="utf-8")
         g = ["git", "-C", str(tmp)]
@@ -254,7 +254,7 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
 
 
 scope_case("writing into deny FAILs", ["ledgers/Claim_Ledger.md"], 1, "WRITE_TO_DENIED_PATH",
-           scopes={"governance": ["governance", "policy"]})
+           scopes={"governance": ["governance", "profiles"]})
 # 🔴 **The paired sample for D1 (v1.4.1).**
 #    ⚠️ **The old code folded `t0_docs` into `denied` unconditionally, so no configuration
 #    could turn T0 protection off — while the comment in `framework_config.py` said
@@ -262,11 +262,11 @@ scope_case("writing into deny FAILs", ["ledgers/Claim_Ledger.md"], 1, "WRITE_TO_
 #    **⛔ Both of the following must hold; either one failing means the old behaviour is back.**
 scope_case("with T0 in deny, editing a T0 FAILs",
            ["governance/AGENTS.md"], 1, "WRITE_TO_DENIED_PATH",
-           scopes={"governance": ["governance", "policy"]},
+           scopes={"governance": ["governance", "profiles"]},
            deny=["ledgers", "governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md"])
 scope_case("🔴 with T0 ⛔ not in deny, editing a T0 must ⛔ NOT fail (it is switchable)",
            ["governance/AGENTS.md"], 0,
-           scopes={"governance": ["governance", "policy"]},
+           scopes={"governance": ["governance", "profiles"]},
            deny=["ledgers"], forbid=("WRITE_TO_DENIED_PATH",))
 
 # 🔴 **The paired sample for D2 (v1.4.1).**
@@ -279,11 +279,11 @@ scope_case("🔴 solo project edits a ledger: must be listed, ⛔ must not FAIL"
            ["ledgers/Claim_Ledger.md"], 0, "DENIED_PATH_TOUCHED_UNATTRIBUTED",
            scopes={}, forbid=("WRITE_TO_DENIED_PATH", "WRITE_OUT_OF_SCOPE"))
 scope_case("solo project edits an ordinary file: ⛔ that WARN must not appear",
-           ["policy/SOURCES.md"], 0, scopes={},
+           ["governance/SOURCES.md"], 0, scopes={},
            forbid=("DENIED_PATH_TOUCHED_UNATTRIBUTED",))
 scope_case("covered by _human: no false alarm, and the count is printed",
            ["ledgers/Claim_Ledger.md"], 0, "_human", forbid=("WRITE_TO_DENIED_PATH",))
-scope_case("an in-scope change does not false-alarm", ["policy/SOURCES.md"], 0,
+scope_case("an in-scope change does not false-alarm", ["governance/SOURCES.md"], 0,
            forbid=("WRITE_TO_DENIED_PATH", "WRITE_OUT_OF_SCOPE"))
 
 
@@ -661,16 +661,16 @@ def subrepo_case():
     try:
         proj = tmp / "edition_en"
         (proj / "governance").mkdir(parents=True, exist_ok=True)
-        (proj / "policy").mkdir(parents=True, exist_ok=True)
+        (proj / "profiles").mkdir(parents=True, exist_ok=True)
         (proj / "ledgers").mkdir(parents=True, exist_ok=True)
         (tmp / "something_else").mkdir(parents=True, exist_ok=True)
         for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
             (proj / "governance" / t0).write_text("# T0\n", encoding="utf-8")
-        (proj / "policy/SOURCES.md").write_text("x\n", encoding="utf-8")
+        (proj / "profiles/PROFILE_solo.md").write_text("x\n", encoding="utf-8")
         (proj / "ledgers/Claim_Ledger.md").write_text("x\n", encoding="utf-8")
         (tmp / "something_else/note.md").write_text("x\n", encoding="utf-8")
         (proj / "governance_config.json").write_text(json.dumps(
-            {"write_scopes": {"governance": ["governance", "policy"]},
+            {"write_scopes": {"governance": ["governance", "profiles"]},
              "deny": ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
         g = ["git", "-C", str(tmp)]
         subprocess.run(["git", "init", "-q", str(tmp)], capture_output=True)
@@ -724,7 +724,7 @@ def subprocess_encoding_case():
     global ok, bad
     import ast as _ast
     offenders = []
-    for f in sorted(HERE.glob("*.py")):
+    for f in sorted(HERE.glob("*.py"), key=lambda p: p.as_posix()):
         if f.name.startswith("_selftest"):
             continue
         try:
@@ -753,6 +753,601 @@ def subprocess_encoding_case():
 
 
 subprocess_encoding_case()
+
+
+# ── 🔴 Only a person may move the reviewed tag (v1.4.4, R-H003-05) ──
+# **觸發個案（Codex 覆核，2026-09-02，在 `v1.4.2` 的 tag 上重現）：**
+# `upgrade.py` 自 v1.4.1 起以 `checkpoint.py --root <root>` 呼叫，⛔ 沒有傳 `--mode`，
+# 於是走 `human` 預設——**一次框架升級就把 `reviewed` 移到升級前的提交，並印「我看過了」。**
+#
+# 🔴 **真正的後果⛔ 不是標籤變了，是使用者的「還沒看過」被清空：**
+# **一筆 AI 寫進台帳、人從未審閱的內容，因為使用者升級框架而從 `review_changes.py` 消失。**
+# ⚠️ **`reviewed` 是本框架「人是唯一裁決者」這個宣稱的唯一機械載體。**
+#
+# ⛔ **⛔ 這一組⛔ 不是只測新工具**——**`CP-12` 測的是 `upgrade.py`，
+#    因為已發布版本的缺陷在那裡，⛔ 不在任何新增的東西裡。**
+def reviewed_tag_case():
+    global ok, bad
+    import shutil, tempfile
+
+    def sh(root, *args):
+        return subprocess.run(["git", "-C", str(root)] + list(args),
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace")
+
+    def build():
+        tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_rev_"))
+        (tmp / "governance").mkdir()
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (tmp / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (tmp / "scripts/harness").mkdir(parents=True)
+        for n in ("checkpoint.py", "_common.py", "framework_config.py"):
+            (tmp / "scripts/harness" / n).write_bytes((HERE / n).read_bytes())
+        subprocess.run(["git", "init", "-q", str(tmp)], capture_output=True)
+        sh(tmp, "add", "-A"); sh(tmp, "-c", "user.email=a@b", "-c", "user.name=t",
+                                 "commit", "-qm", "base")
+        return tmp
+
+    def cp(root, *args):
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        return subprocess.run([PY, str(root / "scripts/harness/checkpoint.py"),
+                               "--root", str(root)] + list(args),
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", env=env)
+
+    def has_reviewed(root):
+        return sh(root, "rev-parse", "--verify", "reviewed").returncode == 0
+
+    def check(desc, cond, detail=""):
+        global ok, bad
+        if cond:
+            print(f"  ✅ {desc}"); ok += 1
+        else:
+            print(f"  ❌ {desc}{detail}"); bad += 1
+
+    for mode_args, label in ((["--mode", "tool", "--tool-id", "t", "--operation", "op"], "tool"),
+                             (["--mode", "ai", "--role", "governance",
+                               "--model", "claude-opus-5", "--topic", "x"], "ai")):
+        # CP-09: no reviewed to begin with -> still none afterwards
+        r = build()
+        (r / "note.md").write_text("dirty\n", encoding="utf-8")
+        res = cp(r, *mode_args)
+        check(f"🔴 CP-09/{label}: there was no reviewed tag, and there still is none",
+              res.returncode == 0 and not has_reviewed(r), f" (exit {res.returncode})")
+        check(f"CP-09/{label}: ⛔ must not print the human-review banner",
+              "looked at this" not in res.stdout)
+        shutil.rmtree(r, ignore_errors=True)
+
+        # CP-10: a reviewed tag already exists -> it must point at exactly the same commit
+        r = build()
+        sh(r, "tag", "-f", "reviewed")
+        before = sh(r, "rev-parse", "reviewed").stdout.strip()
+        (r / "note.md").write_text("dirty\n", encoding="utf-8")
+        cp(r, *mode_args)
+        after = sh(r, "rev-parse", "reviewed").stdout.strip()
+        check(f"🔴 CP-10/{label}: an existing reviewed tag ⛔ must not move",
+              before == after and before != "", f" ({before[:7]}->{after[:7]})")
+        shutil.rmtree(r, ignore_errors=True)
+
+    # CP-11: human mode still moves it — ⛔ the distinction is deliberate, do not switch
+    #        both off together
+    r = build()
+    (r / "note.md").write_text("dirty\n", encoding="utf-8")
+    cp(r)
+    check("human mode still moves reviewed (⛔ the distinction is deliberate)",
+          has_reviewed(r))
+    shutil.rmtree(r, ignore_errors=True)
+
+    # CP-13: tool mode without an identity must be refused
+    r = build()
+    res = cp(r, "--mode", "tool")
+    check("tool mode without --tool-id/--operation must be refused "
+          "(⛔ an anonymous tool is indistinguishable from a person)",
+          res.returncode != 0)
+    shutil.rmtree(r, ignore_errors=True)
+
+    # CP-14: 🔴 `git tag -f reviewed` can fail, and a failure ⛔ must not be reported as
+    #        success. Counterexample from review (Codex, 2026-09-02): with a tag named
+    #        `reviewed/child` present, Git cannot create `reviewed` at all.
+    r = build()
+    sh(r, "tag", "reviewed/child", "HEAD")
+    (r / "note.md").write_text("dirty\n", encoding="utf-8")
+    res = cp(r)
+    check("🔴 CP-14: when the reviewed tag cannot be created, human checkpoint "
+          "⛔ must not exit 0", res.returncode != 0, f" (exit {res.returncode})")
+    check("🔴 CP-14: ⛔ must not print the 'baseline moved' banner when it did not move",
+          "baseline moved" not in res.stdout.lower())
+    check("CP-14: must say the baseline did not move",
+          "did not move" in res.stdout.lower())
+    check("CP-14: the commit itself is still made (⛔ no work is lost)",
+          sh(r, "log", "--oneline", "-1").stdout.strip().count("snapshot") == 1)
+    shutil.rmtree(r, ignore_errors=True)
+
+    # CP-12: 🔴 where the shipped defect lived — the shape of upgrade.py's call
+    src = (HERE / "upgrade.py").read_text(encoding="utf-8")
+    check("🔴 CP-12: upgrade.py must pass --mode tool explicitly when calling checkpoint",
+          src.count('"--mode", "tool"') >= 2,
+          " — ⛔ without it the human default applies and one upgrade forges one "
+          "human review")
+
+    # CP-15: the upgrader must create a durable, independently checkable receipt
+    #        before replacement and route recovery through its own safe interface.
+    check("🔴 CP-15: upgrade.py must print a durable receipt id and checkpoint commit",
+          'MSG["receipt"].format(rid=receipt["receipt_id"], cp=cp' in src)
+    check("🔴 CP-15: upgrade.py ⛔ must not overwrite when the receipt is unreadable",
+          'MSG["no_receipt"]' in src and src.index('MSG["no_receipt"]') <
+          src.index("shutil.rmtree(dst)"))
+    check("🔴 CP-15: recovery uses built-in receipt commands, ⛔ not raw git checkout",
+          "receipt-diff {rid}" in src and "restore {rid}" in src
+          and "git checkout {cp} --" not in src)
+
+
+reviewed_tag_case()
+
+
+# ── 🔴 Path sorting must be identical on every platform (v1.4.4, `N-8`) ─────
+# **Real case (v1.4.1, on the principal's machine): `tool_my_index.py` built the index
+#  with `sorted(root.rglob("*"))`, sorting `Path` objects — ⛔ and `WindowsPath`
+#  comparison casefolds while `PosixPath` does not.**
+# 🔴 **⇒ The same project produced a different index order on two machines, and the
+#    index is stored and then compared — the user got `MY_INDEX_STALE` on the very
+#    first run, ⛔ having done nothing wrong.**
+#
+# ⚠️ **This test is a **static** check: it reads the harness source, ⛔ it does not run it.**
+#    🔴 **Same reason as `subprocess_encoding_case`: the difference only shows on Windows,
+#    ⛔ and a criterion that cannot fire on this machine is not a criterion.**
+#
+# ⚠️ **What the criterion covers: the first argument of `sorted(...)` contains a
+#    `.glob()`/`.rglob()` call (which always yields `Path`), and that call has no `key=`.**
+#    ⛔ **It does NOT cover storing the paths in a variable first** — a known gap,
+#    written down here rather than left blank.
+def path_sort_case():
+    global ok, bad
+    import ast as _ast
+    offenders = []
+    scanned = 0
+    for f in sorted(HERE.glob("*.py"), key=lambda p: p.as_posix()):
+        if f.name.startswith("_selftest"):
+            continue
+        scanned += 1
+        try:
+            tree = _ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError as e:
+            offenders.append(f"{f.name}: ⛔ cannot parse ({e})")
+            continue
+        for node in _ast.walk(tree):
+            if not (isinstance(node, _ast.Call) and isinstance(node.func, _ast.Name)
+                    and node.func.id == "sorted" and node.args):
+                continue
+            if any(k.arg == "key" for k in node.keywords):
+                continue
+            for sub in _ast.walk(node.args[0]):
+                if (isinstance(sub, _ast.Call) and isinstance(sub.func, _ast.Attribute)
+                        and sub.func.attr in ("glob", "rglob")):
+                    offenders.append(f"{f.name}:{node.lineno}")
+                    break
+    if not offenders:
+        # ⚠️ **Print the denominator** (`R-35`): "0 found" is the result of a count,
+        #    ⛔ not the absence of one.
+        print(f"  ✅ 🔴 every path sort passes an explicit key (scanned {scanned}, 0 exceptions)"); ok += 1
+    else:
+        print("  ❌ sorted() sorts Path objects; order differs between platforms: "
+              + ", ".join(offenders)); bad += 1
+
+    # ⚠️ **The other half of the pair: the criterion must actually catch something,
+    #    ⛔ or it is just a permanent green light.**
+    src = ('import pathlib\n'
+           'def f(root):\n'
+           '    return sorted(root.rglob("*"))\n')
+    tree = _ast.parse(src)
+    caught = False
+    for node in _ast.walk(tree):
+        if (isinstance(node, _ast.Call) and isinstance(node.func, _ast.Name)
+                and node.func.id == "sorted" and node.args
+                and not any(k.arg == "key" for k in node.keywords)):
+            for sub in _ast.walk(node.args[0]):
+                if (isinstance(sub, _ast.Call) and isinstance(sub.func, _ast.Attribute)
+                        and sub.func.attr in ("glob", "rglob")):
+                    caught = True
+    if caught:
+        print("  ✅ the criterion catches the original v1.4.1 line"); ok += 1
+    else:
+        print("  ❌ the criterion is silent on a known defective form — it protects nothing"); bad += 1
+
+
+path_sort_case()
+
+
+# ── 🔴 A file that will be hashed must be written with a fixed line ending
+#    (v1.4.4, `A-20260902-11`) ───────────────────────────────────────────────
+# **Measured: `tool_pdf_to_md.py` wrote extracts with `write_text(..., encoding="utf-8")`,
+#  ⛔ which on Windows emits CRLF; `_manifest.json` then recorded the hash of those CRLF bytes.**
+# **⛔ And `.gitattributes` carries `*.md text eol=lf` ⇒ the commit normalises to LF.**
+# 🔴 **⇒ On the next clean checkout the working tree is LF and `sensor_claim_ledger.py`
+#    reports `CORPUS_MD_MODIFIED` on every file — ⛔ with not one character changed.**
+# ⚠️ **Three individually correct components combine into a false positive, ⛔ and a false
+#    positive is exactly what `R-19` says teaches people to ignore a sensor.**
+#
+# ⚠️ **The criterion is a deliberate over-approximation: if a module computes hashes at all
+#    (`import hashlib`), every `write_text` in it must pass `newline=`.**
+#    🔴 **⛔ Known gap, written down rather than left blank: if the module that writes and the
+#    module that hashes are two different files, this check misses it.** ⚠️ No such split
+#    exists in the framework today (`tool_pdf_to_md.py` does both), **⛔ and that is the
+#    current state, not a guarantee.**
+def hash_write_newline_case():
+    global ok, bad
+    import ast as _ast
+
+    def offenders_in(src, name):
+        bad_ = []
+        tree = _ast.parse(src)
+        if not any(isinstance(n, (_ast.Import, _ast.ImportFrom))
+                   and "hashlib" in _ast.dump(n) for n in _ast.walk(tree)):
+            return None                       # does not hash ⇒ out of scope
+        for node in _ast.walk(tree):
+            if (isinstance(node, _ast.Call) and isinstance(node.func, _ast.Attribute)
+                    and node.func.attr == "write_text"
+                    and not any(k.arg == "newline" for k in node.keywords)):
+                bad_.append(f"{name}:{node.lineno}")
+        return bad_
+
+    offenders, scanned = [], 0
+    for f in sorted(HERE.glob("*.py"), key=lambda p: p.as_posix()):
+        try:
+            hits = offenders_in(f.read_text(encoding="utf-8"), f.name)
+        except SyntaxError as e:
+            offenders.append(f"{f.name}: ⛔ unparseable ({e})"); continue
+        if hits is None:
+            continue
+        scanned += 1
+        offenders.extend(hits)
+    if not offenders:
+        # ⚠️ **Print the denominator** (`R-35`): how many were scanned is a counted
+        #    result, ⛔ not an absence of counting.
+        print(f"  ✅ 🔴 every hashing module fixes its line endings ({scanned} scanned, 0 exceptions)"); ok += 1
+    else:
+        print("  ❌ a hashing module has write_text without newline=: " + ", ".join(offenders)); bad += 1
+
+    # ⚠️ **The other half of the pair: the criterion must be able to catch something,
+    #    ⛔ or it merely prints green forever.**
+    probe = ('import hashlib, pathlib\n'
+             'def f(p):\n'
+             '    p.write_text("x", encoding="utf-8")\n')
+    caught = offenders_in(probe, "probe")
+    if caught:
+        print("  ✅ the criterion does FAIL a planted write site (⛔ falsifiable)"); ok += 1
+    else:
+        print("  ❌ the criterion does not react to an obvious violation — ⛔ it is empty"); bad += 1
+
+    # ⚠️ **A third sample: a module that does ⛔ not hash must ⛔ not be flagged** —
+    #    🔴 **otherwise the next person is forced to add `newline=` to dozens of fixture
+    #    writes, and a parameter added only to silence a warning turns the criterion
+    #    itself into noise.**
+    quiet = ('import pathlib\n'
+             'def f(p):\n'
+             '    p.write_text("x", encoding="utf-8")\n')
+    if offenders_in(quiet, "quiet") is None:
+        print("  ✅ a non-hashing module is ⛔ out of scope (⛔ no noise)"); ok += 1
+    else:
+        print("  ❌ the criterion pulled in an unrelated module"); bad += 1
+
+
+hash_write_newline_case()
+
+
+# ── 🔴 Version consistency (v1.4.4, A5b) ──────────────────────
+# **Trigger: Project D's `policy/` sat at v1.3.0 while the other five packages were v1.4.2.**
+# 🔴 **Every sensor green, every self-test passing — ⛔ and it took an outside audit to find it.**
+# ⚠️ **All four branches must be checked: same (must not false-alarm) / different (must
+#    catch) / package absent (WARN, not FAIL) / unreadable (INCOMPLETE, not PASS).**
+def version_consistency_case():
+    global ok, bad
+    import shutil, tempfile
+    from sensor_version_consistency import survey
+    cfg = {}
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_ver_"))
+    try:
+        def build(spec):
+            root = tmp / ("p%d" % len(list(tmp.iterdir())))
+            for name, v in spec.items():
+                d = root / name
+                d.mkdir(parents=True)
+                if v is not None:
+                    (d / "_VERSION").write_text(v + "\n", encoding="utf-8")
+            return root
+
+        five = ["governance", "profiles", "prompts", "scripts", "docs"]
+
+        r = build({n: "v1.4.4" for n in five})
+        found, absent, unread = survey(r, cfg)
+        if len(set(found.values())) == 1 and not absent and not unread:
+            print("  ✅ packages on one version must report nothing"); ok += 1
+        else:
+            print(f"  ❌ findings on a clean project: {absent} {unread} {set(found.values())}"); bad += 1
+
+        spec = {n: "v1.4.4" for n in five}; spec["profiles"] = "v1.3.0"
+        r = build(spec)
+        found, absent, unread = survey(r, cfg)
+        if set(found.values()) == {"v1.4.4", "v1.3.0"}:
+            print("  ✅ Project D's state (profiles one version behind) is caught"); ok += 1
+        else:
+            print(f"  ❌ a package left behind was not caught: {found}"); bad += 1
+
+        spec = {n: "v1.4.4" for n in five if n != "docs"}
+        r = build(spec)
+        found, absent, unread = survey(r, cfg)
+        if absent == ["docs"] and len(set(found.values())) == 1:
+            print("  ✅ a missing package is a WARN, ⛔ never a version mismatch"); ok += 1
+        else:
+            print(f"  ❌ a missing package was counted as a mismatch: {absent} {found}"); bad += 1
+
+        spec = {n: "v1.4.4" for n in five}; spec["docs"] = None
+        r = build(spec)
+        found, absent, unread = survey(r, cfg)
+        if unread == ["docs"] and "docs" not in found:
+            print("  ✅ an unreadable marker is INCOMPLETE, ⛔ never a pass"); ok += 1
+        else:
+            print(f"  ❌ an unreadable package was treated as passing: {unread} {found}"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 🔴 **F-04 (2026-09-02): ⛔ never let a string sort stand in for SemVer.**
+    #    ⚠️ **Measured: `sorted({'v1.9.0','v1.10.0'})[-1]` → `v1.9.0`**, ⛔ the older one.
+    #    **⇒ Adjudication `A4b: B`: the sensor reports disagreement only, ⛔ never a target.**
+    import shutil as _sh, tempfile as _tf, subprocess as _sp, os as _os
+    _t = pathlib.Path(_tf.mkdtemp(prefix="s2g_semver_"))
+    try:
+        for n, v in (("governance", "v1.10.0"), ("profiles", "v1.9.0"),
+                     ("prompts", "v1.10.0"), ("scripts", "v1.10.0"), ("docs", "v1.10.0")):
+            (_t / n).mkdir(parents=True)
+            (_t / n / "_VERSION").write_text(v + "\n", encoding="utf-8")
+        _env = dict(_os.environ, PYTHONIOENCODING="utf-8")
+        _r = _sp.run([PY, str(HERE / "sensor_version_consistency.py"), "--root", str(_t)],
+                     capture_output=True, text=True, encoding="utf-8",
+                     errors="replace", env=_env)
+        _o = (_r.stdout or "") + (_r.stderr or "")
+        if _r.returncode == 1 and "VERSION_MISMATCH" in _o:
+            print("  ✅ v1.9.0 alongside v1.10.0 must report VERSION_MISMATCH"); ok += 1
+        else:
+            print(f"  ❌ the mismatch was not caught (exit {_r.returncode})"); bad += 1
+        if "up to `v1.9.0`" not in _o and "up to `v1.10.0`" not in _o:
+            print("  ✅ 🔴 the message names ⛔ no target version (the sensor cannot see the source)"); ok += 1
+        else:
+            print("  ❌ the sensor chose a target version — ⛔ and a string sort points the wrong way"); bad += 1
+    finally:
+        _sh.rmtree(_t, ignore_errors=True)
+
+    # 🔴 **A watcher for the two copies: `version_packages` and `FRAMEWORK_DIRS` are the
+    #    same set of names.** ⛔ **When they drift you get a package the upgrader can
+    #    replace but the sensor never compares** — ⚠️ **which is exactly what `docs/` was
+    #    between v1.3.0 and v1.4.0.**
+    from framework_config import DEFAULTS
+    import upgrade as _up
+    if set(DEFAULTS["version_packages"]) == set(_up.FRAMEWORK_DIRS):
+        print("  ✅ version_packages matches upgrade.FRAMEWORK_DIRS"); ok += 1
+    else:
+        a = set(DEFAULTS["version_packages"]); b = set(_up.FRAMEWORK_DIRS)
+        print(f"  ❌ the two lists have drifted: config only {a - b} | upgrader only {b - a}"); bad += 1
+
+
+version_consistency_case()
+
+
+# ── 🔴 Rule sync is a read-only report (v1.4.4) ────────────────
+# **v1.4.4 briefly had an `--adopt` that overwrote drifted rules for the user. Review found it
+#   wrote the file before printing the "preview", claimed "the checkpoint holds it"
+#   unconditionally, and still wrote when the checkpoint program had explicitly failed.
+#   ⇒ The principal ruled the entire write path back out.**
+#
+# 🔴 **⇒ This tool now does two things: append missing entries, and report drift line by line.**
+# ⚠️ **`SYNC-03` (missing and drift together) is the direct counterpart of `R-H003-02`:
+#    the English edition once wrote the file and printed "Nothing was changed this run".**
+def sync_report_case():
+    global ok, bad
+    import shutil, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_sync_"))
+
+    def build(my_body, second_rule=True):
+        root = tmp / ("p%d" % len(list(tmp.iterdir())))
+        (root / "governance").mkdir(parents=True)
+        (root / "my").mkdir(parents=True)
+        (root / "governance/RULES.md").write_text(
+            "# Rules\n\n**R-19** The framework wording.\n\n**R-20** Another one.\n",
+            encoding="utf-8")
+        body = my_body + ("\n\n**R-20** Another one." if second_rule else "")
+        (root / "my/MY_RULES.md").write_text(
+            "# My rules\n\n## 1. Framework rules\n\n" + body
+            + "\n\n<!-- FRAMEWORK_RULES_END -->\n", encoding="utf-8")
+        return root
+
+    def run_(root, *args):
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "tool_sync_my_rules.py"),
+                            "--root", str(root)] + list(args),
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+    def check(desc, cond, detail=""):
+        global ok, bad
+        if cond:
+            print(f"  ✅ {desc}"); ok += 1
+        else:
+            print(f"  ❌ {desc}{detail}"); bad += 1
+
+    DRIFT = "**R-19** This is the old sentence."
+    OK19 = "**R-19** The framework wording."
+    MARK = "[project override]"
+    try:
+        # SYNC-01: missing only → append, and the message admits the write
+        r = build(OK19, second_rule=False); f = r / "my/MY_RULES.md"
+        code, out = run_(r)
+        check("SYNC-01: appends missing entries and states nothing existing was overwritten",
+              code == 0 and "**R-20** Another one." in f.read_text(encoding="utf-8")
+              and "No existing text was overwritten" in out)
+
+        # SYNC-02: drift only → zero write, real diff lines and the two roads
+        r = build(DRIFT); f = r / "my/MY_RULES.md"; b = f.read_bytes()
+        code, out = run_(r)
+        check("SYNC-02: drift alone writes nothing", code == 0 and f.read_bytes() == b)
+        check("🔴 SYNC-02: prints real diff lines (starting `+` or `-`)",
+              "    -" in out and "    +" in out)
+        check("SYNC-02: tells the user to paste the `+` lines, ⛔ never to replace the whole file",
+              "paste the `+` lines" in out and "Never replace the whole" in out)
+
+        # SYNC-03: 🔴 missing and drift together (the direct counterpart of R-H003-02)
+        r = build(DRIFT, second_rule=False); f = r / "my/MY_RULES.md"
+        code, out = run_(r)
+        wrote = "**R-20** Another one." in f.read_text(encoding="utf-8")
+        check("🔴 SYNC-03: with both missing and drift, the append really happens",
+              code == 0 and wrote)
+        check("🔴 SYNC-03: ⛔ must never write and claim nothing changed",
+              wrote and "There is nothing to append" not in out)
+        check("SYNC-03: the drift is still reported", "RULE_TEXT_DRIFT" in out)
+
+        # SYNC-05a: a valid override → untouched, said so
+        r = build("**R-19** My own sentence.\n" + MARK
+                  + " our corpus is transcripts, so the criterion has to be stricter.")
+        f = r / "my/MY_RULES.md"; b = f.read_bytes()
+        code, out = run_(r)
+        check("SYNC-05a: a valid override is untouched and reported as marked",
+              f.read_bytes() == b and f"is marked {MARK}" in out)
+
+        # SYNC-05b: a marker with no reason → must say the sensor will FAIL
+        r = build("**R-19** My own sentence.\n" + MARK + " oops")
+        f = r / "my/MY_RULES.md"; b = f.read_bytes()
+        code, out = run_(r)
+        check("🔴 SYNC-05b: a marker with no reason must say the sensor will FAIL",
+              f.read_bytes() == b and "OVERRIDE_WITHOUT_REASON" in out)
+
+        # SYNC-06: neither → zero write, honest report
+        r = build(OK19); f = r / "my/MY_RULES.md"; b = f.read_bytes()
+        code, out = run_(r)
+        check("SYNC-06: nothing to do writes nothing and says it was computed",
+              code == 0 and f.read_bytes() == b and "not a skipped one" in out)
+
+        # SYNC-07: 🔴 the --adopt flag must be gone
+        r = build(DRIFT); f = r / "my/MY_RULES.md"; b = f.read_bytes()
+        code, out = run_(r, "--adopt")
+        check("🔴 SYNC-07: `--adopt` was ruled out; it must be rejected with zero write",
+              code != 0 and f.read_bytes() == b, f" (exit {code})")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+sync_report_case()
+
+
+# ── 🔴 A withdrawn CLI flag ⛔ must not survive in current instructions (v1.4.4, `R-H006-05`)
+# 🔴 **Measured case (Codex review, 2026-09-02): `--adopt` had been removed from argparse,
+#    and three pieces of current instruction still told the user to add that flag** —
+#    the upgrade completion message in both editions, and `sensor_my_rules.py`'s docstring
+#    in both editions.
+# ⚠️ **The paired sample at the time was `SYNC-07`: it proved "the program refuses it".**
+#    ⛔ **"The program refuses it" and "nobody is told to use it" are two different things** —
+#    **a user typing what the instructions say gets an error he has no way to explain.**
+# 🔴 **⇒ Withdrawing a flag means withdrawing two things: the flag and the instruction.**
+#
+# ⚠️ **The one exception is a historical account, and it has to say so itself:**
+#    **`[withdrawn]` must appear in the same paragraph.**
+#    ⛔ **No word whitelist** ("used to", "briefly", ...) — **a criterion like that is
+#    bypassed by rephrasing.**
+RETIRED_FLAGS = {"--adopt": "v1.4.4"}
+RETIRED_MARK = "[withdrawn]"
+# ⚠️ The scope is current operator-facing instruction. ⛔ `SENSOR_CHANGELOG.md` is out:
+#    that file **is** the historical record. ⛔ `run_selftest.py` is out too: a paired
+#    sample has to be able to write the flag down.
+def retired_flag_case():
+    global ok, bad
+    root = HERE.parents[1]
+    surfaces = [root / n for n in ("SETUP.md", "README.md", "INITIALIZE_PROMPT.md")]
+    # ⚠️ Sort by `p.name`, ⛔ never `Path` itself — `WindowsPath` comparison
+    #    casefolds and `PosixPath` does not (`N-8`).
+    surfaces += [p for p in sorted(HERE.glob("*.py"), key=lambda q: q.name)
+                 if p.name != "run_selftest.py"]
+    bad_hits = []
+    for p in surfaces:
+        if not p.is_file():
+            continue
+        text = p.read_text(encoding="utf-8", errors="replace")
+        for para in text.split("\n\n"):
+            for flag in RETIRED_FLAGS:
+                if flag in para and RETIRED_MARK not in para:
+                    first = next(l for l in para.splitlines() if flag in l)
+                    bad_hits.append(f"{p.name}: {first.strip()[:70]}")
+    if not bad_hits:
+        print(f"  ✅ 🔴 SYNC-08: no withdrawn flag survives in current instructions "
+              f"({len(surfaces)} files scanned)")
+        ok += 1
+    else:
+        print("  ❌ 🔴 SYNC-08: current instructions still tell the user to use a "
+              "withdrawn flag")
+        for h in bad_hits:
+            print(f"       {h}")
+        bad += 1
+    # ⚠️ **⛔ The scan itself needs a counter-sample: an unmarked fake instruction must
+    #    be caught. ⛔ Otherwise "scanned, all clear" and "the scan is broken" look alike.**
+    probe = "Run tool_sync_my_rules.py with --adopt to take the framework wording."
+    caught = any(f in probe and RETIRED_MARK not in probe for f in RETIRED_FLAGS)
+    if caught:
+        print("  ✅ SYNC-08: the scan does FAIL a fake instruction (⛔ falsifiable)"); ok += 1
+    else:
+        print("  ❌ SYNC-08: the scan does not react to an obvious violation — ⛔ it is empty")
+        bad += 1
+
+
+retired_flag_case()
+
+
+# ── 🔴 Retired packages (v1.4.4, A3) ──────────────────────────
+# **`policy/` was folded into `governance/` in v1.4.4.**
+# 🔴 **A folder taken out of `FRAMEWORK_DIRS` becomes an orphan in an existing project:
+#    its contents stay frozen at the version it retired in, ⛔ and nothing touches it again.**
+# ⚠️ **The upgrader ⛔ does not delete your files (constitution §6.3), but it must say so** —
+# **⛔ an orphan folder nobody knows about is exactly a stale framework document.**
+def retired_dirs_case():
+    global ok, bad
+    import shutil, tempfile
+    import upgrade as _up
+
+    # ① 🔴 a name must ⛔ never be both "replaceable" and "retired"
+    both = set(_up.RETIRED_DIRS) & set(_up.FRAMEWORK_DIRS)
+    if not both:
+        print("  ✅ the retired list and the replaceable list ⛔ do not overlap"); ok += 1
+    else:
+        print(f"  ❌ {both} is on both lists — ⛔ the verdict would depend on code order"); bad += 1
+
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_retired_"))
+    try:
+        # ② must report: the folder is still there
+        root = tmp / "has"
+        (root / "policy").mkdir(parents=True)
+        if _up.retired_present(root) == [("policy", "v1.4.4", "governance")]:
+            print("  ✅ a project that still has `policy/` gets it listed"); ok += 1
+        else:
+            print("  ❌ the orphan was not listed — ⛔ silence means the mechanism is absent"); bad += 1
+
+        # ③ ⛔ must not false-alarm: the folder does not exist (= a normal new project)
+        root = tmp / "clean"
+        root.mkdir()
+        if _up.retired_present(root) == []:
+            print("  ✅ a new project without `policy/` ⛔ gets no retirement notice"); ok += 1
+        else:
+            print("  ❌ a clean new project was told about a retired folder — ⛔ permanent red"); bad += 1
+
+        # ④ an empty orphan counts too: ⚠️ the criterion is "the folder exists",
+        #    ⛔ not "it has anything in it"
+        root = tmp / "empty"
+        (root / "policy").mkdir(parents=True)
+        if _up.retired_present(root):
+            print("  ✅ an empty orphan is still listed (it still reads as maintained)"); ok += 1
+        else:
+            print("  ❌ an empty orphan was treated as absent"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+retired_dirs_case()
 
 
 # ── 🔴 Your own file index (v1.4.1) ────────────────────────────
@@ -835,6 +1430,16 @@ my_index_case("a description pointing at a missing file: FAIL",
               lambda t: ((t / "my/MY_INDEX_notes.json").write_text(
                              '{"no_such_file.md": "x"}', encoding="utf-8"),
                          _gen(t), None)[-1], 1, "INDEX_NOTE_DANGLING")
+# 🔴 **The paired other half: "absent from the scan" has two causes, ⛔ and they are
+#    ⛔ not the same thing.** **Triggering case (Project D, 2026-09-02): `archive/` sits
+#    in the exclude list, so a file that really exists printed as "does not exist".
+#    ⚠️ Acting on that (deleting the note) does not fail ⇒ nobody finds out it lied.**
+my_index_case("🔴 the file is there and merely excluded: ⛔ must not be called missing",
+              lambda t: ((t / "git-checkpoint.log").write_text("x", encoding="utf-8"),
+                         (t / "my/MY_INDEX_notes.json").write_text(
+                             '{"git-checkpoint.log": "x"}', encoding="utf-8"),
+                         _gen(t), None)[-1], 0, "INDEX_NOTE_EXCLUDED",
+              forbid=("INDEX_NOTE_DANGLING",), regen=False)
 my_index_case("a broken notes file: INCOMPLETE (⛔ never 'there are no descriptions')",
               lambda t: (_gen(t),
                          (t / "my/MY_INDEX_notes.json").write_text("{broken", encoding="utf-8"),
@@ -886,6 +1491,684 @@ def index_order_case():
 
 index_order_case()
 
+
+# -- v1.4.4: source and project must prove the same language edition -------
+_TEST_LAUNCHERS = {
+    "zh": {
+        "bat": ("查看變更.bat", "檢查更新.bat", "記錄快照.bat"),
+        "command": ("查看變更.command", "檢查更新.command", "記錄快照.command"),
+    },
+    "en": {
+        "bat": ("review_changes.bat", "check_update.bat", "snapshot.bat"),
+        "command": ("review_changes.command", "check_update.command", "snapshot.command"),
+    },
+}
+
+
+def _seed_upgrade_edition(root, src, edition="en", layout="bat"):
+    for base in (root, src):
+        base.mkdir(parents=True, exist_ok=True)
+        for name in _TEST_LAUNCHERS[edition][layout]:
+            (base / name).write_text("launcher\n", encoding="utf-8")
+
+
+def upgrade_edition_case():
+    global ok, bad
+    import shutil, tempfile
+    from upgrade import _edition_fingerprint
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_edition_"))
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    try:
+        layouts_ok = True
+        for edition in ("zh", "en"):
+            for layout in ("bat", "command", "both"):
+                sample = tmp / f"{edition}_{layout}"
+                sample.mkdir()
+                names = ("bat", "command") if layout == "both" else (layout,)
+                for platform in names:
+                    for name in _TEST_LAUNCHERS[edition][platform]:
+                        (sample / name).write_text("x\n", encoding="utf-8")
+                layouts_ok = layouts_ok and _edition_fingerprint(sample)[0] == edition
+        if layouts_ok:
+            print("  ✅ Chinese and English Windows-only, macOS-only, and dual signatures resolve uniquely"); ok += 1
+        else:
+            print("  ❌ a valid edition signature could not be resolved reliably"); bad += 1
+
+        custom = tmp / "custom"
+        _seed_upgrade_edition(custom, custom, "en", "bat")
+        (custom / "research_tool.bat").write_text("x\n", encoding="utf-8")
+        (custom / "my.command").write_text("x\n", encoding="utf-8")
+        if _edition_fingerprint(custom)[0] == "en":
+            print("  ✅ differently named project-owned .bat/.command files do not affect"
+                  " edition detection (⛔ colliding names do — see the next case)"); ok += 1
+        else:
+            print("  ❌ a project-owned launcher contaminated edition detection"); bad += 1
+
+        cases = []
+        for label in ("cross", "mixed", "project_missing", "source_missing"):
+            root = tmp / label / "project"
+            src = root / "_upgrade"
+            (root / "governance").mkdir(parents=True)
+            (root / "governance/AGENTS.md").write_text("# OLD\n", encoding="utf-8")
+            (src / "governance").mkdir(parents=True)
+            (src / "governance/AGENTS.md").write_text("# NEW\n", encoding="utf-8")
+            if label == "cross":
+                _seed_upgrade_edition(root, root, "en", "bat")
+                _seed_upgrade_edition(src, src, "zh", "bat")
+            elif label == "mixed":
+                _seed_upgrade_edition(root, src, "en", "bat")
+                (root / _TEST_LAUNCHERS["zh"]["bat"][0]).write_text("x\n", encoding="utf-8")
+            elif label == "project_missing":
+                _seed_upgrade_edition(src, src, "en", "bat")
+            else:
+                _seed_upgrade_edition(root, root, "en", "bat")
+            before = (root / "governance/AGENTS.md").read_bytes()
+            result = subprocess.run([PY, str(HERE / "upgrade.py"), "apply", "governance",
+                                     "--root", str(root)], capture_output=True, text=True,
+                                    encoding="utf-8", errors="replace", env=env)
+            cases.append(result.returncode == 1
+                         and (root / "governance/AGENTS.md").read_bytes() == before
+                         and not (root / ".git").exists())
+        if all(cases):
+            print("  ✅ cross-edition, mixed, and missing signatures all fail before checkpoint with zero writes"); ok += 1
+        else:
+            print("  ❌ the edition gate did not fail closed for every uncertain state"); bad += 1
+
+        # 🔴 **Paired sample: when the gate blocks, the message must name the file it saw.**
+        #    ⚠️ **The gate reads only these twelve names and ⛔ not who put them there**,
+        #    so a project-owned file carrying one of them makes a legitimate project
+        #    read as "mixed" and blocks the whole upgrade. That is fail-closed,
+        #    ⛔ but the user cannot tell which file caused it.
+        #    **⇒ This sample's criterion is ⛔ not "did it block" but "did it say why".**
+        collide = tmp / "collide" / "project"
+        csrc = collide / "_upgrade"
+        (collide / "governance").mkdir(parents=True)
+        (collide / "governance/AGENTS.md").write_text("# OLD\n", encoding="utf-8")
+        (csrc / "governance").mkdir(parents=True)
+        (csrc / "governance/AGENTS.md").write_text("# NEW\n", encoding="utf-8")
+        _seed_upgrade_edition(collide, csrc, "en", "bat")
+        offender = _TEST_LAUNCHERS["zh"]["bat"][2]
+        (collide / offender).write_text("x\n", encoding="utf-8")
+        before = (collide / "governance/AGENTS.md").read_bytes()
+        r = subprocess.run([PY, str(HERE / "upgrade.py"), "apply", "governance",
+                            "--root", str(collide)], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env=env)
+        told = offender in ((r.stdout or "") + (r.stderr or ""))
+        if (r.returncode == 1 and told
+                and (collide / "governance/AGENTS.md").read_bytes() == before):
+            print(f"  ✅ a colliding project-owned launcher is named in the refusal: `{offender}`"); ok += 1
+        else:
+            print("  ❌ the refusal did not name the colliding file, so the user cannot fix it"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: root globs and platform launchers ----------------
+def root_glob_platform_case():
+    global ok, bad
+    import shutil, tempfile
+    from _common import _glob_dir, dead_glob_findings
+    from framework_config import active_launcher_globs
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_rootglob_"))
+    try:
+        root = tmp / "project"
+        root.mkdir()
+        (tmp / "sibling.command").write_text("x", encoding="utf-8")
+        findings = dead_glob_findings(["*.command"], "launcher_globs", root)
+        bounded = _glob_dir(root, "*.command") == root
+        no_parent_false_alarm = all(f[1] != "COVERAGE_COLLAPSE" for f in findings)
+        if bounded and no_parent_false_alarm:
+            print("  ✅ a root glob stays at project root; a neighbouring project cannot contaminate it"); ok += 1
+        else:
+            print("  ❌ a root glob escaped to the parent and manufactured coverage collapse"); bad += 1
+
+        (root / "_upgrade/nested").mkdir(parents=True)
+        (root / "_upgrade/nested/readme.txt").write_text("x", encoding="utf-8")
+        (root / "_upgrade/nested/check.command").write_text("x", encoding="utf-8")
+        excluded_findings = dead_glob_findings(
+            ["*.txt", "*.command"], "excluded_dirs", root)
+        if all(f[1] != "COVERAGE_COLLAPSE" for f in excluded_findings):
+            print("  ✅ recursive collapse checks also exclude _upgrade (text and launcher)"); ok += 1
+        else:
+            print("  ❌ files under _upgrade still manufacture false coverage collapse"); bad += 1
+
+        (root / "notes").mkdir()
+        (root / "notes/real.txt").write_text("x", encoding="utf-8")
+        real_findings = dead_glob_findings(["*.txt"], "real_child", root)
+        if any(f[1] == "COVERAGE_COLLAPSE" for f in real_findings):
+            print("  ✅ a real same-suffix file outside exclusions still means coverage collapse"); ok += 1
+        else:
+            print("  ❌ the exclusion fix is too broad and hides a real coverage collapse"); bad += 1
+
+        (root / "check.bat").write_text("x", encoding="utf-8")
+        globs = ["*.bat", "*.command"]
+        win = active_launcher_globs(globs, root, "win32")
+        if win == ["*.bat"]:
+            print("  ✅ a Windows project may omit .command without an alarm"); ok += 1
+        else:
+            print(f"  ❌ Windows incorrectly requires a foreign launcher: {win}"); bad += 1
+        (root / "check.bat").unlink()
+        (root / "check.command").write_text("x", encoding="utf-8")
+        mac = active_launcher_globs(globs, root, "darwin")
+        if mac == ["*.command"]:
+            print("  ✅ a macOS project may omit .bat without an alarm"); ok += 1
+        else:
+            print(f"  ❌ macOS incorrectly requires a foreign launcher: {mac}"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: validate index-tool arguments before any write ---
+def my_index_cli_safety_case():
+    global ok, bad
+    import shutil, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_idxcli_"))
+    try:
+        (tmp / "my").mkdir()
+        idx = tmp / "my/MY_INDEX.md"
+        idx.write_text("SENTINEL\n", encoding="utf-8")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        help_run = subprocess.run([PY, str(HERE / "tool_my_index.py"), "--root", str(tmp), "--help"],
+                                  capture_output=True, text=True, encoding="utf-8",
+                                  errors="replace", env=env)
+        help_safe = help_run.returncode == 0 and idx.read_text(encoding="utf-8") == "SENTINEL\n"
+        if help_safe:
+            print("  ✅ tool_my_index.py --help does not write the index"); ok += 1
+        else:
+            print("  ❌ --help rewrote the index before showing help"); bad += 1
+        unknown = subprocess.run([PY, str(HERE / "tool_my_index.py"), "--root", str(tmp), "--not-an-option"],
+                                 capture_output=True, text=True, encoding="utf-8",
+                                 errors="replace", env=env)
+        unknown_safe = unknown.returncode == 2 and idx.read_text(encoding="utf-8") == "SENTINEL\n"
+        if unknown_safe:
+            print("  ✅ an unknown tool_my_index.py option exits 2 without writing"); ok += 1
+        else:
+            print(f"  ❌ an unknown option must be refused without a write (exit {unknown.returncode})"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: parse rule-sync arguments first and write only the selected root --
+def sync_my_rules_cli_safety_case():
+    global ok, bad
+    import shutil, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_rulescli_"))
+    try:
+        a_root, b_root = tmp / "A", tmp / "B"
+        for project in (a_root, b_root):
+            (project / "governance").mkdir(parents=True)
+            (project / "my").mkdir()
+        rules = "**R-01** first.\n\n**R-02** second.\n"
+        a_my = "**R-01** first.\n\n<!-- FRAMEWORK_RULES_END -->\n"
+        b_my = rules + "\n<!-- FRAMEWORK_RULES_END -->\n"
+        for project in (a_root, b_root):
+            (project / "governance/RULES.md").write_text(rules, encoding="utf-8")
+        (a_root / "my/MY_RULES.md").write_text(a_my, encoding="utf-8")
+        (b_root / "my/MY_RULES.md").write_text(b_my, encoding="utf-8")
+        harness = b_root / "scripts/harness"
+        harness.mkdir(parents=True)
+        for name in ("tool_sync_my_rules.py", "sensor_my_rules.py", "_common.py",
+                     "framework_config.py"):
+            (harness / name).write_bytes((HERE / name).read_bytes())
+        tool = harness / "tool_sync_my_rules.py"
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        before_a = (a_root / "my/MY_RULES.md").read_bytes()
+        before_b = (b_root / "my/MY_RULES.md").read_bytes()
+
+        help_run = subprocess.run([PY, str(tool), "--root", str(a_root), "--help"],
+                                  capture_output=True, text=True, encoding="utf-8",
+                                  errors="replace", env=env)
+        if (help_run.returncode == 0
+                and (a_root / "my/MY_RULES.md").read_bytes() == before_a
+                and (b_root / "my/MY_RULES.md").read_bytes() == before_b):
+            print("  ✅ tool_sync_my_rules.py --help writes to neither project"); ok += 1
+        else:
+            print("  ❌ rule-sync --help triggered a write"); bad += 1
+
+        unknown = subprocess.run([PY, str(tool), "--root", str(a_root), "--not-an-option"],
+                                 capture_output=True, text=True, encoding="utf-8",
+                                 errors="replace", env=env)
+        if (unknown.returncode == 2
+                and (a_root / "my/MY_RULES.md").read_bytes() == before_a
+                and (b_root / "my/MY_RULES.md").read_bytes() == before_b):
+            print("  ✅ an unknown rule-sync option exits 2 with zero writes"); ok += 1
+        else:
+            print(f"  ❌ rule-sync did not safely reject an unknown option (exit {unknown.returncode})"); bad += 1
+
+        rooted = subprocess.run([PY, str(tool), "--root", str(a_root)],
+                                capture_output=True, text=True, encoding="utf-8",
+                                errors="replace", env=env)
+        after_a = (a_root / "my/MY_RULES.md").read_text(encoding="utf-8")
+        after_b = (b_root / "my/MY_RULES.md").read_bytes()
+        if rooted.returncode == 0 and "**R-02** second." in after_a and after_b == before_b:
+            print("  ✅ --root A updates only A, never the tool's own project B"); ok += 1
+        else:
+            print(f"  ❌ --root did not confine the write to the selected project (exit {rooted.returncode})"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: transient exemption is package + exact relative path --
+def upgrade_transient_scope_case():
+    global ok, bad
+    import shutil, tempfile
+    from upgrade import target_only_files
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_transient_"))
+    try:
+        cur, new = tmp / "current", tmp / "new"
+        (cur / "harness").mkdir(parents=True)
+        (cur / "custom").mkdir()
+        (cur / "empty-owned").mkdir()
+        new.mkdir()
+        (cur / "harness/harness_status.json").write_text("framework", encoding="utf-8")
+        (cur / "custom/harness_status.json").write_text("project", encoding="utf-8")
+        scripts_only = target_only_files(cur, new, "scripts")
+        if "harness/harness_status.json" not in scripts_only:
+            print("  ✅ scripts/harness/harness_status.json is the exact transient exception"); ok += 1
+        else:
+            print("  ❌ the framework's own harness status was treated as project data"); bad += 1
+        if "custom/harness_status.json" in scripts_only:
+            print("  ✅ a namesake elsewhere under scripts still blocks replacement"); ok += 1
+        else:
+            print("  ❌ a name-only exception would silently delete project data"); bad += 1
+        profiles_only = target_only_files(cur, new, "profiles")
+        if "harness/harness_status.json" in profiles_only:
+            print("  ✅ the same path outside the scripts package gets no exception"); ok += 1
+        else:
+            print("  ❌ the transient exception was not bound to the scripts package"); bad += 1
+        if ("harness/harness_status.json" not in scripts_only
+                and "custom/harness_status.json" in scripts_only
+                and "harness/harness_status.json" in profiles_only):
+            print("  ✅ UPG-REC-10: the transient exception is bound to exact package and path"); ok += 1
+        else:
+            print("  ❌ UPG-REC-10: the transient exception escaped its exact scope"); bad += 1
+        if "empty-owned/" in scripts_only:
+            print("  ✅ UPG-REC-11: a target-only empty directory blocks wholesale replacement"); ok += 1
+        else:
+            print("  ❌ UPG-REC-11: wholesale replacement would silently delete an empty directory"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: block target-only files before wholesale replacement --
+def upgrade_target_only_case():
+    global ok, bad
+    import shutil, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_targetonly_"))
+    try:
+        portable = tmp / "download" / "scripts" / "harness"
+        portable.mkdir(parents=True)
+        for name in ("upgrade.py", "_common.py", "framework_config.py"):
+            (portable / name).write_bytes((HERE / name).read_bytes())
+        portable_checkpoint = portable / "checkpoint.py"
+        portable_checkpoint.write_text(
+            'CHECKPOINT_TOOL_API = "spark2groundwork-checkpoint-tool-v1"\n'
+            "import pathlib, sys\n"
+            "r=pathlib.Path(sys.argv[sys.argv.index('--root')+1])\n"
+            "r.joinpath('checkpoint_called').write_text('yes')\n"
+            "sys.exit(0)\n", encoding="utf-8")
+        upgrade_tool = portable / "upgrade.py"
+        root = tmp / "project"
+        (root / "governance").mkdir(parents=True)
+        (root / "governance/AGENTS.md").write_text("# A\n", encoding="utf-8")
+        (root / "governance/WORKFLOW_CONSTITUTION.md").write_text("# W\n", encoding="utf-8")
+        (root / "scripts/harness").mkdir(parents=True)
+        checkpoint_body = (
+            "import pathlib, sys\n"
+            "r=pathlib.Path(sys.argv[sys.argv.index('--root')+1])\n"
+            "r.joinpath('checkpoint_called').write_text('yes')\n"
+            "sys.exit(0)\n")
+        (root / "scripts/harness/checkpoint.py").write_text(checkpoint_body, encoding="utf-8")
+        (root / "_upgrade/scripts/harness").mkdir(parents=True)
+        (root / "_upgrade/scripts/harness/checkpoint.py").write_text(checkpoint_body, encoding="utf-8")
+        (root / "prompts").mkdir()
+        (root / "prompts/base.txt").write_text("old\n", encoding="utf-8")
+        custom = root / "prompts/TEMPLATE_decompose.txt"
+        custom.write_text("MY IDEA\n", encoding="utf-8")
+        (root / "_upgrade/prompts").mkdir(parents=True)
+        (root / "_upgrade/prompts/base.txt").write_text("new\n", encoding="utf-8")
+        _seed_upgrade_edition(root, root / "_upgrade")
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        args = [PY, str(upgrade_tool), "apply", "prompts", "--root", str(root)]
+        blocked = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
+                                 errors="replace", env=env)
+        untouched = (custom.read_text(encoding="utf-8") == "MY IDEA\n"
+                     and (root / "prompts/base.txt").read_text(encoding="utf-8") == "old\n")
+        before_checkpoint = not (root / "checkpoint_called").exists()
+        listed = "prompts/TEMPLATE_decompose.txt" in ((blocked.stdout or "") + (blocked.stderr or ""))
+        if blocked.returncode == 1 and untouched and before_checkpoint and listed:
+            print("  ✅ target-only files are named and blocked before checkpoint or replacement"); ok += 1
+        else:
+            print("  ❌ target-only blocking must name the file and perform zero writes"); bad += 1
+
+        idea = root / "FIRST_IDEA.md"
+        custom.replace(idea)
+
+        # 🔴 **The receipt gate (v1.4.4, `R-H006-02`): the checkpoint reports success,
+        #    ⛔ and the restore point cannot be named.**
+        #    ⚠️ **The stub checkpoint here only exits 0; ⛔ it builds no git history** —
+        #    **⇒ `upgrade.py` cannot read back the pre-image commit id.**
+        #    🔴 **⛔ That must not overwrite: a restore point that cannot say where it is
+        #    is not a restore point.**
+        #    ⚠️ **The other half of the pair is below: once git is there, the same command
+        #    must succeed.**
+        norepo = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
+                                errors="replace", env=env)
+        kept = (root / "prompts/base.txt").read_text(encoding="utf-8") == "old\n"
+        if norepo.returncode == 2 and kept:
+            print("  ✅ 🔴 no overwrite when the checkpoint id cannot be read back "
+                  "(receipt gate)"); ok += 1
+        else:
+            print(f"  ❌ 🔴 the receipt gate is inert: exit {norepo.returncode}, content "
+                  f"was {'kept' if kept else 'OVERWRITTEN'}"); bad += 1
+
+        subprocess.run(["git", "init", "-q", str(root)], capture_output=True)
+        subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True)
+        subprocess.run(["git", "-C", str(root), "-c", "user.email=a@b", "-c", "user.name=t",
+                        "commit", "-qm", "base"], capture_output=True)
+
+        # From here on, use the real same-version peer in the download; keep the project copy incompatible.
+        portable_checkpoint.write_bytes((HERE / "checkpoint.py").read_bytes())
+
+        # The current project can still carry the old checkpoint CLI. A downloaded
+        # v1.4.4 upgrader must use the downloaded checkpoint peer for the bootstrap.
+        (root / "checkpoint_called").unlink(missing_ok=True)
+        (root / "scripts/harness/checkpoint.py").write_text(
+            "import sys\nsys.exit(9)\n", encoding="utf-8")
+
+        applied = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
+                                 errors="replace", env=env)
+        replaced = (root / "prompts/base.txt").read_text(encoding="utf-8") == "new\n"
+        survived = idea.read_text(encoding="utf-8") == "MY IDEA\n"
+        if applied.returncode == 0 and replaced and survived and not (root / "checkpoint_called").exists():
+            print("  ✅ the downloaded checkpoint bootstraps replacement while the old project tool refuses, and the root idea survives"); ok += 1
+        else:
+            detail = ((applied.stdout or "") + (applied.stderr or "")).strip().replace("\n", " | ")
+            print(f"  ❌ wholesale replacement failed after project data moved out "
+                  f"(exit {applied.returncode}: {detail})"); bad += 1
+        # 🔴 The durable receipt and its safe recovery interface must be on screen.
+        head = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace").stdout.strip()
+        out_all = (applied.stdout or "") + (applied.stderr or "")
+        if head and head in out_all and "receipt: upg-" in out_all and "receipt-diff" in out_all:
+            print("  ✅ 🔴 the completion message hands over a durable restore receipt and safe interface"); ok += 1
+        else:
+            print("  ❌ 🔴 the completion message hands over no usable restore point"); bad += 1
+
+        import re
+        found = re.search(r"upg-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]+-[0-9a-f]{8}", out_all)
+        restored = subprocess.run([PY, str(upgrade_tool), "restore",
+                                   found.group(0) if found else "missing", "prompts/base.txt",
+                                   "--root", str(root)], capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", env=env)
+        if (restored.returncode == 0
+                and (root / "prompts/base.txt").read_text(encoding="utf-8") == "old\n"
+                and "upg-" in ((restored.stdout or "") + (restored.stderr or ""))):
+            print("  ✅ old project + download + non-scripts package restores with an undo receipt"); ok += 1
+        else:
+            print(f"  ❌ post-bootstrap restore did not use the download peer safely (exit {restored.returncode})"); bad += 1
+
+        foreign = "snapshot.bat" if sys.platform == "darwin" else "snapshot.command"
+        (root / "_upgrade" / foreign).write_text("foreign launcher\n", encoding="utf-8")
+        routine = subprocess.run([PY, str(upgrade_tool), "diff", "--root", str(root)],
+                                 capture_output=True, text=True, encoding="utf-8",
+                                 errors="replace", env=env)
+        explicit = subprocess.run([PY, str(upgrade_tool), "apply", foreign,
+                                   "--root", str(root)], capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", env=env)
+        omitted = foreign not in ((routine.stdout or "") + (routine.stderr or ""))
+        installed = (root / foreign).read_text(encoding="utf-8") == "foreign launcher\n"
+        if routine.returncode == 0 and omitted and explicit.returncode == 0 and installed:
+            print("  ✅ routine diff omits an absent foreign launcher, but explicit apply installs it"); ok += 1
+        else:
+            print("  ❌ the foreign-launcher routine omission or explicit apply escape hatch failed"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: durable upgrade receipts must prove and recover the exact pre-image --
+def upgrade_receipt_case():
+    global ok, bad
+    import json, re, shutil, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_receipts_"))
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+
+    def git(root, *args):
+        return subprocess.run(["git", "-C", str(root), *args], capture_output=True,
+                              text=True, encoding="utf-8", errors="replace")
+
+    def build(name, ignored=False):
+        root = tmp / name
+        (root / "governance").mkdir(parents=True)
+        (root / "governance/AGENTS.md").write_text("# A\n", encoding="utf-8")
+        (root / "governance/WORKFLOW_CONSTITUTION.md").write_text("# W\n", encoding="utf-8")
+        (root / "scripts/harness").mkdir(parents=True)
+        # A minimal tool-mode checkpoint: commit the worktree, never move `reviewed`.
+        (root / "scripts/harness/checkpoint.py").write_text(
+            "import pathlib, subprocess, sys\n"
+            "r=pathlib.Path(__file__).resolve().parents[2]\n"
+            "a=subprocess.run(['git','-C',str(r),'add','-A'])\n"
+            "if a.returncode: sys.exit(a.returncode)\n"
+            "d=subprocess.run(['git','-C',str(r),'diff','--cached','--quiet'])\n"
+            "if d.returncode==1:\n"
+            " p=subprocess.run(['git','-C',str(r),'-c','user.email=a@b','-c','user.name=t','commit','-qm','tool checkpoint'])\n"
+            " sys.exit(p.returncode)\n"
+            "sys.exit(0 if d.returncode==0 else d.returncode)\n", encoding="utf-8")
+        (root / "docs").mkdir()
+        (root / "_upgrade/docs").mkdir(parents=True)
+        (root / "_upgrade/docs/fig.svg").write_text("NEW\n", encoding="utf-8")
+        _seed_upgrade_edition(root, root / "_upgrade")
+        if ignored:
+            (root / ".gitignore").write_text("/docs/fig.svg\n", encoding="utf-8")
+        else:
+            (root / "docs/fig.svg").write_text("OLD\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q", str(root)], capture_output=True)
+        git(root, "add", "-A")
+        git(root, "-c", "user.email=a@b", "-c", "user.name=t", "commit", "-qm", "base")
+        if ignored:
+            (root / "docs/fig.svg").write_text("IGNORED HAND EDIT\n", encoding="utf-8")
+        return root
+
+    def apply(root):
+        return subprocess.run([PY, str(HERE / "upgrade.py"), "apply", "docs",
+                               "--root", str(root)], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", env=env)
+
+    def receipt_id(result):
+        m = re.search(r"upg-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]+-[0-9a-f]{8}",
+                      (result.stdout or "") + (result.stderr or ""))
+        return m.group(0) if m else None
+
+    try:
+        ignored = build("ignored", ignored=True)
+        result = apply(ignored)
+        kept = (ignored / "docs/fig.svg").read_text(encoding="utf-8") == "IGNORED HAND EDIT\n"
+        if result.returncode == 2 and kept and receipt_id(result) is None:
+            print("  ✅ UPG-REC-03: an ignored same-path hand edit blocks replacement"); ok += 1
+        else:
+            print("  ❌ UPG-REC-03: ignored same-path content was not protected"); bad += 1
+
+        hidden_ok = True
+        for flag, clear in (("--assume-unchanged", "--no-assume-unchanged"),
+                            ("--skip-worktree", "--no-skip-worktree")):
+            root = build(flag.lstrip("-").replace("-", "_"))
+            git(root, "update-index", flag, "--", "docs/fig.svg")
+            (root / "docs/fig.svg").write_text(f"HIDDEN {flag}\n", encoding="utf-8")
+            result = apply(root)
+            hidden_ok = hidden_ok and result.returncode == 2 and \
+                (root / "docs/fig.svg").read_text(encoding="utf-8") == f"HIDDEN {flag}\n"
+            git(root, "update-index", clear, "--", "docs/fig.svg")
+        if hidden_ok:
+            print("  ✅ UPG-REC-04: assume-unchanged and skip-worktree cannot hide a pre-image"); ok += 1
+        else:
+            print("  ❌ UPG-REC-04: an index flag bypassed pre-image verification"); bad += 1
+
+        root = build("roundtrip")
+        reviewed = git(root, "rev-parse", "HEAD").stdout.strip()
+        git(root, "tag", "reviewed", reviewed)
+        (root / "docs/fig.svg").write_text("HAND EDIT\n", encoding="utf-8")
+        result = apply(root)
+        rid = receipt_id(result)
+        listed = subprocess.run([PY, str(HERE / "upgrade.py"), "receipts", "--root", str(root)],
+                                capture_output=True, text=True, encoding="utf-8",
+                                errors="replace", env=env)
+        ref = git(root, "rev-parse", f"refs/spark2groundwork/restore/{rid}") if rid else None
+        store_raw = git(root, "rev-parse", "--git-path", "spark2groundwork/receipts").stdout.strip()
+        store = pathlib.Path(store_raw)
+        if not store.is_absolute():
+            store = root / store
+        manifest = store / f"{rid}.json" if rid else store / "missing.json"
+        manifest_data = json.loads(manifest.read_text(encoding="utf-8")) if manifest.is_file() else {}
+        durable = (result.returncode == 0 and rid and manifest.is_file()
+                   and ref.returncode == 0 and rid in listed.stdout
+                   and manifest_data["ref"].endswith(rid))
+        if durable:
+            print("  ✅ UPG-REC-05: apply persists a verifiable manifest and private Git ref"); ok += 1
+        else:
+            print("  ❌ UPG-REC-05: the receipt is not durable or listable"); bad += 1
+
+        captured = git(root, "show", f"refs/spark2groundwork/restore/{rid}:docs/fig.svg") \
+            if rid else None
+        if captured and captured.returncode == 0 and captured.stdout == "HAND EDIT\n":
+            print("  ✅ UPG-REC-08: a normal tracked hand edit is captured before apply"); ok += 1
+        else:
+            print("  ❌ UPG-REC-08: the tracked pre-image was not captured"); bad += 1
+
+        diffed = subprocess.run([PY, str(HERE / "upgrade.py"), "receipt-diff", rid or "missing",
+                                 "docs/fig.svg", "--root", str(root)], capture_output=True,
+                                text=True, encoding="utf-8", errors="replace", env=env)
+        restored = subprocess.run([PY, str(HERE / "upgrade.py"), "restore", rid or "missing",
+                                   "docs/fig.svg", "--root", str(root)], capture_output=True,
+                                  text=True, encoding="utf-8", errors="replace", env=env)
+        receipt_count = len(list(store.glob("*.json")))
+        roundtrip = (diffed.returncode == 0 and "-HAND EDIT" in diffed.stdout and "+NEW" in diffed.stdout
+                     and restored.returncode == 0
+                     and (root / "docs/fig.svg").read_text(encoding="utf-8") == "HAND EDIT\n"
+                     and receipt_count == 2
+                     and git(root, "rev-parse", "refs/tags/reviewed").stdout.strip() == reviewed
+                     and git(root, "diff", "--cached", "--quiet").returncode == 0)
+        if roundtrip:
+            print("  ✅ UPG-REC-06: diff and single-file restore work, with an undo receipt and stable reviewed tag"); ok += 1
+        else:
+            detail = (f"diff={diffed.returncode}, restore={restored.returncode}, "
+                      f"receipts={receipt_count}, current={repr((root / 'docs/fig.svg').read_text(encoding='utf-8'))}, "
+                      f"diff_out={repr(diffed.stdout)}, restore_out={repr(restored.stdout)}, "
+                      f"restore_err={repr(restored.stderr)}")
+            print(f"  ❌ UPG-REC-06: receipt diff/restore round trip was not safe ({detail})"); bad += 1
+
+        before_count = len(list(store.glob("*.json")))
+        outside = subprocess.run([PY, str(HERE / "upgrade.py"), "restore", rid or "missing",
+                                  "../outside", "--root", str(root)], capture_output=True,
+                                 text=True, encoding="utf-8", errors="replace", env=env)
+        (root / "docs/fig.svg").unlink()
+        missing = subprocess.run([PY, str(HERE / "upgrade.py"), "restore", rid or "missing",
+                                  "docs/fig.svg", "--root", str(root)], capture_output=True,
+                                 text=True, encoding="utf-8", errors="replace", env=env)
+        after_count = len(list(store.glob("*.json")))
+        if outside.returncode == 1 and missing.returncode == 1 and before_count == after_count:
+            print("  ✅ UPG-REC-07: path escape and missing-current restore fail with zero receipt writes"); ok += 1
+        else:
+            print("  ❌ UPG-REC-07: restore confinement or fail-closed behavior regressed"); bad += 1
+
+        crlf = build("crlf")
+        (crlf / ".gitattributes").write_text("docs/*.svg text eol=lf\n", encoding="utf-8")
+        git(crlf, "add", ".gitattributes")
+        git(crlf, "-c", "user.email=a@b", "-c", "user.name=t", "commit", "-qm", "attributes")
+        (crlf / "docs/fig.svg").write_bytes(b"OLD\r\n")
+        normalized = apply(crlf)
+        if (normalized.returncode == 0
+                and (crlf / "docs/fig.svg").read_text(encoding="utf-8") == "NEW\n"):
+            print("  ✅ UPG-REC-09: CRLF normalization follows Git semantics without a false block"); ok += 1
+        else:
+            print("  ❌ UPG-REC-09: byte-only CRLF differences caused a false block"); bad += 1
+
+        if manifest.is_file():
+            tampered = json.loads(manifest.read_text(encoding="utf-8"))
+            tampered["files"][0]["blob"] = "0" * 40
+            manifest.write_text(json.dumps(tampered), encoding="utf-8")
+        invalid = subprocess.run([PY, str(HERE / "upgrade.py"), "receipt-diff", rid or "missing",
+                                  "--root", str(root)], capture_output=True, text=True,
+                                 encoding="utf-8", errors="replace", env=env)
+        if invalid.returncode == 2:
+            print("  ✅ UPG-REC-12: a tampered manifest is rejected before use"); ok += 1
+        else:
+            print("  ❌ UPG-REC-12: receipt integrity checks accepted a tampered manifest"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+# -- v1.4.4: restore must write nothing when no compatible peer exists -----
+def upgrade_peer_fail_case():
+    global ok, bad
+    import re, shutil, tempfile
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_peerfail_"))
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    try:
+        root = tmp / "project"
+        (root / "governance").mkdir(parents=True)
+        (root / "governance/AGENTS.md").write_text("# A\n", encoding="utf-8")
+        (root / "governance/WORKFLOW_CONSTITUTION.md").write_text("# W\n", encoding="utf-8")
+        (root / "scripts/harness").mkdir(parents=True)
+        # This old copy leaves evidence if executed and deliberately lacks the API marker.
+        (root / "scripts/harness/checkpoint.py").write_text(
+            "import pathlib, sys\n"
+            "r=pathlib.Path(sys.argv[sys.argv.index('--root')+1])\n"
+            "r.joinpath('UNEXPECTED').write_text('x')\n",
+            encoding="utf-8")
+        (root / "docs").mkdir()
+        (root / "docs/fig.svg").write_text("OLD\n", encoding="utf-8")
+        (root / "_upgrade/docs").mkdir(parents=True)
+        (root / "_upgrade/docs/fig.svg").write_text("NEW\n", encoding="utf-8")
+        _seed_upgrade_edition(root, root / "_upgrade")
+        subprocess.run(["git", "init", "-q", str(root)], capture_output=True)
+        subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True)
+        subprocess.run(["git", "-C", str(root), "-c", "user.email=a@b", "-c", "user.name=t",
+                        "commit", "-qm", "base"], capture_output=True)
+        applied = subprocess.run([PY, str(HERE / "upgrade.py"), "apply", "docs",
+                                  "--root", str(root)], capture_output=True, text=True,
+                                 encoding="utf-8", errors="replace", env=env)
+        found = re.search(r"upg-[0-9]{8}T[0-9]{6}Z-[a-z0-9-]+-[0-9a-f]{8}",
+                          (applied.stdout or "") + (applied.stderr or ""))
+        portable = tmp / "standalone"
+        portable.mkdir()
+        for name in ("upgrade.py", "_common.py", "framework_config.py"):
+            (portable / name).write_bytes((HERE / name).read_bytes())
+        store_raw = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-path",
+                                    "spark2groundwork/receipts"], capture_output=True, text=True,
+                                   encoding="utf-8", errors="replace").stdout.strip()
+        store = pathlib.Path(store_raw)
+        if not store.is_absolute():
+            store = root / store
+        before_count = len(list(store.glob("*.json")))
+        before = (root / "docs/fig.svg").read_bytes()
+        restored = subprocess.run([PY, str(portable / "upgrade.py"), "restore",
+                                   found.group(0) if found else "missing", "docs/fig.svg",
+                                   "--root", str(root)], capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", env=env)
+        out = (restored.stdout or "") + (restored.stderr or "")
+        safe = (applied.returncode == 0 and found is not None
+                and restored.returncode == 2
+                and (root / "docs/fig.svg").read_bytes() == before
+                and len(list(store.glob("*.json"))) == before_count
+                and not (root / "UNEXPECTED").exists()
+                and "same edition and version" in out)
+        if safe:
+            print("  ✅ restore with no compatible peer skips the old tool, writes nothing, and says to redownload"); ok += 1
+        else:
+            print("  ❌ restore did not fail closed when no compatible peer existed"); bad += 1
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+root_glob_platform_case()
+upgrade_edition_case()
+my_index_cli_safety_case()
+sync_my_rules_cli_safety_case()
+upgrade_transient_scope_case()
+upgrade_target_only_case()
+upgrade_receipt_case()
+upgrade_peer_fail_case()
 upgrade_case()
 
 print("\n" + "=" * 48)

@@ -1,7 +1,7 @@
 handoffs/ ── 交接封包放這裡
 
 每一輪工作結束時，AI 會在這裡留下一份「這一輪做了什麼」的封包。
-格式見 policy/HANDOFF.md。
+格式見 governance/HANDOFF.md。
 
 為什麼需要它：
 下一輪接手的人（或 AI）不會記得上一輪發生過什麼。

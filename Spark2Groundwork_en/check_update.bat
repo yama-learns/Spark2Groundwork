@@ -20,11 +20,24 @@ if "%PY%"=="" (where py >nul 2>nul && set PY=py -3)
 if "%PY%"=="" (where python3 >nul 2>nul && set PY=python3)
 if "%PY%"=="" goto :no_python
 
+if not "%~1"=="" goto :run_args
+%PY% "scripts\harness\upgrade.py" check
+set "RC=%ERRORLEVEL%"
+if not exist "_upgrade\" goto :done
+echo.
+%PY% "scripts\harness\upgrade.py" diff
+if not "%ERRORLEVEL%"=="0" set "RC=%ERRORLEVEL%"
+goto :done
+
+:run_args
 %PY% "scripts\harness\upgrade.py" %*
+set "RC=%ERRORLEVEL%"
+
+:done
 echo.
 echo ===========================================================
 pause
-exit /b 0
+exit /b %RC%
 
 :no_python
 echo.

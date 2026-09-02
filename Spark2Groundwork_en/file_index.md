@@ -46,15 +46,16 @@
 | **Conjecture states and thresholds** | `governance/CONJECTURE_LEDGER_SPEC.md` |
 | **A file may have exactly one owner** | `governance/WORKFLOW_CONSTITUTION.md` §6.4 |
 | **Mechanical implementation of exit-code semantics** | `scripts/harness/_common.py` (`emit`) — ⚠️ **the semantics are defined in constitution §7.4; this is their only implementation** |
-| Handoff packet spec | `policy/HANDOFF.md` |
-| **Project identity, is-it-worth-doing, ethical red lines, search keywords** | 🔴 **`PROJECT.md` (root; the only file the user fills in)** |
+| Handoff packet spec | `governance/HANDOFF.md` |
+| **Project identity, is-it-worth-doing, ethical red lines, search keywords** | 🔴 **`PROJECT.md` (root; user-filled)** |
+| **First idea to decompose and its decomposition rules** | 🔴 **`FIRST_IDEA.md` (root; project-owned and never replaced on upgrade)** |
 | **Incidents that actually happened in this project** | `my/MY_INCIDENTS.md` |
 | **Who decides the AI's write permissions** | `governance/WORKFLOW_CONSTITUTION.md` §6.3 |
 | **The cost ceiling on governance, and the three-question review** | `governance/WORKFLOW_CONSTITUTION.md` §10 |
 | **Operational directories** (`scratch/` / `archive/` / `_to_delete/`) | `governance/WORKFLOW_CONSTITUTION.md` §6.2 |
-| Bibliography and sources | `policy/SOURCES.md` |
-| External tools | `policy/EXTERNAL_TOOLS.md` |
-| Model identity | `policy/MODEL_IDENTITY.md` |
+| Bibliography and sources | `governance/SOURCES.md` |
+| External tools | `governance/EXTERNAL_TOOLS.md` |
+| Model identity | `governance/MODEL_IDENTITY.md` |
 | Audit tooling / tone / coverage declaration | `governance/Audit_Protocol.md` |
 
 ---
@@ -64,7 +65,7 @@
 | Class | Files |
 |---|---|
 | **State** (overwritten each round) | `NEXT_SESSION_MEMO.md` |
-| **Spec** (rarely changed) | `governance/*`, `policy/*`, `profiles/*`, `prompts/*` |
+| **Spec** (rarely changed) | `governance/*`, `profiles/*`, `prompts/*` |
 | **Data** (append-only) | `ledgers/*`, `handoffs/*`, `SENSOR_CHANGELOG.md` |
 | **Index** | `file_index.md` (this file) |
 
@@ -94,6 +95,7 @@ python scripts/harness/run_selftest.py
 | `tool_sync_my_rules.py` | Copies newly added framework rules into `my/MY_RULES.md` (**not a sensor**) |
 | `sensor_my_index.py` | 🔴 **Whether `my/MY_INDEX.md` is stale, and whether a description points at a missing file** |
 | `tool_my_index.py` | Generates `my/MY_INDEX.md` (**not a sensor**) — the criterion is "everything the framework does ⛔ not own" |
+| `sensor_version_consistency.py` | 🔴 **Whether the framework packages named in the settings are all on one version** — ⚠️ "half-replaced" ⛔ produces no error |
 | `tool_pdf_to_md.py` | PDF → Markdown programmatic extraction (the corpus that link ② compares against — **not a sensor**) |
 | `checkpoint.py` | **Single home** of the human/AI checkpoint (`.bat` / `.command` are thin shells) |
 | `review_changes.py` | **Single home** of "what changed since I last reviewed" |

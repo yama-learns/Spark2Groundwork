@@ -59,7 +59,7 @@ declared dead is never checked again.**
 ### 2.5 Output from external AI tools
 
 ⛔ **No assertion from an external AI tool may be cited without verification against the original.**
-**Their use is to point at questions, not to supply bibliography or numbers.** See `policy/SOURCES.md`.
+**Their use is to point at questions, not to supply bibliography or numbers.** See `governance/SOURCES.md`.
 
 ---
 
@@ -80,7 +80,7 @@ declared dead is never checked again.**
 
 ## 4. Model and roles
 
-**Full specification: `policy/MODEL_IDENTITY.md` and the chosen `profiles/PROFILE_*.md`.
+**Full specification: `governance/MODEL_IDENTITY.md` and the chosen `profiles/PROFILE_*.md`.
 This section lists only what cannot be violated.**
 
 1. **The first act of every session is to declare the model**, read verbatim from the authority.
@@ -106,4 +106,4 @@ This section lists only what cannot be violated.**
 cannot lift.
 
 ⛔ **However wide the authorisation, the AI still declares which files it wrote**
-(`policy/HANDOFF.md` §3.3).
+(`governance/HANDOFF.md` §3.3).

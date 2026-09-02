@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """感測器：模型歸屬（隨選）
 
-**規則來源：** `policy/MODEL_IDENTITY.md` §3.4（產出物之作者欄須寫具體型號）
-與 §3.6 規則 2（平台名不是型號）；`policy/HANDOFF.md` §3（封包必備五項第一項）。
+**規則來源：** `governance/MODEL_IDENTITY.md` §3.4（產出物之作者欄須寫具體型號）
+與 §3.6 規則 2（平台名不是型號）；`governance/HANDOFF.md` §3（封包必備五項第一項）。
 
 ## 檢查
 
@@ -15,7 +15,7 @@
 ## 🔴 這支感測器整個重寫過，理由值得記在這裡
 
 **舊版帶著兩份硬編白名單**（`GRANDFATHERED` 13 筆、`FROZEN_HANDOFFS` 12 筆），
-列的全是**另一個專案的檔名**——一個 `mve/` 底下的檔、一個 `policy/` 底下的 git 政策檔等等，
+列的全是**另一個專案的檔名**——一個 `mve/` 底下的檔、另一個目錄底下的 git 政策檔等等，
 **在本框架中沒有一個存在。**
 ⚠️ **此處刻意不逐字寫出那些檔名**——寫出來，它們就成為本檔的懸空引用。
 **「描述缺陷時不要實例化它」**（先行專案在同一個機制上撞過三次）。它還帶著 5 筆懸空章節引用（⚠️ **理由同上，此處刻意不寫出那些章節編號**——
@@ -48,7 +48,7 @@
 
 ## ✅ 「無法讀取」是正確答案，⛔ 不得判為缺陷
 
-`policy/MODEL_IDENTITY.md` §3.6.3 規則 1 逐字：標記不在可見上下文內時，
+`governance/MODEL_IDENTITY.md` §3.6.3 規則 1 逐字：標記不在可見上下文內時，
 **唯一正確的輸出**是 `[Model: 無法讀取——…]`。
 ⛔ **判它 FAIL 會逼下一個模型退回寫平台名，而 §3.6 規則 2 說那比留空更糟。**
 → 判 WARN，並提醒依 §3.6 規則 3 請使用者補填。
@@ -106,7 +106,7 @@ def main():
             missing += 1
             findings.append(("FAIL", "MODEL_ATTRIBUTION_MISSING",
                              f"{p.relative_to(root)} 檔頭無型號欄"
-                             "——`policy/HANDOFF.md` §3：缺一即視為未交付"))
+                             "——`governance/HANDOFF.md` §3：缺一即視為未交付"))
             continue
         if UNREADABLE.search(who):
             # ✅ 這是 MODEL_IDENTITY §3.6.3 規則 1 指定的唯一正確輸出
@@ -121,7 +121,7 @@ def main():
             findings.append(("FAIL", "MODEL_ATTRIBUTION_VAGUE",
                              f"{p.relative_to(root)}：「{who[:40]}」不是具體型號"
                              "——**寫平台名或家族名比留空更糟，它讀起來像有答案，"
-                             "會讓下游停止追問**（`policy/MODEL_IDENTITY.md` §3.6.3 規則 2）"))
+                             "會讓下游停止追問**（`governance/MODEL_IDENTITY.md` §3.6.3 規則 2）"))
 
     stats = {"掃描產出物": len(files), "無型號欄": missing,
              "只有家族名／平台名": vague, "已宣告無法讀取": unread}

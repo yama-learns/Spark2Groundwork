@@ -57,7 +57,7 @@ def parse(text):
     return out
 
 
-def corpus_integrity(root, cfg):
+def corpus_integrity(root, cfg, stats=None):
     """Corpus integrity.
 
     ⚠️ **Three states, ⛔ not two.** "No corpus", "a corpus with nothing in it yet" and
@@ -74,13 +74,22 @@ def corpus_integrity(root, cfg):
     checking whether there was anything to put in it.
     ⛔ **The fix is structural, not an exemption (`R-20`/`R-21`): the criterion now keys on
     whether extractions exist, ⛔ not on whether the directory exists.**
+
+    🔴 **`B-3` (ruling 48): the number of files this function re-hashes ⛔ must appear in the
+    stats line.**
+    ⚠️ **Measured, twice, by two different people:** the v1.3.0 auditor could not find "which
+    sensor compares `_manifest.json`", and on 2026-09-02 Project D's user wrote the same thing
+    again. **⛔ It had been here the whole time.** ⇒ **A protection nobody can see looks exactly
+    like no protection at all.**
     """
+    stats = {} if stats is None else stats
+    stats.setdefault("hash_compared", 0)
     out = []
     cdir = root / cfg["corpus_dir"]
     if not cdir.is_dir():
         return out
     mp = root / cfg["corpus_manifest"]
-    extracts = sorted(cdir.glob("*.md"))
+    extracts = sorted(cdir.glob("*.md"), key=lambda p: p.as_posix())
     if not extracts and not mp.exists():
         return [("WARN", "CORPUS_EMPTY",
                  f"{cfg['corpus_dir']}/ holds no extractions yet — "
@@ -95,12 +104,13 @@ def corpus_integrity(root, cfg):
     except Exception as e:                                    # noqa: BLE001
         return [("INCOMPLETE", "CORPUS_MANIFEST_UNREADABLE", f"manifest could not be parsed：{e}")]
     known = {e["md"]: e.get("md_sha256") for e in man if "md" in e}
-    for f in sorted(cdir.glob("*.md")):
+    for f in sorted(cdir.glob("*.md"), key=lambda p: p.as_posix()):
         want = known.get(f.name)
         if want is None:
             out.append(("WARN", "CORPUS_FILE_UNTRACKED",
                         f"{f.name} is not in the manifest — re-run the extraction tool after adding sources"))
             continue
+        stats["hash_compared"] += 1
         if hashlib.sha256(f.read_bytes()).hexdigest() != want:
             out.append(("FAIL", "CORPUS_MD_MODIFIED",
                         f"{f.name} content no longer matches the manifest — "
@@ -113,12 +123,15 @@ def corpus_integrity(root, cfg):
 
 def main():
     root, cfg, as_json, name = cli("claim_ledger")
-    findings = corpus_integrity(root, cfg)
+    cstats = {}
+    findings = corpus_integrity(root, cfg, cstats)
     led = root / cfg["claim_ledger"]
     if not led.exists():
         findings.append(("INCOMPLETE", "CLAIM_LEDGER_MISSING",
                          f"{cfg['claim_ledger']} not found — **not checked, and that is not a pass**"))
-        return emit("Claim Ledger sensor", findings, {}, as_json, name)
+        return emit("Claim Ledger sensor", findings,
+                    {"hashes compared file by file": cstats["hash_compared"]},
+                    as_json, name)
 
     entries = parse(led.read_text(encoding="utf-8"))
     cdir = root / cfg["corpus_dir"]
@@ -148,6 +161,7 @@ def main():
 
     code = emit("Claim Ledger sensor", findings,
                 {"claims": len(entries), "extractions": len(corpus),
+                 "hashes compared file by file": cstats["hash_compared"],
                  "anchors matched": f"{matched}/{checked}"}, as_json, name)
     if not as_json:
         print("      ⚠️ This sensor only checks that the anchor exists,")

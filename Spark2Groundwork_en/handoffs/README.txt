@@ -1,7 +1,7 @@
 handoffs/ -- handoff packets go here
 
 At the end of each round of work, the AI leaves a packet here describing
-what that round did. The format is defined in policy/HANDOFF.md.
+what that round did. The format is defined in governance/HANDOFF.md.
 
 Why this exists:
 Whoever picks up the next round -- person or AI -- will not remember what

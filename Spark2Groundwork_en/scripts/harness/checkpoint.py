@@ -41,18 +41,23 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import _force_utf8                            # noqa: E402
 _force_utf8()
 
+# Exact marker used by upgrade.py to recognise a same-version, tool-mode peer.
+# Reading it does not execute a candidate, so compatibility probing cannot write first.
+CHECKPOINT_TOOL_API = "spark2groundwork-checkpoint-tool-v1"
+
 MSG = {
  "title_human": "  SNAPSHOT [human review point: I have looked at this]",
  "title_ai":    "  SNAPSHOT [AI auto checkpoint, ⛔ NOT human-reviewed]",
+ "title_tool":  "  RESTORE POINT [automatic, ⛔ NOT human-reviewed]",
  "usage": """Usage:
   Human checkpoint: python3 scripts/harness/checkpoint.py
   AI checkpoint:    python3 scripts/harness/checkpoint.py --mode ai \\
                         --role <role> --model <model> --topic <topic>
 
   <role>   single AI: agent | multi-role: governance | research | audit
-           ⛔ Do not invent values. Defined in policy/HANDOFF.md §2
+           ⛔ Do not invent values. Defined in governance/HANDOFF.md §2
   <model>  a concrete model; ⛔ never a platform or family name
-           Defined in policy/MODEL_IDENTITY.md
+           Defined in governance/MODEL_IDENTITY.md
   <topic>  one word: what this round did""",
  "wrong_folder": """[FAIL] This is not the project root; ⛔ nothing was written.
        Missing: {missing}
@@ -90,7 +95,20 @@ MSG = {
  "committed_human": "  ✅ New checkpoint created.",
  "committed_ai": "  ✅ AI checkpoint created: [{role}/{model}-{topic}]",
  "tag_moved": "  ✅ Done. Reviewed baseline moved to the latest checkpoint.",
- "tag_not_moved": "  ⛔ The reviewed tag was **not moved** — a file the AI saved is not a file you reviewed.",
+ "tag_not_moved": "  ⛔ The reviewed tag was **not moved** — ⛔ a file a program saved is not a file you reviewed.",
+ "tag_failed": """[FAIL] The checkpoint (the commit) was created, ⛔ **but the `reviewed` tag did not move.**
+       🔴 **⇒ The human review baseline is still where it was — ⛔ this "I have looked at
+          this" was not recorded.**
+       ⚠️ **⛔ Do not treat this as done**: the next "review changes" will compare against
+       the old baseline, **so it will list this round's work again ⛔ and it will not tell
+       you that the tag never moved.**
+       git tag exit code: {rc}; see {log}
+       -> Most common cause: a tag named `reviewed/<something>` already exists.
+          **Git ⛔ cannot hold `reviewed` and `reviewed/...` at the same time.**
+          Check with `git tag -l "reviewed*"` -> delete the one with the slash, then re-run.""",
+ "need_tool_args": """[FAIL] `--mode tool` requires `--tool-id` and `--operation`.
+       ⚠️ **An anonymous tool checkpoint is indistinguishable from one a person pressed.**""",
+ "committed_tool": "  ✅ Restore point created (tool: {tool}/{op}) — ⛔ **this is not a human review.**",
  "recent": "\nLast 5 checkpoints:",
 }
 
@@ -152,7 +170,26 @@ def sweep_locks(root, log):
 
 def main(MSG):
     ap = argparse.ArgumentParser(add_help=False)
-    ap.add_argument("--mode", choices=("human", "ai"), default="human")
+    # 🔴 **`tool` is a third identity, added in v1.4.4.**
+    #    ⚠️ **Trigger (Codex review, 2026-09-02): since v1.4.1 `upgrade.py` has called
+    #    `checkpoint.py --root <root>` with ⛔ no `--mode`, so it fell to the human default —**
+    #    🔴 **one framework upgrade moved the `reviewed` tag onto the pre-upgrade commit and
+    #    printed "I have looked at this".**
+    #    **⇒ AI work the user had not reviewed vanished from `review_changes.py`'s list.**
+    #
+    #    ⛔ **Why a tool must not use `ai` mode:** `ai` requires `--role` and a concrete
+    #    `--model`, **and a local tool is ⛔ none of `VALID_ROLES` and has no model** —
+    #    ⚠️ **making it use `ai` means making it invent a model, ⛔ which is the very thing
+    #    `MODEL_IDENTITY.md` exists to forbid.**
+    #
+    #    ⚠️ **`--mode` still defaults to `human`. ⛔ That is a known cost:**
+    #    **making it mandatory would immediately break older projects' `.bat`/`.command`.**
+    #    🔴 **⇒ Mandatory is deferred to v1.5.0, in the same round as the launchers.**
+    ap.add_argument("--mode", choices=("human", "ai", "tool"), default="human")
+    ap.add_argument("--tool-id", default=None,
+                    help="required for tool mode: which tool (e.g. upgrade)")
+    ap.add_argument("--operation", default=None,
+                    help="required for tool mode: what it is doing (e.g. apply-governance)")
     ap.add_argument("--role", default=None)
     ap.add_argument("--model", default=None)
     ap.add_argument("--topic", default=None)
@@ -167,7 +204,9 @@ def main(MSG):
     log = root / "git-checkpoint.log"
 
     print("=" * 46)
-    print(MSG["title_ai"] if a.mode == "ai" else MSG["title_human"])
+    # 🔴 **The banner must follow the identity too: ⛔ a tool printing "I have looked
+    #    at this" is the same error as moving the tag, one line earlier.**
+    print(MSG["title_" + a.mode])
     print("=" * 46)
 
     # ── 前置 1：這是不是專案根目錄 ─────────────────────────────────
@@ -185,6 +224,10 @@ def main(MSG):
         print(MSG["no_git"]); return 1
 
     # ── 前置 3：AI 模式的三個必填參數 ──────────────────────────────
+    if a.mode == "tool":
+        # ⚠️ **工具身分也要具體：⛔ 一個匿名的「工具」在歷史裡與人分不開。**
+        if not (a.tool_id and a.operation):
+            print(MSG["need_tool_args"]); print(MSG["usage"]); return 1
     if a.mode == "ai":
         if not (a.role and a.model and a.topic):
             print(MSG["need_args"]); print(MSG["usage"]); return 1
@@ -247,23 +290,53 @@ def main(MSG):
             msg = (f"auto: {utcstamp('%Y-%m-%d %H:%MZ')} "
                    f"[{a.role}/{a.model}-{a.topic}] -- AI auto checkpoint, NOT human-reviewed")
             ident = ["-c", "user.name=AI agent", "-c", "user.email=agent@local"]
+        elif a.mode == "tool":
+            msg = (f"tool: {utcstamp('%Y-%m-%d %H:%MZ')} "
+                   f"[{a.tool_id}/{a.operation}] -- automatic restore point, "
+                   "NOT human-reviewed")
+            ident = ["-c", "user.name=local tool", "-c", "user.email=tool@local"]
         else:
             msg = f"snapshot {utcstamp('%Y-%m-%d %H:%MZ')}"
             ident = ["-c", "user.name=researcher", "-c", "user.email=me@local"]
         rc, out = run(["git"] + ident + ["commit", "-q", "-m", msg], root, log)
         if rc != 0:
             print(MSG["commit_failed"].format(log=log.name)); return 2
-        print(MSG["committed_ai"].format(role=a.role, model=a.model, topic=a.topic)
-              if a.mode == "ai" else MSG["committed_human"])
+        if a.mode == "ai":
+            print(MSG["committed_ai"].format(role=a.role, model=a.model, topic=a.topic))
+        elif a.mode == "tool":
+            print(MSG["committed_tool"].format(tool=a.tool_id, op=a.operation))
+        else:
+            print(MSG["committed_human"])
 
     # ── reviewed 標籤 ────────────────────────────────────────────
     # ⚠️ AI 模式 ⛔ 不移動標籤——「AI 自己存的檔不算你看過」，這個區分是刻意的。
     # ⚠️ 人工模式即使「無變更」也要移動——AI 可能已經自己提交過那些工作，
     #    而人按下這一支的意思就是「我看過了」。
-    if a.mode == "ai":
+    if a.mode != "human":
+        # 🔴 **Neither `ai` nor `tool` may ⛔ ever move `reviewed`.**
+        #    **⛔ That tag is the only carrier of "a person looked at this",
+        #    ⛔ and a program cannot sign for a person.**
         print(MSG["tag_not_moved"])
     else:
-        run(["git", "tag", "-f", "reviewed"], root, log)
+        # 🔴 **`git tag -f` can fail, ⛔ and when it did this program still printed "done".**
+        #    ⚠️ **Measured counterexample (Codex, 2026-09-02, Windows): with a tag
+        #    `reviewed/child` already in the project, Git can no longer create `reviewed`
+        #    (ref namespace collision) and `git tag -f reviewed` returns 128 — ⛔ yet this
+        #    program still exited 0 and printed "reviewed baseline moved to the latest
+        #    checkpoint", while that tag did not exist at all.**
+        # 🔴 **⇒ The post-condition of a human checkpoint is ⛔ not "the commit succeeded";
+        #    it is "`reviewed` exists and actually points at the current HEAD".**
+        #    ⚠️ **Checking the exit code is not enough: read it back and compare.**
+        #    **`R-22`: silence is not a pass ⛔ and a write with no read-back is silence.**
+        rc_tag, _ = run(["git", "tag", "-f", "reviewed"], root, log)
+        rc_head, head = run(["git", "rev-parse", "--verify", "HEAD^{commit}"], root, log)
+        rc_rev, tagged = run(["git", "rev-parse", "--verify", "reviewed^{commit}"], root, log)
+        if (rc_tag != 0 or rc_head != 0 or rc_rev != 0
+                or not head.strip() or head.strip() != tagged.strip()):
+            print(MSG["tag_failed"].format(rc=rc_tag, log=log.name))
+            with log.open("a", encoding="utf-8") as f:
+                f.write(f"[{utcstamp('%Y-%m-%dT%H:%M:%SZ')}] ---- end rc=2 (tag) ----\n")
+            return 2
         print(MSG["tag_moved"])
 
     _, recent = run(["git", "--no-pager", "log", "--oneline", "-5"], root, log)

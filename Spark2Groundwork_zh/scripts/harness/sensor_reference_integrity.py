@@ -44,7 +44,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _common import cli, emit, dead_glob_findings            # noqa: E402
-from framework_config import resolve_globs, excluded         # noqa: E402
+from framework_config import (resolve_globs, excluded,
+                              active_launcher_globs)         # noqa: E402
 
 # 只認「看起來是專案檔案」的引用：有副檔名、無空白開頭
 REF = re.compile(r"`([\w/.一-鿿-]+\.(?:md|py|sh))`")
@@ -71,8 +72,9 @@ def escapes_root(text):
 
 def main():
     root, cfg, as_json, name = cli("reference_integrity")
+    launchers = active_launcher_globs(cfg.get("launcher_globs", []), root)
     globs = (cfg.get("code_globs", ["scripts/**/*.py", "scripts/**/*.sh"])
-             + cfg.get("launcher_globs", [])
+             + launchers
              + cfg.get("governance_globs", []))
     files, dead = resolve_globs(globs, root, cfg)
     findings = dead_glob_findings(dead, "code_globs ＋ launcher_globs ＋ governance_globs", root)

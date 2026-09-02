@@ -82,7 +82,7 @@ def main() -> int:
     args = ap.parse_args()
 
     A, B = ROOT / args.a, ROOT / args.b
-    files = sorted(A.glob("*.md"))
+    files = sorted(A.glob("*.md"), key=lambda p: p.as_posix())
     if not files:
         print(f"[FAIL] SCAN_GLOB_MATCHES_NOTHING: {args.a}/ 中沒有 .md"
               "——掃不到的地方等於沒有感測器")

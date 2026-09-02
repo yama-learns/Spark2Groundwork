@@ -28,7 +28,7 @@ is, in this topology, not a design at all.**
 | ② **Exists** | Is that passage in the source | `sensor_claim_ledger.py` | **Computational, zero cost** |
 | ③ Fields | Are required fields filled | `sensor_conjecture_ledger.py` | Computational |
 | ④ Consistency | Do documents agree | `sensor_governance_text.py` | Computational |
-| ⑤ Authenticity | Does this reference exist | **Authoritative bibliography file** (`policy/SOURCES.md` §3) | **Human** / ✅ approved tool |
+| ⑤ Authenticity | Does this reference exist | **Authoritative bibliography file** (`governance/SOURCES.md` §3) | **Human** / ✅ approved tool |
 | ⑥ Support | Does the passage bear this claim | — | **Human / cross-model audit** |
 | ⑦ Generalisation | Can you go from that sample to here | — | **Human / cross-model audit** |
 
@@ -38,7 +38,7 @@ and that teaches people to ignore the whole system.**
 
 ⚠️ **⑤ is different from ⑥ and ⑦: it is not unmechanisable, there is simply no trustworthy
 machine source for it by default.** The conditions under which a tool may take over this link
-are defined in `policy/SOURCES.md` §5 — ⛔ not restated here.
+are defined in `governance/SOURCES.md` §5 — ⛔ not restated here.
 
 ---
 
@@ -47,7 +47,7 @@ are defined in `policy/SOURCES.md` §5 — ⛔ not restated here.
 | Class | Frequency | Examples |
 |---|---|---|
 | **State** | Overwritten each round | `NEXT_SESSION_MEMO.md` |
-| **Spec** | Rarely | The two T0 files, `RULES.md`, `policy/*` |
+| **Spec** | Rarely | The two T0 files, `RULES.md`, `governance/*` |
 | **Data** | Event-driven, append-only | Ledgers, `Incident_Log.md`, `handoffs/` |
 | **Index** | As files come and go | `file_index.md` |
 
@@ -104,7 +104,7 @@ stays green** — and a sensor can only catch the latter.
 
 ### 4.1 Session start
 
-1. **Declare your model** (`policy/MODEL_IDENTITY.md`)
+1. **Declare your model** (`governance/MODEL_IDENTITY.md`)
 2. Read the state document (`NEXT_SESSION_MEMO.md`)
 3. Read both T0 files
 4. First-time participants also read `Incident_Log.md`
@@ -128,7 +128,7 @@ stays green** — and a sensor can only catch the latter.
 
 1. Run `run_all_sensors.py`
 2. Overwrite the state document
-3. **Produce a handoff packet** (`policy/HANDOFF.md`)
+3. **Produce a handoff packet** (`governance/HANDOFF.md`)
 4. Raise decision requests (§5)
 
 ⚠️ **Any change affecting another party's permissions, specs, or tool behaviour requires a
@@ -192,8 +192,21 @@ The pending list in the state document **must carry a "rounds waited" column**.
 | Single AI | Project root, **minus** ledgers, T0, and `scripts/` |
 | Multiple roles | Whatever `write_scopes` lists in `framework_config.py` |
 
-⛔ **In every situation, the following are in no AI's output area:**
+⚠️ **The following three are ⛔ by default in no AI's output area:**
 `ledgers/`, `governance/AGENTS.md`, `governance/WORKFLOW_CONSTITUTION.md`
+
+🔴 **⛔ That is a default, ⛔ not a prohibition by this framework** — per §6.3 the user decides
+authorisation, and its mechanical counterpart is `deny` in `governance_config.json`.
+**⇒ Where the two disagree, `deny` governs.**
+
+⚠️ **Before v1.4.4 this line read "In every situation ... in no AI's output area"** — **⇒ it
+contradicted general rule 2 nine lines below it ("that is a default, ⛔ not a prohibition")
+and §6.3, ⛔ all three in the same document.**
+🔴 **Measured case: a real project's AI edited this section under its principal's ruling, and
+the next upgrade replaced the whole constitution, taking the edit with it.**
+⚠️ **⛔ A project's ruling on a framework clause still has ⛔ nowhere to live that an upgrade
+will not overwrite** — **⇒ that is a design gap, ⛔ not a defect in the upgrader (the
+constitution sits in the "pure framework content ⇒ replaced wholesale" row). Deferred to v1.5.0.**
 
 ✅ **`NEXT_SESSION_MEMO.md` is part of every role's output area** —
 the end-of-session ritual requires overwriting it (§4.2); leave it out and **§4 and §6 contradict each other**.
@@ -240,7 +253,7 @@ well-founded one.**
 
 **Two mechanisms guarantee those folders are safe, and both are mechanical:**
 
-1. **The upgrade tool recognises nine names of its own** (five folders plus four files) and
+1. **The upgrade tool recognises only the items named on its replaceable list** (`FRAMEWORK_DIRS` and `FRAMEWORK_FILES` in `upgrade.py`) and
    ⛔ **refuses every other target.**
    ⚠️ **Paired sample: `upgrade_case()` in `run_selftest.py`.**
 2. **A sensor's scan scope is defined by globs**, ⛔ not by "scan everything".
@@ -268,8 +281,8 @@ off in a config is safer than a gate that gets bypassed.**
 
 | | After it breaks |
 |---|---|
-| **Framework documents** (`governance/` `policy/` `profiles/` `prompts/` `scripts/` …) | ✅ **Re-download from GitHub and overwrite** |
-| **`ledgers/` `corpus/` `corpus_md/` `handoffs/` `my/` `PROJECT.md`** | 🔴 **Nothing anywhere can restore them** |
+| **Framework documents** (`governance/` `profiles/` `prompts/` `scripts/` …) | ✅ **Re-download from GitHub and overwrite** |
+| **`ledgers/` `corpus/` `corpus_md/` `handoffs/` `my/` `PROJECT.md` `FIRST_IDEA.md`** | 🔴 **Nothing anywhere can restore them** |
 
 **The default `deny` blocks only the second kind, ⛔ never the first** — so a governance agent
 can fully maintain the governance documents, **which is the precondition for a user being able
@@ -277,7 +290,7 @@ to keep this framework alive on their own.**
 
 #### ⚠️ Two things full authorisation does not change
 
-1. **The AI still declares "which files I wrote" in `handoffs/`** (`policy/HANDOFF.md` §3.3).
+1. **The AI still declares "which files I wrote" in `handoffs/`** (`governance/HANDOFF.md` §3.3).
    **Authorisation changes what may be written, ⛔ not whether it must be reported.**
 2. The **falsification-adjudicated column** in `ledgers/Conjecture_Ledger.md` is still ⛔
    human-only. 🔴 **That column is the only record that a human adjudicated — if the AI can
@@ -303,7 +316,7 @@ the next upgrade — ⛔ and which one is lost depends only on which list that f
 |---|---|---|
 | **Yes** | **Framework ⊆ a copy under `my/`, plus a comparison sensor** | `RULES.md` ↔ `my/MY_RULES.md` |
 | **No, but framework definitions and project data are mixed** | **Definitions move to the framework side; the data side keeps data plus a one-line pointer** | the two ledgers ↔ `governance/*_LEDGER_SPEC.md`; `Incident_Log.md` ↔ `my/MY_INCIDENTS.md` |
-| **Pure framework content** | **Replaced wholesale** | `file_index.md`, `policy/*`, `profiles/*`, `prompts/*` |
+| **Pure framework content** | **Replaced wholesale** | `file_index.md`, `governance/*`, `profiles/*`, `prompts/*`; the user-filled first idea now lives at the root, outside `prompts/` |
 
 ⚠️ **⛔ The criterion exists to stop a good mechanism being applied where it is not needed:
 per-item copies of a ledger would put sixty lines of spec inside the user's data file,
@@ -416,7 +429,7 @@ governance maintenance.**
 | # | Question |
 |---|---|
 | ① | For what changed this round, **can I see why it was changed?** |
-| ② | Did it touch **anything I cannot restore** (ledgers, corpus, handoffs, `PROJECT.md`)? |
+| ② | Did it touch **anything I cannot restore** (ledgers, corpus, handoffs, `PROJECT.md`, `FIRST_IDEA.md`)? |
 | ③ | **Are the sensors still green?** |
 
 🔴 **⛔ The reviewer must not be asked to judge whether a change is *correct*.**

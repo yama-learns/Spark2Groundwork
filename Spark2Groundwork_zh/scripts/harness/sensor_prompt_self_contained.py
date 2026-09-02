@@ -21,7 +21,7 @@
 | **② DR 條款表** | LANG／VENUE-TYPE／NO-DOI／PASS A／PASS B／標題精確性／NONE RETRIEVED／OUTPUT CONTRACT | ⚠️ **只有 `--profile deep-research`** |
 
 ⚠️ **舊版把 ② 對所有 prompt 執行，後果實測如下：**
-`prompts/TEMPLATE_decompose.txt` 是一份**完全自足**的拆解 prompt，
+根目錄 `第一個想法.md` 是一份**完全自足**的拆解 prompt，
 它開頭逐字寫著「⛔ 這一輪不要查文獻」——
 **一份禁止查文獻的 prompt，不可能也不應該包含雙語檢索條款。**
 **它被判 FAIL，而且組裝完成之後仍然會 FAIL，永遠。**
@@ -38,12 +38,12 @@
 | **內容槽** | `<<<貼上你的構想全文>>>` | ✅ **不是缺陷** — 那是使用者在使用時才填的輸入位 |
 | **填空槽** | `<<<填空:一句話>>>` | ⚠️ **WARN** — 提醒尚未填，但不阻擋 |
 
-⚠️ **舊版把三者一律當缺陷**，於是 `TEMPLATE_decompose.txt` 因為
+⚠️ **舊版把三者一律當缺陷**，於是 `第一個想法.md` 因為
 `<<<貼上你的構想全文>>>` 被判 FAIL——**而那個佔位符本來就該留在那裡。**
 
 ## 🔴 引述禁令 ≠ 違反禁令
 
-**實測個案：** `TEMPLATE_decompose.txt` 有一行逐字是
+**實測個案：** `第一個想法.md` 有一行逐字是
 「⛔ 不要在反證條件欄裡寫『待填』『見下方說明』之類的字」，
 **而感測器把其中的「見下方」當成跨檔指涉判 FAIL。**
 
@@ -103,7 +103,7 @@ POLLUTION = [
 # 通用提示（WARN）：任何外部 prompt 都該有的三件事
 # ⚠️ **這三個樣式是以框架自己隨附的三份模板校準的。**
 #    ⛔ 若某一項對一份寫得好的 prompt 報警，那是樣式錯了，不是 prompt 錯了（`R-19`）。
-#    **校準參考：`prompts/TEMPLATE_decompose.txt`、`TEMPLATE_adversarial.txt`
+#    **校準參考：根目錄 `第一個想法.md`、`TEMPLATE_adversarial.txt`
 #    （組裝後的 `TEMPLATE_prior_art.txt` 亦同）。**
 GENERIC_HINTS = [
     ("幻覺護欄", r"不確定|不得(?:編造|捏造)|不要編|勿編|填不出來就|查無|"

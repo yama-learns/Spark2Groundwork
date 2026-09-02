@@ -21,6 +21,7 @@
 
 import json
 import pathlib
+import sys
 
 # ── 專案根目錄 ────────────────────────────────────────────────
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -34,7 +35,7 @@ DEFAULTS = {
 
     # 治理文件（規則的家）——供跨檔重複與章節引用檢查使用
     # ⚠️ 這是 **glob**，不是硬編清單（R-21：白名單會靜默過濾）
-    "governance_globs": ["governance/*.md", "policy/*.md", "ledgers/*.md", "file_index.md"],
+    "governance_globs": ["governance/*.md", "ledgers/*.md", "file_index.md"],
 
     # 🔴 **你的文件索引**（`tool_my_index.py`、`sensor_my_index.py`）。
     # ⚠️ **實測個案：某專案套用框架後就不再維護自己的檔案索引了——
@@ -67,6 +68,13 @@ DEFAULTS = {
 
     # 語料庫：程式化提取的全文，錨點比對的對象
     # ⛔ 提取物不得手工編輯（R-14）
+    # 🔴 **版本一致性感測器要比對哪幾包**（`sensor_version_consistency.py`）。
+    #    ⚠️ **這份清單與 `upgrade.py::FRAMEWORK_DIRS` 是同一組名字，⛔ 而它們是兩份拷貝。**
+    #    **⛔ 兩邊不同步時，會出現「升級換得了、感測器卻不比對」的那一包。**
+    "version_packages": ["governance", "profiles",
+                         "prompts", "scripts", "docs"],
+    "version_file": "_VERSION",
+
     "corpus_dir": "corpus_md",
     "corpus_manifest": "corpus_md/_manifest.json",
     # 原始 PDF 放這裡；tool_pdf_to_md.py 由此讀，⛔ 不得在工具內另行硬編
@@ -146,8 +154,8 @@ DEFAULTS = {
     ],
     # 副本可能出現的地方。⚠️ ⛔ 不含 `scripts/`——
     #    變更記錄與感測器原始碼會**描述**這份清單，而描述不是副本。
-    "sync_scan_globs": ["prompts/*.txt", "prompts/*.md", "governance/*.md",
-                        "policy/*.md", "profiles/*.md"],
+    "sync_scan_globs": ["第一個想法.md", "prompts/*.txt", "prompts/*.md", "governance/*.md",
+                        "profiles/*.md"],
 
     # 產出物：會被下游引用者，受自我背書檢查
     # ⚠️ 同 `attribution_globs`：`outputs/`／`reports/` 兩個死 glob 已於 v1.4.1 移除。
@@ -174,7 +182,7 @@ DEFAULTS = {
     # ⛔ **本框架沒有立場禁止那件事**——每個專案由該專案的主持人負責。
     #
     # ⚠️ **為什麼預設擋這三個而不擋治理文件：** 判準是**能不能還原**。
-    #    `governance/` `policy/` `prompts/` `scripts/` 壞了可以從 GitHub 重新下載覆蓋；
+    #    `governance/` `prompts/` `scripts/` 壞了可以從 GitHub 重新下載覆蓋；
     #    🔴 **台帳與語料壞了，沒有任何地方可以還原。**
     # ⛔ 這是資訊，不是規勸——**知道差別之後怎麼設定，是使用者的決定。**
     #
@@ -197,7 +205,7 @@ DEFAULTS = {
     # ⚠️ 這裡曾有 enable_reference_authenticity 與 enable_bat_checks 兩個鍵。
     #    ⛔ 全專案沒有任何程式讀過它們——**看起來有一個功能可以打開，其實打開了不會發生任何事。**
     #    這與本檔開頭警告的死 glob 同型（死開關），故移除。
-    #    環⑤ 的守望方式改由 policy/SOURCES.md §3、§5 定義。
+    #    環⑤ 的守望方式改由 governance/SOURCES.md §3、§5 定義。
 }
 
 
@@ -265,4 +273,17 @@ def resolve_globs(globs, root, cfg):
         if not hit:
             dead.append(g)
         files.extend(hit)
-    return sorted(set(files)), dead
+    return sorted(set(files), key=lambda p: p.as_posix()), dead
+
+
+def active_launcher_globs(globs, root, platform=None):
+    """只要求目前平台的啟動器存在，但仍掃描實際存在的外平台啟動器。"""
+    platform = platform or sys.platform
+    required = ".bat" if platform == "win32" else (".command" if platform == "darwin" else None)
+    active = []
+    for g in globs:
+        suffix = pathlib.PurePosixPath(g).suffix
+        present = any(p.is_file() for p in pathlib.Path(root).glob(g))
+        if present or (required and suffix == required):
+            active.append(g)
+    return active

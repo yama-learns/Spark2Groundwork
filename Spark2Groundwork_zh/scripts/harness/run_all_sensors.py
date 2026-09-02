@@ -33,6 +33,7 @@ SENSORS = [
     ("sensor_clause_sync.py", False),
     ("sensor_my_rules.py", False),
     ("sensor_my_index.py", False),
+    ("sensor_version_consistency.py", False),
 ]
 
 # ⚠️ **以下不列入預設套件，因為它們的介面是「一份檔案」而非「整個專案」。**

@@ -183,7 +183,15 @@ def convert(pdf: Path, out: Path):
     if errors:
         head += ("<!-- ⚠️ 後端降級紀錄（**不是無害的實作細節**：不同後端的提取物不可互換）：\n     "
                  + "\n     ".join(errors) + "\n-->\n\n")
-    out.write_text(head + body, encoding="utf-8")
+    # 🔴 **`newline="\n"` ⛔ 不是可有可無（`A-20260902-11`）。**
+    #    ⚠️ **Windows 上 `write_text` 預設會把 `\n` 翻成 `\r\n`，於是這個檔以 CRLF 落地，
+    #    而下面 `md_sha256` 記的就是 CRLF 的雜湊。**
+    #    ⛔ **而 `.gitattributes` 有 `*.md text eol=lf`：提交時倉庫內正規化成 LF。**
+    #    🔴 **⇒ 下一次乾淨簽出（clone 到第二台機器／`git checkout`／照 SETUP §9 復原）
+    #    工作區變成 LF，每一個檔的雜湊都對不上 → `CORPUS_MD_MODIFIED` 整片 FAIL，
+    #    ⛔ 而內容一個字都沒有被動過。**
+    #    ⚠️ **失效方向是假陽性——正是 `R-19` 說「會教人忽略感測器」的那一種。**
+    out.write_text(head + body, encoding="utf-8", newline="\n")
 
     # ⚠️ fingerprint 是**來源 PDF** 的雜湊，md_sha256 是**提取物本身**的雜湊。
     #    前者證明「這份 md 出自哪一份 PDF」；後者讓「這份 md 有沒有被事後改過」可機械偵測。
@@ -205,7 +213,7 @@ def main() -> int:
     args = ap.parse_args()
 
     src_dir, out_dir = ROOT / args.pdf_dir, ROOT / args.out_dir
-    pdfs = sorted(src_dir.glob("*.pdf"))
+    pdfs = sorted(src_dir.glob("*.pdf"), key=lambda p: p.as_posix())
     if not pdfs:
         print(f"[FAIL] SCAN_GLOB_MATCHES_NOTHING: {args.pdf_dir}/ 中沒有 PDF"
               "——掃不到的地方等於沒有感測器")
@@ -249,7 +257,8 @@ def main() -> int:
     by_src = {r["src"]: r for r in existing}
     by_src.update({r["src"]: r for r in manifest})
     mf.write_text(json.dumps(sorted(by_src.values(), key=lambda r: r["src"]),
-                             ensure_ascii=False, indent=2), encoding="utf-8")
+                             ensure_ascii=False, indent=2),
+                  encoding="utf-8", newline="\n")
     print(f"\n  清單：{mf.relative_to(ROOT)}（{len(by_src)} 筆）")
 
     # ── 孤兒檢查：manifest 有紀錄但 md 不在，或 md 在而 manifest 沒有 ──

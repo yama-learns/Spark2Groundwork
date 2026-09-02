@@ -59,7 +59,7 @@ filling a field is easier than splitting a claim, and deleting is easier than ei
 **Falsification:**    Which observable result would refute it. If you cannot say, write "—"
 **Falsification adjudicated:** `pending` / `adjudicated` — ⛔ only a human may set `adjudicated`
 **Why I could not fill this:** **Optional.** When Falsification is "-", say here why
-                      ⚠️ **Same wording as `prompts/TEMPLATE_decompose.txt` rule 3.**
+                      ⚠️ **Same wording as root `FIRST_IDEA.md` rule 3.**
                       ⛔ Field names are rules too, and a rule has one home
                       (`governance/WORKFLOW_CONSTITUTION.md` §3.2)
                       ⚠️ Filling it makes the sensor report

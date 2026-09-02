@@ -69,7 +69,7 @@ by where the second copy lives (see the table).
 
 | # | Family | Mechanism | Defence |
 |---|---|---|---|
-| **①** | **Index as authority** `[inherited]` | Read an index, abstract, error message, or tool report; asserted without checking the authority. **Three variants get missed most often:** (a) **treating a tool's failure as your own capability limit**; (b) **dropping the source's hedge** (`more than 75%`→`75%`; `may have no network`→`no network`); (c) 🔴 **treating "this looks like a known family" as "this is that family"** — classifying without reading the line | Verification-level tags; name what you checked before declaring absence; **`R-34`** (capability = tool list); (c) **a classification must land on a specific line number or verbatim text** |
+| **①** | **Index as authority** `[inherited]` | Read an index, abstract, error message, or tool report; asserted without checking the authority. **Three variants get missed most often:** (a) **treating a tool's failure as your own capability limit**; (b) **dropping the source's hedge** (`more than 75%`→`75%`; `may have no network`→`no network`); (c) 🔴 **treating "this looks like a known family" as "this is that family"** — classifying without reading the line; (d) 🔴 **measuring a proxy and then treating it as the fact** — **the proxy is usually correct in itself; ⛔ it is simply answering a different question**, ⚠️ so it neither errors nor looks suspicious (measured: checking whether a name exists, to answer whether the feature behind it does anything); (e) **reading a statement that is true within a scope as if it were universal** — "this tool cannot do X" being true does ⛔ not make "no tool can do X" true | Verification-level tags; name what you checked before declaring absence; **`R-34`** (capability = tool list, **⚠️ including that the scope of an authoritative statement is itself something to check**); (c) **a classification must land on a specific line number or verbatim text**; (d) **ask "am I measuring the thing itself?"**; (e) **carry the statement's scope along with the statement** |
 | **②** | **Fixed one layer, missed another** `[inherited]` `[axis 2]` | **One fact has two copies, and only one of them gets updated. ⛔ When they disagree, nothing says so.** Forms are distinguished by where the second copy lives: (a) **another document**; (b) 🔴 **a carrier that evaporates** (a conversation, screen output, memory); (c) **a number written into prose** | One home per rule (constitution §3.2); `DUPLICATE_RULE_TEXT`; `sensor_clause_sync.py`; (b) a single registry; (c) **`R-16`** |
 | **③** | **Required fields induce fabrication** `[inherited]` `[axis 1]` | The field is mandatory and the fact is unavailable, so a plausible value gets entered | **"Not reported" is a valid field value**; ⛔ do not back-derive from other numbers |
 | **④** | **Silent filtering** `[inherited]` `[axis 1]` | A whitelist or hard-coded list means some objects are never checked, with no message | Discovery-based scanning replaces whitelists (R-21) |
@@ -77,7 +77,9 @@ by where the second copy lives (see the table).
 | **⑥** | **Tools failing while "technically correct"** `[inherited]` `[axis 1]` | The predicate is right and the message is true, but the tool failed at its actual job | Ask "what is this tool's job", not "is this predicate correct" |
 | **⑦** | **Artefact self-certification** `[inherited]` `[axis 1]` | The artefact claims it has verified itself, and that claim cannot be independently checked | `sensor_self_certification.py`; R-10, R-12 |
 | **⑧** | **Text about a defect, and the defect itself, are indistinguishable to string matching** `[framework's own]` `[axis 1]` | When a document explains a defect, its wording **cannot be told apart from a specimen of that defect**. ⚠️ **Two forms pointing in opposite directions, with opposite dispositions** (see §2.2) | Form one: ⛔ **reword into description, add no exemption**; form two: ✅ **quotation detection** (a prohibition marker earlier on the same line), ⛔ **not an exemption list** |
-
+| **⑨** | **The batch edit succeeded, ⛔ and what it did was not what I wanted** `[framework's own]` | **The command ran, ⛔ there was no error, and the effect was not the intended one.** ⚠️ **Three measured cases:** (a) moving a section with the start and end reversed **duplicated the whole section**; (b) successive string replacement let **a shorter key corrupt a longer one already replaced**; (c) an unquoted heredoc let the outer shell expand the inner string. 🔴 **The one sentence worth keeping: ⛔ reading the diff does not catch this** — **a diff says "this block was added", ⛔ never "this block should not have been"** | 🔴 **After the edit, re-derive a structural invariant and compare it** (a heading list, the set of clause numbers, a file count), ⛔ not a second reading of the diff; ⚠️ **boundary with ⑥: ⑥ is "the edit failed and you saw a success message", ⛔ ⑨ is "the edit succeeded and the success was wrong"** |
+| **⑩** | **A constant tuned for one environment, copied verbatim into another** `[framework's own]` `[axis 2]` | **A constant that was just right at A is copied word for word to B, ⛔ and nobody recalibrates it.** 🔴 **Both sides are textually identical, ⇒ every "are the two editions consistent?" check reports consistent — "consistent" is precisely its disguise.** ⚠️ **Three measured cases:** a sentence-length window tuned for Chinese, applied to longer English sentences, **silently found nothing**; a graphic width tuned for Chinese character widths let the English string **run past its border**; a program assuming a UTF-8 output channel **crashed the whole harness** on a non-UTF-8 console | ⚠️ **Record, next to the constant, which set of inputs it was calibrated against**; 🔴 **when copying across languages or platforms, the paired sample must use that environment's real data, ⛔ not the other environment's data in translation** |
+| **⑪** | **Two writers share one identifier space, ⛔ and to each of them the allocation looks successful** `[framework's own]` | A allocates against the file as A read it; B is allocating at the same time. **⛔ Neither side gets an error; the collision is only visible after the merge.** 🔴 **⛔ Unlike ②, this is not one fact copied into multiple records; two distinct **new** things are claiming the same unique name.** ⚠️ **Measured, three times in one day: two maintainers each registered pending items and each wrote a work-log entry.** | 🔴 **Split the identifier space by allocator** (⇒ ⛔ no coordination needed to avoid collisions); ⚠️ **"re-read before allocating" is ⛔ not a substitute** — **measured: three allocations that day, each preceded by a re-read, and all three collided**; ⛔ **existing identifiers are never rewritten retroactively** |
 ### 2.2 Concrete cases (**recorded here because their mechanisms are worth remembering verbatim**)
 
 #### The textbook form of "index as authority"
@@ -200,6 +202,39 @@ by where the second copy lives (see the table).
 > 🔴 **And the danger is asymmetric: form one really does damage the document; form two teaches
 > people to switch the sensor off (`R-19`).**
 
+#### Illustrating an identifier rule with an example the string matcher cannot tell from a real one (family ⑧, form one)
+
+**Inside the very rule saying "⛔ one sequence number must never appear under two prefixes", an
+example identifier was written out.**
+🔴 **⇒ The example was indistinguishable from a real identifier, and the consistency check
+immediately reported it as a violation.**
+⚠️ **It happened twice in one day — the second time after the first had already been fixed by
+rewording.** **⇒ Disposition per ⑧ form one: reword into description, ⛔ add no exemption and
+⛔ give no example.**
+
+#### The sentence used to illustrate "numbers in prose drift" drifted the same day (family ②⑶)
+
+**A document used "self-tests 79→120→128→139" as its example of a drifting number. ⇒ By that
+evening the figure was 149.**
+⚠️ **⇒ A sentence illustrating drift drifted within a single day. It was deliberately left in
+place as a specimen.**
+
+#### Using one field of a tool's output to answer a different question (family ①⑷)
+
+**To answer "which files changed after a given moment", the command used printed only hours and
+minutes — ⛔ no date.**
+🔴 **⇒ A timestamp from three weeks earlier was judged "later than today", and a wrong list of
+changed files was nearly handed over.**
+**⇒ With a criterion that carries the full time, the correct answer was very different.**
+
+#### "It was blocked" read as "there is a check" (family ①⑷)
+
+**A wrong source package was refused under two different layouts, ⇒ which looked like protection.**
+⛔ **In fact neither refusal had anything to do with the thing being checked** (one was a path
+resolution failure, the other happened to hit a filename difference in a test fixture).
+🔴 **⇒ "It was blocked" and "a criterion exists" are two different things, ⚠️ and the day either
+coincidence disappears, so does the protection.**
+
 ### 2.3 Predicted families (**have not occurred in any project**)
 
 ⛔ **Predicted families use their own `P` numbering; ⛔ they do not share a sequence with
@@ -232,7 +267,7 @@ row "**occurred → family 〈new number〉**". ⛔ Do not delete the row.
 
 | Participant | Expected weakness | Gate |
 |---|---|---|
-| **AI (generator)** | Wrong where most confident; rhetorical strength ≠ evidential strength | Verification tags; spot-check the most confident claims |
+| **AI (generator)** | Wrong where most confident; rhetorical strength ≠ evidential strength; ⚠️ **treats a criterion it set for its own recommendations as an obligation on the principal** — 🔴 **⛔ a recommendation criterion and a ruling are not on the same level, and an AI easily conflates them** | Verification tags; spot-check the most confident claims; **state the cost inside the recommendation, ⛔ and after a ruling neither change the criterion nor use it to argue against the ruling** |
 | **AI (auditor)** | Treats "restating" as "independently verifying" | Three-column report; "what I did not test" must not be empty |
 | **Principal** | Single point of coordination — every adjudication passes through one person | Decision-request format; **pending queue must show rounds waited** |
 

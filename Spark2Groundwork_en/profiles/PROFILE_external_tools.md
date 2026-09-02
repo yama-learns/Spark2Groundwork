@@ -102,8 +102,8 @@ against.
 🔴 **The moment AI-written text is mixed in, that check stops meaning anything — you will match
 against a sentence the AI wrote itself, and conclude that yes, it is in there.**
 
-⚠️ **Upgrading does not touch `external/`** — **the upgrade tool recognises nine names of
-its own and refuses everything else.**
+⚠️ **Upgrading does not touch `external/`** — **the upgrade tool recognises only names on its
+replaceable-item list and refuses everything else.**
 ⛔ **It does not back it up for you either.** If there is something in there you cannot lose,
 ⛔ keep your own copy.
 

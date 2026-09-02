@@ -37,6 +37,7 @@
 
 退出碼：0 產生成功｜1 檔案有問題｜2 查不了
 """
+import argparse
 import io
 import json
 import pathlib
@@ -130,8 +131,21 @@ def render(root, cfg):
     files = collect(root, cfg)
     described = [f for f in files if notes.get(f)]
     plain = [f for f in files if not notes.get(f)]
-    # 🔴 說明指向一個不存在的檔案 —— 那是懸空引用，⛔ 必須看得見。
-    dangling = sorted(k for k in notes if k not in set(files))
+    # 🔴 **一筆說明沒有出現在掃描結果裡，有兩個原因，⛔ 而它們的資訊量差很多。**
+    #    ⚠️ **v1.4.4 之前兩者都印成「那個檔案不存在」**——
+    #    **⛔ 而照那句話去做（刪掉那筆說明）⛔ 不會出錯，⇒ 沒有人會發現它在說謊。**
+    #    **觸發個案（專案 D，2026-09-02）：`archive/` 在 `my_index_exclude` 內，
+    #    ⇒ 一個真的存在的退役檔被印成「檔案不存在」。**
+    #    🔴 **⇒ 判「不存在」之前，一定要真的去看一次磁碟。**
+    scanned = set(files)
+    dangling, excluded = [], []
+    for k in sorted(notes):
+        if k in scanned:
+            continue
+        if (root / k).exists():
+            excluded.append(k)      # ⚠️ 檔案在，⛔ 只是不在索引的掃描範圍內
+        else:
+            dangling.append(k)      # 🔴 檔案真的不見了 ⇒ 懸空引用
 
     out = [HEADER, ""]
     out.append(f"**檔案 {len(files)} 份｜有說明 {len(described)} 份｜"
@@ -167,16 +181,29 @@ def render(root, cfg):
         out.append("")
         for f in dangling:
             out.append(f"- `{f}`")
+    if excluded:
+        out.append("")
+        out.append("## ⚠️ 有說明、而不在索引掃描範圍內的")
+        out.append("")
+        out.append("**檔案確實存在，⛔ 而 `my_index_exclude` 把它排除在索引之外**——"
+                   "⇒ 說明留著沒問題，⛔ 而索引不會列出它。")
+        out.append("")
+        for f in excluded:
+            out.append(f"- `{f}`")
     out.append("")
 
     return ("\n".join(out),
             {"檔案": len(files), "有說明": len(described),
-             "尚無說明": len(plain), "說明指向不存在的檔案": dangling},
+             "尚無說明": len(plain), "說明指向不存在的檔案": dangling,
+             "有說明但被排除": excluded},
             None)
 
 
-def main():
-    root = HERE.parents[1]
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="產生這個專案的 my/MY_INDEX.md")
+    ap.add_argument("--root", default=None, help="要建立索引的專案根目錄")
+    args = ap.parse_args(argv)
+    root = pathlib.Path(args.root).resolve() if args.root else HERE.parents[1]
     cfg = load(root)
     idx = root / cfg.get("my_index", "my/MY_INDEX.md")
     text, stats, err = render(root, cfg)

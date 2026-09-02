@@ -24,6 +24,7 @@ one because the name was missing an "s".
 
 import json
 import pathlib
+import sys
 
 # ── Project root ──────────────────────────────────────────────
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -39,7 +40,7 @@ DEFAULTS = {
     # Governance documents (where rules live) — used by the duplicate and
     # section-reference checks.
     # ⚠️ These are **globs**, not a hard-coded list (R-21: whitelists filter silently)
-    "governance_globs": ["governance/*.md", "policy/*.md", "ledgers/*.md", "file_index.md"],
+    "governance_globs": ["governance/*.md", "ledgers/*.md", "file_index.md"],
 
     # 🔴 **Your own file index** (`tool_my_index.py`, `sensor_my_index.py`).
     # ⚠️ **Measured case: a project adopted the framework and stopped maintaining its own
@@ -77,6 +78,15 @@ DEFAULTS = {
 
     # Corpus: programmatically extracted full text; the comparison target for anchors.
     # ⛔ Extractions must never be hand-edited (R-14)
+    # 🔴 **Which packages the version-consistency sensor compares**
+    #    (`sensor_version_consistency.py`).
+    #    ⚠️ **This list and `upgrade.py::FRAMEWORK_DIRS` are the same set of
+    #    names, ⛔ and they are two copies.** **When they drift apart you get a
+    #    package the upgrader can replace but the sensor never compares.**
+    "version_packages": ["governance", "profiles",
+                         "prompts", "scripts", "docs"],
+    "version_file": "_VERSION",
+
     "corpus_dir": "corpus_md",
     "corpus_manifest": "corpus_md/_manifest.json",
     # Source PDFs live here; tool_pdf_to_md.py reads it from here.
@@ -167,8 +177,8 @@ DEFAULTS = {
     # Where copies may live. ⚠️ ⛔ `scripts/` is excluded --
     #    the changelog and the sensor source **describe** this list, and a description
     #    is not a copy.
-    "sync_scan_globs": ["prompts/*.txt", "prompts/*.md", "governance/*.md",
-                        "policy/*.md", "profiles/*.md"],
+    "sync_scan_globs": ["FIRST_IDEA.md", "prompts/*.txt", "prompts/*.md", "governance/*.md",
+                        "profiles/*.md"],
 
     # Artefacts: things downstream will cite; subject to the self-certification check
     # ⚠️ Same as `attribution_globs`: the two dead globs were removed in v1.4.1.
@@ -199,7 +209,7 @@ DEFAULTS = {
     #    responsibility of its principal.
     #
     # ⚠️ **Why these three and not the governance documents:** the criterion is
-    #    **restorability**. `governance/` `policy/` `prompts/` `scripts/` can be
+    #    **restorability**. `governance/` `prompts/` `scripts/` can be
     #    re-downloaded from GitHub and overwritten;
     #    🔴 **a broken ledger or corpus can be restored from nowhere.**
     # ⛔ Information, not persuasion — **what to do with it is the user's decision.**
@@ -228,7 +238,7 @@ DEFAULTS = {
     #    ⛔ Nothing in the project ever read them — **a switch that looks like it turns
     #    something on, and turns nothing on.** Same shape as the dead glob this file warns
     #    about at the top, so they are gone.
-    #    Link ⑤ is now watched per policy/SOURCES.md §3 and §5.
+    #    Link ⑤ is now watched per governance/SOURCES.md §3 and §5.
 }
 
 
@@ -301,4 +311,17 @@ def resolve_globs(globs, root, cfg):
         if not hit:
             dead.append(g)
         files.extend(hit)
-    return sorted(set(files)), dead
+    return sorted(set(files), key=lambda p: p.as_posix()), dead
+
+
+def active_launcher_globs(globs, root, platform=None):
+    """Require this platform's launchers, while scanning foreign launchers that exist."""
+    platform = platform or sys.platform
+    required = ".bat" if platform == "win32" else (".command" if platform == "darwin" else None)
+    active = []
+    for g in globs:
+        suffix = pathlib.PurePosixPath(g).suffix
+        present = any(p.is_file() for p in pathlib.Path(root).glob(g))
+        if present or (required and suffix == required):
+            active.append(g)
+    return active

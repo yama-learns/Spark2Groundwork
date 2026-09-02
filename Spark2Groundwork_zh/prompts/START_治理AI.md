@@ -25,7 +25,7 @@
 **你可以寫：**
 
 ```
-governance/     policy/     scripts/     my/
+governance/     scripts/     my/
 file_index.md   NEXT_SESSION_MEMO.md
 handoffs/       （共用，⛔ 檔名必須以 governance_ 開頭）
 ```

@@ -44,6 +44,7 @@ maintained by the research AI.**
 
 Exit codes: 0 generated | 1 file problem | 2 could not check
 """
+import argparse
 import io
 import json
 import pathlib
@@ -145,7 +146,22 @@ def render(root, cfg):
     plain = [f for f in files if not notes.get(f)]
     # 🔴 A description pointing at a file that does not exist is a dangling reference,
     #    ⛔ and it must be visible.
-    dangling = sorted(k for k in notes if k not in set(files))
+    # 🔴 **A note absent from the scan has two possible causes, ⛔ carrying very
+    #    different information.** ⚠️ **Before v1.4.4 both printed "the file does not
+    #    exist"** — ⛔ **and acting on that (deleting the note) does not fail, ⇒ nobody
+    #    ever finds out the message lied.**
+    #    **Triggering case (Project D, 2026-09-02): `archive/` sits in
+    #    `my_index_exclude`, so a retired file that really exists printed as missing.**
+    #    🔴 **⇒ Look at the disk before saying something does not exist.**
+    scanned = set(files)
+    dangling, excluded = [], []
+    for k in sorted(notes):
+        if k in scanned:
+            continue
+        if (root / k).exists():
+            excluded.append(k)      # ⚠️ the file is there, ⛔ just outside the index scan
+        else:
+            dangling.append(k)      # 🔴 the file really is gone ⇒ a dangling reference
 
     out = [HEADER, ""]
     out.append(f"**{len(files)} files | {len(described)} described | "
@@ -183,16 +199,30 @@ def render(root, cfg):
         out.append("")
         for f in dangling:
             out.append(f"- `{f}`")
+    if excluded:
+        out.append("")
+        out.append("## ⚠️ Described, and outside the index's scan")
+        out.append("")
+        out.append("**The file does exist, ⛔ and `my_index_exclude` keeps it out of the "
+                   "index** — ⇒ the description is fine to keep, ⛔ but the index will "
+                   "never list it.")
+        out.append("")
+        for f in excluded:
+            out.append(f"- `{f}`")
     out.append("")
 
     return ("\n".join(out),
             {"files": len(files), "described": len(described),
-             "not yet described": len(plain), "notes pointing at missing files": dangling},
+             "not yet described": len(plain), "notes pointing at missing files": dangling,
+             "described but excluded": excluded},
             None)
 
 
-def main():
-    root = HERE.parents[1]
+def main(argv=None):
+    ap = argparse.ArgumentParser(description="Generate this project's my/MY_INDEX.md")
+    ap.add_argument("--root", default=None, help="project root to index")
+    args = ap.parse_args(argv)
+    root = pathlib.Path(args.root).resolve() if args.root else HERE.parents[1]
     cfg = load(root)
     idx = root / cfg.get("my_index", "my/MY_INDEX.md")
     text, stats, err = render(root, cfg)

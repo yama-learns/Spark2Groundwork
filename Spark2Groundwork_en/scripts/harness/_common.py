@@ -117,6 +117,8 @@ def _glob_dir(root, g):
     if "*" not in g:
         return None
     head = g.split("*", 1)[0]
+    if not head:
+        return root
     return (root / head) if head.endswith("/") else (root / head).parent
 
 
@@ -147,6 +149,7 @@ def dead_glob_findings(dead, where, root=None):
     → **The criterion is structural: does the directory exist. ⛔ No history required.**
     """
     out = []
+    cfg = load(root) if root is not None else None
     for g in dead:
         # ⚠️ **The criterion was narrowed twice, and the self-test caught both:**
         #    (1) "the directory exists" => a freshly created, unused directory was INCOMPLETE.
@@ -158,7 +161,8 @@ def dead_glob_findings(dead, where, root=None):
         d = _glob_dir(root, g) if root is not None else None
         suffix = pathlib.Path(g).suffix
         collapsed = bool(d and d.is_dir() and suffix
-                         and any(f.is_file() for f in d.rglob("*" + suffix)))
+                         and any(f.is_file() and not excluded(f, root, cfg)
+                                 for f in d.rglob("*" + suffix)))
         if collapsed:
             out.append(("INCOMPLETE", "COVERAGE_COLLAPSE",
                         f"{where}: glob '{g}' — **the directory exists and holds zero files**"

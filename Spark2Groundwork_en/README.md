@@ -8,7 +8,7 @@
 
 | What | Where |
 |---|---|
-| **Fill in one file** | `PROJECT.md` in this folder. ⛔ Every other document is looked after by the AI |
+| **Fill in two files** | `PROJECT.md` and `FIRST_IDEA.md` in this folder. ⛔ Every other governance document is looked after by the AI |
 | **Press three buttons** | snapshot / review changes / check update (`.bat` on Windows, `.command` on Mac) |
 | **Decide** | The AI proposes; you decide whether to accept. **This part cannot be handed off** |
 
@@ -64,7 +64,8 @@ no check at all.**
 **Yours (an upgrade never replaces any of it):**
 
 ```
-PROJECT.md            ← The only file you have to write yourself
+PROJECT.md            ← Your project's identity, value and boundaries
+FIRST_IDEA.md         ← The original idea you want the AI to decompose
 my/                   ← 🔴 Everything in here is yours
   MY_RULES.md         ←   Your working rules. The framework's are copied into §1; your P-xx in §2
   MY_INCIDENTS.md     ←   What actually went wrong in this project
@@ -83,8 +84,8 @@ governance_config.json ← You decide where the AI may write
 ```
 SETUP.md              ← 🚩 Start here. Install, fill in, first run
 INITIALIZE_PROMPT.md  ← The text you paste to your AI the first time
-governance/           ← The rules the AI works under, and the two ledgers' field specs
-policy/               ← Rules by topic: sources, handovers, model identity, outside tools
+governance/           ← The rules the AI works under, the two ledgers' field specs,
+                         and rules by topic: sources, handovers, model identity, outside tools
 profiles/             ← Pick the one that matches how you work
 prompts/              ← Ready-made instructions you can paste
 scripts/harness/      ← The automatic checks
@@ -184,8 +185,8 @@ one will not look the same; **what is worth having is the shape that repeats.**
 
 ⚠️ **It is also why upgrading never overwrites your material — and the reason may be the
 opposite of what you expect:**
-🔴 **the upgrade tool recognises nine names of its own and refuses everything else.**
-**So your ledgers, your papers, your incident log, `PROJECT.md`,
+🔴 **the upgrade tool recognises only the items named on its replaceable list and refuses everything else.**
+**So your ledgers, your papers, your incident log, `PROJECT.md`, `FIRST_IDEA.md`,
 and ⛔ any folder you created yourself are all left alone** —
 **you never have to register them on a list.**
 

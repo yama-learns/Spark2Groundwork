@@ -33,7 +33,7 @@
 <text x="281.41" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/*_LEDGER_SPEC.md</text>
 <text x="281.41" y="258" text-anchor="middle" font-size="9.5" fill="#4a5b6a">ledger fields and hard rules</text>
 <rect x="416.82" y="222" width="264.199" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="548.92" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">policy/</text>
+<text x="548.92" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/ by topic</text>
 <text x="548.92" y="258" text-anchor="middle" font-size="9.5" fill="#4a5b6a">sources | identity | handoff | tools</text>
 <rect x="695.019" y="222" width="242.981" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
 <text x="816.51" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">profiles/　+　prompts/</text>
@@ -60,15 +60,15 @@
 <text x="42" y="460" font-size="13" font-weight="bold" fill="#b03a3a">yours</text>
 <text x="42" y="478" font-size="10.5" fill="#4a5b6a">append-only</text>
 <text x="42" y="494" font-size="10.5" fill="#4a5b6a">🔴 not restorable</text>
-<rect x="160" y="450" width="229.399" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="274.7" y="469" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">PROJECT.md</text>
-<text x="274.7" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">🔴 the one file you fill in yourself</text>
-<rect x="403.399" y="450" width="267.911" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="537.355" y="469" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">conjecture | claim ledger</text>
-<text x="537.355" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">idea + falsifier　|　verbatim anchor + page</text>
-<rect x="685.31" y="450" width="252.69" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="811.655" y="469" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">corpus/　corpus_md/</text>
-<text x="811.655" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">source PDFs and programmatic extractions</text>
+<rect x="160" y="450" width="233.27" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
+<text x="276.635" y="469" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">PROJECT.md　+　FIRST_IDEA.md</text>
+<text x="276.635" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">🔴 the two files you fill in yourself</text>
+<rect x="407.27" y="450" width="265.919" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
+<text x="540.23" y="469" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">conjecture | claim ledger</text>
+<text x="540.23" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">idea + falsifier　|　verbatim anchor + page</text>
+<rect x="687.189" y="450" width="250.811" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
+<text x="812.594" y="469" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">corpus/　corpus_md/</text>
+<text x="812.594" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">source PDFs and programmatic extractions</text>
 <rect x="160" y="506" width="273.433" height="46" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
 <text x="296.716" y="525" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">my/MY_RULES.md</text>
 <text x="296.716" y="542" text-anchor="middle" font-size="9.5" fill="#4a5b6a">framework rules copied into §1; your P-xx in §2</text>
@@ -94,7 +94,7 @@
 <text x="168" y="300" font-size="10" font-weight="bold" fill="#1f6b4a">on upgrade: a tool copies the framework's new rules in verbatim — ⛔ your P-xx is untouched</text>
 <rect x="28" y="664" width="924" height="132" rx="7" fill="#fffbea" stroke="#c9a227" stroke-width="1.5"/>
 <text x="44" y="686" font-size="12.5" font-weight="bold" fill="#7d6209">What this figure is actually saying</text>
-<text x="44" y="712" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">① You fill in one file.</tspan>　An AI maintains the rest — you never need to open them or understand them.</text>
+<text x="44" y="712" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">① You fill in two files.</tspan>　An AI maintains the rest — you never need to open them or understand them.</text>
 <text x="44" y="738" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">② If the top half breaks, download it again.</tspan>　That is why the governance AI may rewrite it — the reason is a restore path, not trust.</text>
 <text x="44" y="764" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">③ A file may have exactly one owner.</tspan>　Mix the framework's content with yours and an upgrade will lose one of them — so your rules live in my/, ⛔ not governance/.</text>
 <text x="44" y="790" font-size="11" fill="#4a5b6a">⛔ This framework sets no prohibition you cannot lift. A rule you cannot lift gets bypassed the moment you truly need it — and a bypass leaves no record.</text>

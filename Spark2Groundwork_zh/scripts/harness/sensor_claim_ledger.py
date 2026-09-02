@@ -52,7 +52,7 @@ def parse(text):
     return out
 
 
-def corpus_integrity(root, cfg):
+def corpus_integrity(root, cfg, stats=None):
     """提取物完整性。
 
     ⚠️ **有三種狀態，⛔ 不是兩種。**「沒有語料庫」「有語料庫但裡面還是空的」
@@ -68,13 +68,20 @@ def corpus_integrity(root, cfg):
     ⚠️ **這與先前一個缺陷同型：** 某支工具先建好輸出目錄，才去看有沒有東西要放進去。
     ⛔ **修法是結構性的，不是加豁免（`R-20`／`R-21`）：判準改為看「有沒有提取物」，
     ⛔ 而不是看「目錄在不在」。**
+
+    🔴 **`B-3`（裁決 48）：本函式逐檔重算雜湊的筆數，⛔ 必須印在統計欄。**
+    ⚠️ **實測理由（兩次，兩個不同的人）：** v1.3.0 的稽核者找不到「哪一支感測器在比對
+    `_manifest.json`」，2026-09-02 專案 D 的使用者又寫了一次「我至今找不到」。
+    **⛔ 而它一直都在這裡。** ⇒ **一個看不見的保護，與沒有那個保護，在畫面上長得一樣。**
     """
+    stats = {} if stats is None else stats
+    stats.setdefault("hash_compared", 0)
     out = []
     cdir = root / cfg["corpus_dir"]
     if not cdir.is_dir():
         return out
     mp = root / cfg["corpus_manifest"]
-    extracts = sorted(cdir.glob("*.md"))
+    extracts = sorted(cdir.glob("*.md"), key=lambda p: p.as_posix())
     if not extracts and not mp.exists():
         return [("WARN", "CORPUS_EMPTY",
                  f"{cfg['corpus_dir']}/ 裡還沒有提取物——"
@@ -89,12 +96,13 @@ def corpus_integrity(root, cfg):
     except Exception as e:                                    # noqa: BLE001
         return [("INCOMPLETE", "CORPUS_MANIFEST_UNREADABLE", f"manifest 無法解析：{e}")]
     known = {e["md"]: e.get("md_sha256") for e in man if "md" in e}
-    for f in sorted(cdir.glob("*.md")):
+    for f in sorted(cdir.glob("*.md"), key=lambda p: p.as_posix()):
         want = known.get(f.name)
         if want is None:
             out.append(("WARN", "CORPUS_FILE_UNTRACKED",
                         f"{f.name} 不在 manifest 中——新增文獻後請重跑提取工具"))
             continue
+        stats["hash_compared"] += 1
         if hashlib.sha256(f.read_bytes()).hexdigest() != want:
             out.append(("FAIL", "CORPUS_MD_MODIFIED",
                         f"{f.name} 內容已與 manifest 不符——"
@@ -107,12 +115,14 @@ def corpus_integrity(root, cfg):
 
 def main():
     root, cfg, as_json, name = cli("claim_ledger")
-    findings = corpus_integrity(root, cfg)
+    cstats = {}
+    findings = corpus_integrity(root, cfg, cstats)
     led = root / cfg["claim_ledger"]
     if not led.exists():
         findings.append(("INCOMPLETE", "CLAIM_LEDGER_MISSING",
                          f"找不到 {cfg['claim_ledger']}——**本項未檢查，這不等於通過**"))
-        return emit("主張台帳感測器", findings, {}, as_json, name)
+        return emit("主張台帳感測器", findings,
+                    {"逐檔比對雜湊": f"{cstats['hash_compared']} 份"}, as_json, name)
 
     entries = parse(led.read_text(encoding="utf-8"))
     cdir = root / cfg["corpus_dir"]
@@ -142,6 +152,7 @@ def main():
 
     code = emit("主張台帳感測器", findings,
                 {"主張筆數": len(entries), "提取檔": len(corpus),
+                 "逐檔比對雜湊": f"{cstats['hash_compared']} 份",
                  "錨點查證": f"{matched}/{checked} 命中"}, as_json, name)
     if not as_json:
         print("      ⚠️ 本感測器只驗錨點存在，不驗原文是否支持該主張（環⑥⑦）")

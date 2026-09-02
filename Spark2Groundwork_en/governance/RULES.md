@@ -51,6 +51,14 @@ number of bottom lines to the `R-xx` series from then on.
 　　③ Filesystem `unlink` was denied → declared "my tools cannot delete files" → **written into
 　　　 three deliverables**, while a second, permission-gated channel went unenumerated.
 　　　 The user caught it a third time.
+　　⚠️ **The scope of an authoritative statement is itself something to check (`B-4`, 2026-09-01):**
+　　"this tool cannot do X" is true; it does ⛔ not follow that "no tool can do X".
+　　🔴 **Triggering case ④: an auditor's system prompt stated plainly that `device_bash`
+　　　 cannot delete files, and that sentence was true; he therefore did not check further,
+　　　 and read a bounded statement as a universal one about his own capability.**
+　　⛔ **The first three are "did not check the tool list"; the fourth is "checked one
+　　　 authoritative statement, and it covered only one channel"** —
+　　　 ⚠️ **two different actions, so they are written down separately.**
 　　⛔ **None of the three was a wrong check. All three were a missing check.**
 　　All three were caught by a human — see `governance/Incident_Log.md` §3.
 
@@ -63,7 +71,7 @@ number of bottom lines to the `R-xx` series from then on.
 　　　 inferences…): "none" is allowed, **but state which directions you looked in and found
 　　　 nothing.**
 　　⛔ **This clause is the single home of all of the above.** `governance/Audit_Protocol.md`
-　　§2 and §5, and `policy/HANDOFF.md` §3.1 and §3.2, each **cite** it; ⛔ none restates it
+　　§2 and §5, and `governance/HANDOFF.md` §3.1 and §3.2, each **cite** it; ⛔ none restates it
 　　(constitution §3.2).
 　　⚠️ **Why it is a rule rather than prose in four places:** the same principle was written out
 　　**verbatim** in several documents, each with a different preceding sentence and a complete
@@ -161,6 +169,7 @@ number of bottom lines to the `R-xx` series from then on.
 | — | **File created** | Distilled from two predecessor projects' rule sets. **Every clause corresponds to at least one measured case.** |
 | 2026-08-20 | **R-35 added** | Decision 22. Triggering case: the sentence "'None' is not full coverage; it is not having taken stock" appeared verbatim in `Audit_Protocol.md` and `HANDOFF.md`, each with a complete context of its own. ⚠️ **Judged to be one higher-order principle instanced in several settings, so it was raised to a rule and all four sites now cite it** — ⛔ not reworded to dodge the sensor |
 | 2026-08-19 | **R-34 added** | Three triggering cases: `rm` failure read as no delete permission; a sensor's "may have no network" read as a sandbox with no network; denied `unlink` read as no ability to delete. ⚠️ **The countermeasure existed in a predecessor project and was lost when the framework was distilled** |
+| 2026-09-01 | **`R-34` gains scope-of-authority** | ⛔ Not a new rule. Project D's auditor supplied a form the existing wording cannot block, and it was his own: his system prompt said `device_bash` cannot delete files — true — and he read it as a universal statement. 🔴 **The existing `R-34` blocks "did not check the tool list"; ⛔ it does not block "checked one authoritative statement that covered only one channel"** |
 | 2026-08-19 | **R-33 added** | Triggering case: the framework's own `ai_checkpoint.sh` reported a false success in a mount that denies unlink. Logged in `governance/Incident_Log.md` §2.2, "technically correct" failures, form three |
 
 | 2026-08-26 | **`R-01`–`R-04` restored as four rows** | ⛔ Not a new rule. Rewriting T0 collapsed the four rows into the range `R-01`–`R-04`, and **`R-02` / `R-03` then matched nothing anywhere in the repository** — while this file's header says rows are never deleted. 🔴 **A range cannot carry the mapping: `R-03` → §3 item 5, `R-04` → item 6, not contiguous.** Now four pointer rows, with items 3 and 4 recorded as carrying no `R-xx` |

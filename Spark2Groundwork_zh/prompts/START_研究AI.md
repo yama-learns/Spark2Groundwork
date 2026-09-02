@@ -35,7 +35,7 @@ handoffs/       （共用，⛔ 檔名必須以 research_ 開頭）
 
 ```
 ledgers/                              ← 兩本台帳。⛔ 任何 AI 都不得寫入
-governance/  policy/  profiles/  prompts/  scripts/   ← 那是治理角色的範圍
+governance/  profiles/  prompts/  scripts/   ← 那是治理角色的範圍
 PROJECT.md                            ← 使用者的專案設定
 corpus/                               ← 原文 PDF，只有使用者放
 ```

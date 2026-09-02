@@ -77,6 +77,26 @@ def parse(text):
     return items
 
 
+
+def is_override(body_text, marker):
+    """回傳 `(有沒有標記, 理由夠不夠長)`。🔴 **覆寫判準的唯一定義處。**
+
+    ⚠️ **標記必須自成一行（`i > 0`），⛔ 不得寫在條文那一行。**
+    🔴 **實測（本感測器的成對樣本）：** 允許寫在同一行時，
+    「`**R-19** [本專案覆寫] <原本的條文>`」會通過——**因為標記後面確實有字，
+    而那些字是條文本身，不是理由。⛔ 判準因此形同虛設。**
+
+    ⛔ **`tool_sync_my_rules.py` 讀的是同一個函式**——
+    ⚠️ **兩份判準只要有一處不同，就會出現「感測器說是覆寫、工具卻把它列成待處理」。**
+    ⚠️ **（v1.4.3 開發途中那支工具有過一個會自動覆寫的 `--adopt` [已退回]，
+    ⛔ 已於 v1.4.4 整條退回；⇒ 現在兩邊都不寫檔，⛔ 而共用判準的理由不變。）**
+    """
+    body = body_text.split("\n")
+    line = next((l for i, l in enumerate(body) if marker in l and i > 0), None)
+    if line is None:
+        return False, False
+    return True, len(line.split(marker, 1)[1].strip()) >= 6
+
 def main():
     root, cfg, as_json, name = cli("my_rules")
     findings, stats = [], {}
@@ -116,14 +136,13 @@ def main():
         #    🔴 **實測（本感測器的成對樣本）：** 允許寫在同一行時，
         #    「`**R-19** [本專案覆寫] <原本的條文>`」會通過——**因為標記後面確實有字，
         #    而那些字是條文本身，不是理由。⛔ 判準因此形同虛設。**
-        body = my[rid].split("\n")
-        line = next((l for i, l in enumerate(body) if marker in l and i > 0), None)
-        if line is None:
+        marked, has_reason = is_override(my[rid], marker)
+        if not marked:
             findings.append(("FAIL", "RULE_TEXT_DRIFT",
                              f"{rid} 兩邊正文不同，且未標 {marker}——"
                              "**框架的版本才是定義處。⛔ 要改請新增一條 `P-xx` 收緊它**"))
             continue
-        if len(line.split(marker, 1)[1].strip()) < 6:
+        if not has_reason:
             findings.append(("FAIL", "OVERRIDE_WITHOUT_REASON",
                              f"{rid} 標了 {marker}，⛔ 而同一行沒有寫理由——"
                              "**豁免是可以的，⛔ 但豁免要看得見**"))
