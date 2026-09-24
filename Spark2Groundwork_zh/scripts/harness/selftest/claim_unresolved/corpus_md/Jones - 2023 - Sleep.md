@@ -1,0 +1,1 @@
+Sleep deprivation reduced recall accuracy by 37 percent.

@@ -1,0 +1,131 @@
+name: CI-0
+
+"on":
+  pull_request:
+    branches: [main, "work/**"]
+  push:
+    branches: [main, "work/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Codebase & Launcher Hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # commit 4237552 (Improve Advanced Usage examples)
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install pytest==8.4.2 PyYAML==6.0.3
+
+      - name: Run repository hygiene check
+        run: |
+          python -B scripts/check_repo_hygiene.py --check-line-endings --check-launchers --check-syntax --check-ast --check-cleanliness
+
+      - name: Run workflow self-tests
+        run: |
+          python -B -m pytest -p no:cacheprovider tests/test_ci_workflow.py -v
+
+  selftest-matrix-lean:
+    name: Selftest Lean Matrix (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    if: github.event_name == 'pull_request'
+    needs: hygiene
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: '3.9'
+          - os: windows-latest
+            python-version: '3.12'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # commit 4237552 (Improve Advanced Usage examples)
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run disposable git project selftests and sensors
+        run: |
+          python -B scripts/check_repo_hygiene.py --check-disposable
+
+      - name: Verify clean worktree after tests
+        shell: bash
+        run: |
+          python -B -c "
+          from pathlib import Path
+          import sys
+          forbidden = ['__pycache__', '.pytest_cache', 'harness_status.json']
+          errors = [str(p) for p in Path('.').rglob('*') if p.name in forbidden or p.name.endswith('.pyc')]
+          if errors:
+              print('Forbidden artifacts found after tests:', errors, file=sys.stderr)
+              sys.exit(1)
+          print('Clean: Zero bytecode or cache artifacts in worktree.')
+          "
+
+  selftest-matrix-full:
+    name: Selftest Full Matrix (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    if: github.event_name != 'pull_request'
+    needs: hygiene
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.9', '3.12']
+        include:
+          - os: macos-latest
+            python-version: '3.9'
+          - os: macos-latest
+            python-version: '3.12'
+          - os: macos-15-intel
+            python-version: '3.9'
+          - os: macos-15-intel
+            python-version: '3.12'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # commit 4237552 (Improve Advanced Usage examples)
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run disposable git project selftests and sensors
+        run: |
+          python -B scripts/check_repo_hygiene.py --check-disposable
+
+      - name: Verify clean worktree after tests
+        shell: bash
+        run: |
+          python -B -c "
+          from pathlib import Path
+          import sys
+          forbidden = ['__pycache__', '.pytest_cache', 'harness_status.json']
+          errors = [str(p) for p in Path('.').rglob('*') if p.name in forbidden or p.name.endswith('.pyc')]
+          if errors:
+              print('Forbidden artifacts found after tests:', errors, file=sys.stderr)
+              sys.exit(1)
+          print('Clean: Zero bytecode or cache artifacts in worktree.')
+          "

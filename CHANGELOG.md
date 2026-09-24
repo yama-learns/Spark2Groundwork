@@ -17,6 +17,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ｜ Versioning:
 
 ---
 
+## [1.4.5] — Unreleased / 尚未發布
+
+Mac/Windows entry and compatibility fixes; separate save and human-reviewed snapshot actions; actionable dependency/update failure guidance; shared interpreter-error classification avoids treating quoted exception names as crashes. Bilingual release summaries and v2 backup/inventory guidance are included. v2 features and migration are not delivered in this version. Final platform acceptance and release approval remain pending.
+
+改善 Mac／Windows 入口與相容性、區分保存及人工已閱快照、補齊依賴與更新失敗出口；錯誤分級共用同一實作，不把普通文字內的例外名稱當成崩潰。提供雙語更新摘要與 v2 備份／盤點指引；尚未提供 v2 功能或遷移器，待最終平台驗收及發布批准。
+
 ## [1.4.4] — 2026-09-03
 
 > 🔴 **`v1.4.3` 從未發布。** 它在發布前的覆核中被發現有五項缺陷，其中三項是紅級；

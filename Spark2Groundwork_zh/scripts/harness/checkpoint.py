@@ -30,9 +30,11 @@
 這是刻意的：兩版的行為差異變成可以用 `diff` 一眼看出來的東西。
 """
 import argparse
+import os
 import datetime
 import pathlib
 import subprocess
+import tempfile
 import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
@@ -122,7 +124,8 @@ def utcstamp(fmt):
 def run(args, cwd, log):
     """跑一個 git 指令，回傳 (returncode, stdout+stderr)。⛔ 一律記進日誌。"""
     p = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True,
-                       encoding="utf-8", errors="replace")
+                       encoding="utf-8", errors="replace",
+                       env=dict(os.environ, LC_ALL="C", LANG="C"))
     out = (p.stdout or "") + (p.stderr or "")
     with log.open("a", encoding="utf-8") as f:
         f.write(f"[{utcstamp('%Y-%m-%dT%H:%M:%SZ')}] $ {' '.join(args)}\n")
@@ -161,6 +164,62 @@ def sweep_locks(root, log):
     with log.open("a", encoding="utf-8") as f:
         f.write(f"[{utcstamp('%Y-%m-%dT%H:%M:%SZ')}] lock sweep: stuck={stuck}\n")
     return stuck
+
+
+
+# Conservative budget for Windows UTF-16 command lines AND POSIX argv bytes.
+# Reserve headroom for executable resolution; do not infer capacity from file count.
+_ARGV_BUDGET = 16000
+
+
+def _argv_size(args):
+    windows = len(subprocess.list2cmdline(args).encode("utf-16-le")) // 2 + 1
+    posix = sum(len(arg.encode("utf-8")) + 1 for arg in args)
+    return max(windows, posix) + 4096
+
+
+def _path_batches(prefix, paths):
+    batch = []
+    for path in paths:
+        if _argv_size(prefix + [path]) > _ARGV_BUDGET:
+            raise OSError("A single path exceeds the safe Git command budget")
+        if batch and _argv_size(prefix + batch + [path]) > _ARGV_BUDGET:
+            yield batch
+            batch = []
+        batch.append(path)
+    if batch:
+        yield batch
+
+
+def _unsupported_pathspec_file(rc, output):
+    # Git's option parser uses 129. A usage banner alone is not a capability test.
+    # C locale is pinned by run(); match the option immediately after the diagnostic.
+    import re
+    return rc == 129 and re.search(
+        r"(?m)^error: (?:unknown|unrecognized) option [`'\"](?:--)?pathspec-from-file(?:=|[`'\"])",
+        output or "") is not None
+
+
+def _refresh_tracked(G, ordinary, root, log):
+    try:
+        with tempfile.TemporaryDirectory(prefix="s2g_stage_") as scratch:
+            paths = pathlib.Path(scratch) / "paths"
+            paths.write_bytes(("\0".join(ordinary) + "\0").encode("utf-8"))
+            rc, out = run(G + ["--literal-pathspecs", "add", "--renormalize",
+                              f"--pathspec-from-file={paths}", "--pathspec-file-nul"], root, log)
+        if not _unsupported_pathspec_file(rc, out):
+            return rc
+        prefix = G + ["--literal-pathspecs", "add", "--renormalize", "--"]
+        for batch in _path_batches(prefix, ordinary):
+            rc, out = run(prefix + batch, root, log)
+            if rc != 0:
+                return rc
+        return 0
+    except OSError as exc:
+        # Includes process creation / pathspec file failures: never proceed to commit.
+        with log.open("a", encoding="utf-8") as f:
+            f.write(f"tracked refresh failed: {exc}\n")
+        return 2
 
 
 def main(MSG):
@@ -273,6 +332,16 @@ def main(MSG):
     # ── 🔴 R-33 的位置：add 失敗 ⛔ 不得往下走到「無變更」分支 ────────
     rc, out = run(G + ["add", "-A"], root, log)
     if rc != 0:
+        print(MSG["add_failed"].format(log=log.name)); return 2
+
+    # copy2 / coarse filesystems can preserve size and mtime while bytes change.
+    # Re-read ordinary tracked content, but respect explicit assume-unchanged /
+    # skip-worktree flags. upgrade.py must still reject unprotected hidden edits.
+    rc, tracked = run(G + ["ls-files", "-v", "-z"], root, log)
+    if rc != 0:
+        print(MSG["add_failed"].format(log=log.name)); return 2
+    ordinary = [row[2:] for row in tracked.split("\0") if row.startswith("H ")]
+    if ordinary and _refresh_tracked(G, ordinary, root, log) != 0:
         print(MSG["add_failed"].format(log=log.name)); return 2
 
     rc, _ = run(["git", "diff", "--cached", "--quiet"], root, log)

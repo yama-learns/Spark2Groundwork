@@ -1819,3 +1819,76 @@ bootstrap 後 restore 與反向收據、找不到相符 peer 時不執行舊程�
   ⚠️ **⛔ 未解決的另一半：「本專案對某條框架條文的裁決」⛔ 沒有不被升級覆蓋的存放處 ⇒ v1.5.0。**
 
 ---
+
+## V145-D | 2026-09-20 | Interpreter diagnostics
+
+Ordinary stderr quoting `SyntaxError:` was classified as a crash. Runner and buttons now import the same `process_diagnostics.is_python_crash`; parse errors need a file diagnostic plus an exception line, and runtime failures need a traceback header. Existing `crash_case` adds negative quoted-token controls, exit-zero control and callable identity coupling. This is diagnostic classification, not a proof that arbitrary tools completed correctly.
+
+---
+
+## V145-E2 ｜ 2026-09-23 ｜ 範圍檢查不因提交或改名而失去紀錄
+
+- **觸發個案**：變更一旦被 `git commit` 或 `git commit + git revert`，既有感測器只看工作目錄即漏判越界寫入；且 `git mv` 或重新命名跨越邊界時，舊端或新端若被漏算會導致越界逃逸或合法搬移誤報；若工作區缺少 `reviewed` 標籤基準時會 fallback 至 HEAD 或默默綠燈。
+- **修復內容**：
+  1. `git_changed(root)` 嚴格錨定 `reviewed` 標籤基準（`git rev-parse --verify reviewed^{commit}` 與 `git merge-base --is-ancestor reviewed HEAD`）；若缺失或非 HEAD 祖先，fail-closed 回傳 `SCOPE_UNCHECKABLE`（exit 2），絕不宣稱通過或 fallback。
+  2. 歷史觸及集採用 `git rev-list reviewed..HEAD` 搭配 `git diff-tree --stdin -r -z -m -M -C --no-commit-id --name-status` 抓取所有 commit 觸及路徑（非淨差異，保留 revert/merge 痕跡）。
+  3. 工作區觸及集採用 `git status --porcelain -z -uall`。
+  4. 解析 Git `-z` 原始位元組串流，對 rename/copy（`R*`/`C*`）完整擷取來源端與目的端兩路徑。
+  5. 支援專案位處 repo 子目錄情境，依 prefix 正確過濾並隔離鄰近專案，對移入子樹之跨邊界移動納入目的端。
+  6. 執行全程保持唯讀，不變動 HEAD、reviewed 或任何使用者檔案。
+- **成對樣本與測例**：雙語 harness 自測新增 11 項範圍檢查矩陣測例（覆蓋全部 8 大測試族群），自測總數由 168 項擴展至 179 項全數通過。
+
+---
+
+## V145-E2b ｜ 2026-09-23 ｜ Git 可見性缺口（隱藏旗標與被忽略檔案檢查）
+
+- **觸發個案**：已追蹤檔案設 `assume-unchanged` 或 `skip-worktree` 旗標後變更，或者 `.gitignore` 忽略 deny 禁區或宣告範圍外的檔案，既有 scope 感測器仍 PASS。此類可見性缺口導致工作樹改動被遮蔽，審核無法驗證檔案真實狀態。
+- **修復內容**：
+  1. 新增 `git_hidden_flags(root)`：以 `git ls-files -v -z -- .` 檢查專案子樹內的已追蹤檔案是否帶有 `assume-unchanged`（`h`）或 `skip-worktree`（`S`/`s`）旗標。若有任一旗標存在，無論內容是否變更，皆 fail-closed 回報 `TRACKED_HIDDEN_FLAGS_PRESENT`（exit 2 `INCOMPLETE`），絕不判定通過。移除旗標後自動恢復正常檢查。
+  2. 新增 `git_ignored(root)`：以 `git ls-files --others --ignored --exclude-standard -z -- .` 讀取專案子樹內被 `.gitignore` 忽略之未追蹤檔案。
+  3. 配置衝突檢查：若 `deny` 禁區路徑與 `excluded_dirs` 排除清單重疊，或忽略檔案同時受 deny 與排除規則管轄，明確回報 `CONFIGURATION_CONFLICT`（exit 2 `INCOMPLETE`），禁止排除規則吞掉 deny 禁區。
+  4. 忽略檔案分類判定：
+     - 落在 `deny` 禁區內者回報 `IGNORED_DENIED_PATH_PRESENT`（exit 2 `INCOMPLETE`）。
+     - 多角色模式下落在宣告範圍外者回報 `IGNORED_OUT_OF_SCOPE_PRESENT`（exit 2 `INCOMPLETE`）。
+     - 框架快取與排除目錄（如 `.cache`, `scratch`）安靜放行。
+     - 單人模式（`write_scopes` 為空）下普通研究附件（非 deny）安靜放行。
+  5. 專案子樹隔離：使用 `-- .` 確保專案外的旗標與 `.gitignore` 不污染本專案。
+  6. 全程唯讀檢查：絕不自動清除旗標、不變動 index、不 stage、不移動 reviewed 標籤、不改動任何檔案 bytes。
+- **成對樣本與測例**：雙語 harness 自測新增 7 項可見性缺口驗收測例（測例 12 至 18），自測總數由 179 項擴展至 186 項全數通過。
+
+---
+
+## V145-E3a ｜ 2026-09-24 ｜ 中文猜想台帳感測器跨樹目標設定修復
+
+- **觸發個案**：中文版 `sensor_conjecture_ledger.py` 於模組層執行 `CFG = _load_cfg()` 與 `LEDGER_NAME = CFG["conjecture_ledger"]`，且輔助函式 `_excluded()` 固定捕捉模組全域 `CFG`。當感測器透過 `--root` 跨樹檢查外部專案時，`main()` 忽略 `cli("conjecture_ledger")` 所解析之目標專案配置 `cfg`，導致跨樹情境下自訂猜想台帳路徑、自訂提案標記與自訂排除目錄完全無效，誤讀感測器所在樹之配置並報錯（如找不到預設台帳路徑）。英文版已在 `main()` 透過 `cli()` 解析目標 `cfg`，無此缺陷。
+- **修復內容**：
+  1. 移除模組層 `CFG`、`LEDGER_NAME` 及多餘的 `_excluded()` 包裝函式。
+  2. `main()` 接收 `root, cfg, as_json, name = cli("conjecture_ledger")`，猜想台帳相對路徑改為讀取 `ledger_rel = cfg["conjecture_ledger"]`，並以 `root / ledger_rel` 定位真實檔案。
+  3. 掃描目標檔案過濾改由 `framework_config.excluded(p, root, cfg)` 依目標配置判定排除目錄。
+  4. 提案檔豁免標記改由 `cfg.get("proposal_markers", [])` 依目標配置動態取得。
+  5. 統一使用 `_common.emit(..., name=name)` 輸出，保持單一定義處原則。英文版行為保持不變。
+- **成對樣本與測例**：於 `tests/test_ci_workflow.py` 新增雙語相鄰參數化測試 `test_e3a_conjecture_cross_tree_target_config`，完整覆蓋自訂台帳路徑、自訂提案標記、自訂排除目錄及其各項負向對照。正常案例 exit 0／PASS；缺自訂台帳時中文沿既有語意 exit 1／FAIL，英文沿既有語意 exit 2／INCOMPLETE；未標記及未排除的虛構引用兩語皆 exit 1／FAIL。雙語 harness 自測維持 186 項全數通過。
+
+---
+
+## V145-E3b ｜ 2026-09-24 ｜ 文件層矛盾修復（Solo、啟動提示、初始化與收尾流程）
+
+- **觸發個案**：文件層存在多處矛盾（D-1 至 D-6）：
+  1. `PROFILE_solo.md` 與 `Audit_Protocol.md` 原先指示單人專案可整份刪除 `Audit_Protocol.md`。實測顯示，刪除該檔會直接導致 `sensor_clause_sync.py` 回報 `SYNC_HOME_MISSING`（exit 2 `INCOMPLETE`，因其為同步基準 home）；其他感測器與自證規範亦間接相依其術語與條款定義，刪除會破壞治理規範一致性。
+  2. START 提示詞原先要求將自訂規則寫入 `governance/RULES.md`，但在升級時會被覆蓋，與 `my/MY_RULES.md` 的專案自訂規則定位矛盾。
+  3. START 提示詞與 `INITIALIZE_PROMPT.md` 將台帳寫入權限寫成硬禁止，與憲章 §6.1 / §6.3（台帳預設由人維護，權限受 `governance_config.json` 之 `deny` 管轄，使用者可明確授權）矛盾。
+  4. `INITIALIZE_PROMPT.md` 開工必讀清單未列入專案自訂規則 `my/MY_RULES.md`，且缺少憲章 §4.2 規定的收工儀式。
+  5. `NEXT_SESSION_MEMO.md` §5 僅列出終端指令，未照顧正常使用者點擊啟動器或 AI 自動執行的需求。
+- **修復內容**：
+  1. `PROFILE_solo.md`（雙語）：將 `Audit_Protocol.md` 移入必留清單，說明 solo 模式雖不跑雙模型對抗，但保留該檔供檢查器使用，⛔ 勿整份刪除。§2 標題改為「沒有第二個模型，你少了什麼」。
+  2. `Audit_Protocol.md`（雙語）：第 4 行更新為說明單一 AI 專案不執行對抗審計，但自動化檢查器仍依本檔定義條款與自證規範，⛔ 請保留勿刪。
+  3. `START_治理AI.md` / `START_governance_AI.md`：自訂規則提案指向 `my/MY_RULES.md`，取得裁決後方可寫入。
+  4. START 提示詞（雙語）：將排除清單標題統一改為預設禁區（`**⛔ 預設不可以寫入：**` / `**⛔ Closed to you by default:**`）；三角色之台帳寫入權限統整對齊憲章 §6.1 / §6.3 與 `governance_config.json` 之 `deny` 清單，明確說明使用者明示授權與解除 deny 條件，且審計者職司獨立查核不得自行豁免。§7 實測個案用語更正為歷史個案。
+  5. `INITIALIZE_PROMPT.md`（雙語）：必讀清單補入 `my/MY_RULES.md`；台帳權限對齊 `deny`；增補第四步收工儀式，依憲章 §4.2 嚴格對齊順序（檢查 → 覆寫備忘 → 產出交接封包 → 決策請求）。
+  6. `NEXT_SESSION_MEMO.md`（雙語）：第 5 節區分 AI / 自動化環境直接執行與使用者雙擊根目錄按鈕，正常流程不需手動貼命令。
+- **成對樣本與測例**：感測器程式碼未變更；保留 E3a r2 `tests/test_ci_workflow.py` 驗收測例，雙語 selftest 維持 186 項全數通過，7/7 儲存庫衛生檢查全數通過。
+
+### E3b r3：Solo 刪除路徑的實際入口覆核
+
+- 依 r2 Solo 指南刪除其他三份 profile 後，雙語 `run_all_sensors.py` 均以 exit 1 結束；`sensor_reference_integrity.py` 指出治理文件及檢查程式的懸空引用。逐一刪除時，外部工具及多代理 profile 也各自觸發該感測器失敗。聊天模式 profile 雖未觸發該感測器，`SETUP.md` 仍引用它。
+- r3 修訂雙語 Solo 指南，要求保留全部隨附 profile 並補列 `檢查專案.bat`／`.command` 啟動器。感測器程式碼未改動。

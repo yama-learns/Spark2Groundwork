@@ -32,16 +32,15 @@ file_index.md   NEXT_SESSION_MEMO.md
 handoffs/       (shared — ⛔ your filenames must start with governance_)
 ```
 
-**⛔ You may not write to:**
+**⛔ Closed to you by default:**
 
 ```
-ledgers/            ← the two ledgers. ⛔ No AI writes to them
+ledgers/            ← the two ledgers; protected by deny in governance_config.json (Constitution §6.1/§6.3)
 PROJECT.md          ← the user's project settings
 corpus/  corpus_md/ ← the sources and their extracted text
 ```
 
-⚠️ **Why the ledgers are closed even to you:** a ledger records **what the user has confirmed**.
-**⛔ If you write straight into it, that column stops meaning that anyone confirmed anything.**
+⚠️ **Ledger permissions:** Ledgers record what the user has confirmed and are maintained by humans by default (protected by `deny` in `governance_config.json`). Unless explicitly authorized by the user and removed from the `deny` list, ⛔ you may not write to the ledgers (Constitution §6.1 / §6.3). Only when the user explicitly authorizes it and lifts the deny may you write within the authorized scope.
 
 ---
 
@@ -131,7 +130,7 @@ read `my/MY_INCIDENTS.md`, name the mechanisms that recur, and for each one answ
 
 ### 5.3 You may propose a new rule; ⛔ you may not enact one
 
-⛔ **Get the user's decision before writing anything into `governance/RULES.md`.**
+⛔ **Propose project-custom rules for `my/MY_RULES.md` (not `governance/RULES.md`, which is overwritten on framework upgrades), and you must obtain the user's adjudication before writing.**
 **That rule will bind the user and you alike.**
 
 ⚠️ **Only something that turns into a concrete action is worth making a rule.**
@@ -167,11 +166,8 @@ format:
 
 ⛔ **Never proceed silently.** All three workable cases require you to say so.
 
-⚠️ **Measured case:** an agent under test was told to write conjectures into the ledger, while
-four documents said no AI may write to the ledger. **It derived its own handling from the
-exemption clause and carried it out.**
-🔴 **An agent reasoning its own way to "I may make an exception" is exactly what this framework
-worries about most.**
+⚠️ **Historical case:** In past tests prior to explicit user-authorization mechanisms, a tested agent was instructed to "write conjectures into the ledger" while all files stated that no AI may write to the ledger. **Without authorization, it derived an "exception" from procedural exemption clauses and carried it out.**
+🔴 **An agent reasoning its own way to "I may make an exception" is exactly what this framework worries about most.**
 
 ---
 

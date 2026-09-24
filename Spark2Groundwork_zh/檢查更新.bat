@@ -1,53 +1,35 @@
 @echo off
-rem ===========================================================
-rem  Framework upgrade: check / diff / apply
-rem
-rem  This file is a BUTTON, not the program. All the logic lives
-rem  in scripts\harness\upgrade.py so that Windows and macOS run
-rem  exactly the same code. Do not copy logic back into here:
-rem  two copies of one thing is how this framework's own
-rem  "fixed one layer, missed another" incidents happened.
-rem ===========================================================
-setlocal
-rem UTF-8 console. The scripts already force UTF-8 output so they cannot
-rem crash without this, but the console would render mojibake.
+setlocal DisableDelayedExpansion
 chcp 65001 >nul
-cd /d "%~dp0"
-
-set PY=
-where python >nul 2>nul && set PY=python
-if "%PY%"=="" (where py >nul 2>nul && set PY=py -3)
-if "%PY%"=="" (where python3 >nul 2>nul && set PY=python3)
-if "%PY%"=="" goto :no_python
-
-if not "%~1"=="" goto :run_args
-%PY% "scripts\harness\upgrade.py" check
+cd /d "%~dp0" || exit /b 2
+if not "%~2"=="" exit /b 2
+if not "%~1"=="" if /i not "%~1"=="--no-pause" exit /b 2
+set "PY="
+rem Prefer installed runtimes, not Store aliases or auto-install launchers.
+for /d %%D in ("%LOCALAPPDATA%\Python\pythoncore-*") do call :probe "%%~D\python.exe"
+for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python*") do call :probe "%%~D\python.exe"
+for /d %%D in ("%ProgramFiles%\Python*") do call :probe "%%~D\python.exe"
+for /f "delims=" %%P in ('where python.exe 2^>nul') do call :probe "%%P"
+for /f "delims=" %%P in ('where python3.exe 2^>nul') do call :probe "%%P"
+if not defined PY goto :missing
+"%PY%" -I -B "%~dp0scripts\harness\check_environment.py" --lang zh --action update
 set "RC=%ERRORLEVEL%"
-if not exist "_upgrade\" goto :done
-echo.
-%PY% "scripts\harness\upgrade.py" diff
-if not "%ERRORLEVEL%"=="0" set "RC=%ERRORLEVEL%"
 goto :done
-
-:run_args
-%PY% "scripts\harness\upgrade.py" %*
-set "RC=%ERRORLEVEL%"
-
+:missing
+echo [INCOMPLETE] Python 3.9+ was not found. Opening the local setup guide.
+start "" "%~dp0docs\START_HERE.html"
+set "RC=2"
 :done
 echo.
-echo ===========================================================
-pause
+echo RESULT CODE: %RC%  ^(0=PASS, 1=FAIL, 2=INCOMPLETE^)
+if /i not "%~1"=="--no-pause" pause
 exit /b %RC%
-
-:no_python
-echo.
-echo [FAIL] Python was not found on this computer.
-echo.
-echo   This framework needs Python 3.9 or newer.
-echo   Download: https://www.python.org/downloads/
-echo   IMPORTANT: tick "Add Python to PATH" during installation.
-echo.
-echo   Nothing was changed.
-echo.
-pause
-exit /b 1
+:probe
+if defined PY exit /b 0
+if not exist "%~1" exit /b 0
+set "CANDIDATE=%~1"
+rem Skip Microsoft Store alias stubs: no browser or installer side effect.
+if not "%CANDIDATE:WindowsApps=%"=="%CANDIDATE%" exit /b 0
+"%~1" -I -B -c "import sys;sys.exit(0 if sys.version_info >= (3,9) else 2)" >nul 2>nul
+if not errorlevel 1 set "PY=%~1"
+exit /b 0

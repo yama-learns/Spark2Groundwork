@@ -79,6 +79,10 @@ HEADER = """# My file index (**what in this project is yours**)
 """
 
 
+# macOS Finder writes `.DS_Store` into any folder it opens; upgrade.py already treats it as transient.
+OS_METADATA_NAMES = frozenset({".DS_Store"})
+
+
 def framework_owned(rel):
     """Is this relative path something the framework owns?"""
     top = rel.split("/", 1)[0]
@@ -106,6 +110,8 @@ def collect(root, cfg):
     for p in root.rglob("*"):
         if not p.is_file():
             continue
+        if p.name in OS_METADATA_NAMES:
+            continue                      # ⛔ Finder metadata is not a user file (Mac field test 2026-09-11)
         if excluded(p, root, cfg):
             continue
         rel = p.relative_to(root).as_posix()

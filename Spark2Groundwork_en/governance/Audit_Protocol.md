@@ -1,7 +1,7 @@
 # Audit Protocol
 
 **Tier: T1 — spec class. Required reading for the audit role before starting.**
-**⚠️ Single-AI projects may delete this file, but read `profiles/PROFILE_solo.md` §1 for the compensation first.**
+**⚠️ Single-AI projects do not run adversarial audits, but automated sensors rely on this file for clauses and self-certification specs; ⛔ keep this file, do not delete (see `profiles/PROFILE_solo.md` §1).**
 
 ---
 

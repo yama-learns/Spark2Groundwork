@@ -1,5 +1,7 @@
 # 學術研究神器 · AI 論文發想框架 · Spark2Groundwork
 
+> v1.4.5 release candidate / 發行候選，尚未發布。See the edition README and CHANGELOG for changes and v2 preparation; final platform acceptance is pending.
+
 ### The Researcher's Power Tool · An AI Framework for Paper Ideation
 
 **把一個發想，變成一份站得住的研究提案。**
@@ -85,8 +87,7 @@ of you afterwards.
 🔴 **That is not drift. That is the point.**
 
 ⚠️ **It is also why upgrading is safe, for a reason that is easy to read backwards:**
-**the upgrade tool recognises nine names of its own — five framework folders and four
-framework files — and ⛔ refuses everything else.**
+**the upgrade tool uses its explicit replaceable list as the authority and ⛔ refuses everything else.**
 **Your ledgers, your papers, your incident log, `PROJECT.md`, and any folder you created
 yourself are all left alone. You never have to register them anywhere.**
 

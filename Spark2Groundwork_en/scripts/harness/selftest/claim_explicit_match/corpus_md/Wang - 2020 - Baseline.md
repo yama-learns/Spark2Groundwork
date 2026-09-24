@@ -1,0 +1,1 @@
+Baseline automated scoring showed thirty percent error rate.

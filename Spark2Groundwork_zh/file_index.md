@@ -108,3 +108,19 @@ python scripts/harness/sensor_model_attribution.py
 
 ⚠️ **把它們硬塞進總執行器，只會產生一個永遠 INCOMPLETE 的假訊號——
 而 INCOMPLETE 是本框架最不能被稀釋的一個狀態。**
+
+
+## 環境與檢查入口
+
+- 檢查專案.bat / 檢查專案.command
+- scripts/harness/check_environment.py
+- [START_HERE.html](docs/START_HERE.html)
+
+
+新增操作：[更新與儲存說明](docs/UPDATE.md)；儲存進度.bat／儲存進度.command、同步規則.bat／同步規則.command。它們是框架入口，不是研究資料。
+
+## v1.4.5 新增入口
+
+- [版本更新摘要](docs/CHANGELOG.md)
+- [準備迎接 v2](docs/V2_PREPARATION.md)
+- 共用程序診斷分類: `scripts/harness/process_diagnostics.py`

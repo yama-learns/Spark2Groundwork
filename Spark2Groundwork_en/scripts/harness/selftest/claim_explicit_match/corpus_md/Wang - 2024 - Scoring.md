@@ -1,0 +1,1 @@
+Multi-agent scoring achieves higher consistency.

@@ -10,10 +10,11 @@
 **deliberately not mechanised**.
 **The anchor's job is to make "did anyone actually read the source" a checkable fact — not to read it for you.**
 
-## Two checks
+## Checks
 
     ANCHOR_NOT_IN_SOURCE   Anchor not found in the extraction                         FAIL
     CORPUS_MD_MODIFIED     Extraction hash differs from manifest              FAIL
+    CLAIM_NONE_CHECKED     Valid claims exist but none reached verification   INCOMPLETE
 
 ⚠️ **The second is a precondition for letting AI write to the corpus, not an add-on.**
 All of the anchor check's force comes from one fact: the comparison target is a
@@ -55,6 +56,19 @@ def parse(text):
         if f:
             cur[f.group(1).strip()] = f.group(2).strip()
     return out
+
+
+def is_valid_claim(f):
+    """Determine whether an entry is a valid substantive claim (not purely placeholder/empty)."""
+    stmt = f.get("Statement", "").strip().strip("`").strip()
+    src = f.get("Source", "").strip().strip("`").strip()
+    anc = f.get("Verbatim anchor", "").strip().strip("`").strip()
+    # Only a whole-field placeholder is empty. Substantive text that happens to
+    # mention the reserved `<<<` marker must not be silently treated as a template.
+    is_empty_stmt = bool(PLACEHOLDER.fullmatch(stmt))
+    is_empty_src = bool(PLACEHOLDER.fullmatch(src))
+    is_empty_anc = bool(PLACEHOLDER.fullmatch(anc))
+    return not (is_empty_stmt and is_empty_src and is_empty_anc)
 
 
 def corpus_integrity(root, cfg, stats=None):
@@ -103,6 +117,13 @@ def corpus_integrity(root, cfg, stats=None):
         man = json.loads(mp.read_text(encoding="utf-8"))
     except Exception as e:                                    # noqa: BLE001
         return [("INCOMPLETE", "CORPUS_MANIFEST_UNREADABLE", f"manifest could not be parsed：{e}")]
+    if not isinstance(man, list):
+        return [("INCOMPLETE", "CORPUS_MANIFEST_MALFORMED",
+                 f"{mp.name} format error: expected a JSON array of extraction entries, got {type(man).__name__}")]
+    for idx, e in enumerate(man):
+        if not isinstance(e, dict):
+            return [("INCOMPLETE", "CORPUS_MANIFEST_MALFORMED",
+                     f"{mp.name} entry #{idx} is not a JSON object: {type(e).__name__}")]
     known = {e["md"]: e.get("md_sha256") for e in man if "md" in e}
     for f in sorted(cdir.glob("*.md"), key=lambda p: p.as_posix()):
         want = known.get(f.name)
@@ -119,6 +140,79 @@ def corpus_integrity(root, cfg, stats=None):
         if not (cdir / name).exists():
             out.append(("FAIL", "CORPUS_FILE_DELETED", f"{name} has disappeared but is still listed in the manifest"))
     return out
+
+
+YEAR_PAT = re.compile(r"\b(19\d\d|20\d\d)\b")
+
+
+def resolve_source(src, corpus):
+    """Resolve a citation string to an extraction filename in corpus.
+
+    Returns:
+        ("EMPTY", None)
+        ("EXACT", filename)
+        ("UNIQUE", filename)
+        ("AMBIGUOUS", [matching_filenames])
+        ("UNRESOLVED", None)
+    """
+    clean_src = src.strip().strip("`").strip()
+    if not clean_src or PLACEHOLDER.match(clean_src) or "<<<" in clean_src:
+        return "EMPTY", None
+
+    # 1. Exact filename match (with or without .md extension)
+    if clean_src in corpus:
+        return "EXACT", clean_src
+    if not clean_src.endswith(".md") and f"{clean_src}.md" in corpus:
+        return "EXACT", f"{clean_src}.md"
+
+    # 2. Extract author surname token and year
+    m = SURNAME.match(clean_src)
+    if not m:
+        return "UNRESOLVED", None
+    author_key = m.group(1).lower()
+
+    year_m = YEAR_PAT.search(clean_src)
+    year = year_m.group(1) if year_m else None
+
+    # Match candidates against corpus keys
+    matched = []
+    for fname in sorted(corpus.keys()):
+        fl = fname.lower()
+        # Corpus filename convention is "Author - Year - Title.md"
+        # Match only on author segment with token boundaries, forbidding unbounded substring match
+        if " - " not in fname:
+            continue
+        file_author = fname.split(" - ")[0].strip().lower()
+        author_match = (
+            file_author == author_key or
+            file_author.startswith(author_key + " ") or
+            file_author.startswith(author_key + "_") or
+            file_author.startswith(author_key + "-") or
+            file_author.startswith(author_key + ",")
+        )
+        if not author_match:
+            continue
+
+        if year:
+            if year in fl:
+                matched.append(fname)
+        else:
+            matched.append(fname)
+
+    if not matched:
+        return "UNRESOLVED", None
+    if len(matched) == 1:
+        # 覆核 B-2：單一命中仍然是一次「推論」，不是台帳明說的。呼叫端會把
+        # 用了哪一條規則印出來，讓這個推論可見，而不是靜默接受。
+        return ("UNIQUE_AUTHOR_YEAR" if year else "UNIQUE_AUTHOR_ONLY"), matched[0]
+    return "AMBIGUOUS", matched
+
+
+RESOLUTION_RULE_TEXT = {
+    "EXACT": "explicit filename",
+    "UNIQUE_AUTHOR_YEAR": "unique match on author field + year (inferred)",
+    "UNIQUE_AUTHOR_ONLY": "unique match on author field only, no year in source (inferred)",
+}
 
 
 def main():
@@ -138,6 +232,7 @@ def main():
     corpus = {p.name: norm(p.read_text(encoding="utf-8", errors="replace"))
               for p in cdir.glob("*.md")} if cdir.is_dir() else {}
     checked = matched = 0
+    resolutions = []
 
     for cid, f in entries.items():
         anchor = f.get("Verbatim anchor", "").strip().strip("`")
@@ -149,21 +244,59 @@ def main():
             findings.append(("INCOMPLETE", "CORPUS_ABSENT",
                              f"{cid} cannot compare: corpus is empty — **not checked is not a pass**"))
             continue
-        m = SURNAME.match(src)
-        key = m.group(1).lower() if m else ""
-        cands = [t for n, t in corpus.items() if key and key in n.lower()] or list(corpus.values())
+
+        status, res = resolve_source(src, corpus)
+        if status in ("EMPTY", "UNRESOLVED"):
+            findings.append(("INCOMPLETE", "ANCHOR_SOURCE_UNRESOLVED",
+                             f"{cid} cannot resolve source: 「{src}」 — **not checked is not a pass**"))
+            continue
+        if status == "AMBIGUOUS":
+            findings.append(("INCOMPLETE", "ANCHOR_SOURCE_AMBIGUOUS",
+                             f"{cid} source is ambiguous (matches multiple extractions: {res}) — specify explicit filename"))
+            continue
+
+        target_fname = res
+        target_text = corpus[target_fname]
         checked += 1
-        if any(norm(anchor) in t for t in cands):
+        resolutions.append((cid, target_fname, RESOLUTION_RULE_TEXT[status]))
+        if norm(anchor) in target_text:
             matched += 1
         else:
             findings.append(("FAIL", "ANCHOR_NOT_IN_SOURCE",
-                             f"{cid} anchor not found in the corpus：「{anchor[:56]}…」"))
+                             f"{cid} anchor not found in source {target_fname}：「{anchor[:56]}…」"))
+
+    # D-20260921-X87 / CLAIM-EXIT-1: When valid claims exist but none reached anchor
+    # verification (checked == 0), add an INCOMPLETE finding so emit yields exit 2
+    # consistently in text and --json.
+    # Preserve existing INCOMPLETE/FAIL priority: if a FAIL already exists, do not mask it.
+    valid_entries = [cid for cid, f in entries.items() if is_valid_claim(f)]
+    if valid_entries and checked == 0 and not any(l == "FAIL" for l, _, _ in findings):
+        findings.append(("INCOMPLETE", "CLAIM_NONE_CHECKED",
+                         f"All {len(valid_entries)} substantive claim(s) skipped anchor verification "
+                         f"(empty template, missing corpus, or unresolved source) "
+                         f"— **not checked is not a pass**"))
 
     code = emit("Claim Ledger sensor", findings,
                 {"claims": len(entries), "extractions": len(corpus),
                  "hashes compared file by file": cstats["hash_compared"],
-                 "anchors matched": f"{matched}/{checked}"}, as_json, name)
+                 "anchors matched": (f"{matched}/{checked}"
+                                     if checked
+                                      else ("0/0 (no substantive claim was actually verified this run "
+                                            "-- **not checked is not a pass**)"
+                                            if valid_entries
+                                            else "0/0 (no substantive claims require verification)"))}, as_json, name)
     if not as_json:
+        # Review B-2: print what each claim resolved to and by which rule. An explicit
+        # filename is what the ledger said; a unique author-field hit is this sensor's
+        # inference, and the reader is entitled to see which one happened.
+        for cid, fname, rule in resolutions:
+            print(f"      -> {cid} resolved to {fname} ({rule})")
+        if valid_entries and checked == 0:
+            # Review B-1 / D-20260921-X87: when there are claims but none reached anchor verification,
+            # say so on the summary. Exit code contract is INCOMPLETE (exit 2).
+            print(f"      ⚠️ All {len(valid_entries)} substantive claim(s) skipped anchor verification "
+                  f"(empty template, missing corpus, or unresolved source) "
+                  f"-- **not checked is not a pass**")
         print("      ⚠️ This sensor only checks that the anchor exists,")
         print("      not whether the source supports the claim (links 6 and 7)")
     return code

@@ -44,6 +44,8 @@ SENSORS = [
 #        python3 scripts/harness/sensor_prompt_self_contained.py <prompt.md>
 ON_DEMAND = ["sensor_prompt_self_contained.py"]
 
+from process_diagnostics import is_python_crash as _is_python_crash
+
 
 def main() -> int:
     results, worst = [], 0
@@ -68,7 +70,7 @@ def main() -> int:
         #    **while what actually happened is that they never finished running.**
         #    ⛔ That is the confusion `R-22` / constitution §7.4 forbid, in the runner itself.
         #    → Criterion: **non-zero exit + a Python traceback on stderr = a crash, not a FAIL.**
-        crashed = r.returncode != 0 and "Traceback (most recent call last)" in (r.stderr or "")
+        crashed = _is_python_crash(r.returncode, r.stderr)
         if crashed:
             print(f"  [INCOMPLETE] SENSOR_CRASHED: {name} crashed — **not checked; ⛔ this is not a FAIL**")
             print((r.stderr or "").rstrip()[-600:])

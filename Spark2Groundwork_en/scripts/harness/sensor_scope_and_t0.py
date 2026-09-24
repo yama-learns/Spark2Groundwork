@@ -2,10 +2,17 @@
 # -*- coding: utf-8 -*-
 """Sensor: T0 uniqueness and write scope
 
-## Two checks
+## Checks
 
-    T0_DUPLICATE_IN_SUBDIR   A subdirectory contains a file named like a T0 document   FAIL
-    WRITE_OUT_OF_SCOPE       This round's changes fall outside the declared scope      FAIL
+    T0_DUPLICATE_IN_SUBDIR          A subdirectory contains a file named like a T0 document   FAIL
+    WRITE_TO_DENIED_PATH            Changes fall inside the deny scope                        FAIL
+    WRITE_OUT_OF_SCOPE              Changes fall outside the declared scope                   FAIL
+    DENIED_PATH_TOUCHED_UNATTRIBUTED Changes in solo project fall inside the deny scope       WARN
+    TRACKED_HIDDEN_FLAGS_PRESENT    Tracked files carry assume-unchanged/skip-worktree flags  INCOMPLETE
+    CONFIGURATION_CONFLICT          deny and excluded_dirs configuration conflict             INCOMPLETE
+    IGNORED_DENIED_PATH_PRESENT     .gitignore-ignored files inside deny scope                INCOMPLETE
+    IGNORED_OUT_OF_SCOPE_PRESENT    .gitignore-ignored files outside declared scopes          INCOMPLETE
+    SCOPE_UNCHECKABLE               Git inspection failed or output truncated                 INCOMPLETE
 
 ⚠️ **Why T0 uniqueness is FAIL rather than WARN:**
 **You change one and miss the others, and each one reads fine on its own.**
@@ -14,17 +21,27 @@ This is the hardest-to-notice form of the "fixed one layer, missed another" fami
 ⚠️ **Solo projects should leave `write_scopes` empty** — the sensor will say
 "not applicable" explicitly, **rather than passing silently**.
 
-## Two pits already fallen into (**written here because they will recur**)
+## Five pits already fallen into (**written here because they will recur**)
 
 1. `git rev-parse --show-toplevel` must equal the project root.
    Otherwise, when the project sits inside another repository, **it reports against the
    wrong repository, and does so with complete confidence.**
 2. `git -c core.quotepath=false`. Otherwise non-ASCII paths print as octal escapes, and
    **the one column you actually need to read — which file changed — becomes a string of digits.**
+3. Benchmark must anchor to the `reviewed` tag, traversing the historical touch set of
+   each commit in `reviewed..HEAD` plus working tree changes. Never rely on working tree
+   status or net diff alone (commits and reverts would otherwise lose their record).
+   If `reviewed` is missing or not an ancestor, fail-closed as INCOMPLETE; never fallback to HEAD or fake PASS.
+4. Path parsing must follow Git `-z` NUL format; rename/copy include both endpoints in the touch set;
+   subdirectory projects narrow to their subtree prefix and correctly capture endpoints within scope.
+5. When hidden flags (assume-unchanged/skip-worktree) or .gitignore files obscure changes,
+   modification status cannot be proven; always fail-closed as INCOMPLETE, never pass silently.
 
 Exit codes: 0 PASS | 1 FAIL | 2 INCOMPLETE
 """
 import pathlib
+import os
+import re
 import subprocess
 import sys
 
@@ -37,7 +54,7 @@ def _text(cp):
     """Return a child process's stdout, ⛔ guaranteed to be a string.
 
     🔴 **Measured case (2026-08-27, Traditional-Chinese Windows, Python 3.14.2,
-    the principal's machine):** `subprocess.run(..., capture_output=True, text=True)`
+    the principal's machine):** `_run_git(..., capture_output=True, text=True)`
     returned `returncode == 0` **with `stdout` set to `None`.**
 
     ## The cause (**established by running one diagnostic, ⛔ not guessed**)
@@ -84,13 +101,146 @@ def _text(cp):
 
 
 def _text_err(cp):
+    if isinstance(cp.stderr, bytes):
+        return cp.stderr.decode("utf-8", "replace")
     return cp.stderr if isinstance(cp.stderr, str) else ""
 
 
-def git_changed(root):
-    """This round's change list. Returns (list, error message)."""
+def _run_git(*args, **kwargs):
+    # git status may refresh the index even when used only to inspect changes.
+    kwargs["env"] = dict(os.environ, **kwargs.get("env", {}))
+    kwargs["env"]["GIT_OPTIONAL_LOCKS"] = "0"
+    return subprocess.run(*args, **kwargs)
+
+
+def _nul_tokens(data):
+    if not isinstance(data, bytes):
+        raise ValueError("Git did not return a byte stream")
+    if not data:
+        return []
+    if not data.endswith(b"\0"):
+        raise ValueError("Unterminated Git NUL record")
+    tokens = data[:-1].split(b"\0")
+    if any(not t for t in tokens):
+        raise ValueError("Empty Git NUL record")
+    return tokens
+
+
+def _git_path(token):
+    path = token.decode("utf-8", "strict")
+    if not path or path.startswith("/") or any(p in ("", ".", "..") for p in path.split("/")):
+        raise ValueError("Invalid repository-relative Git path")
+    return path
+
+
+def _parse_history(data):
+    tokens = _nul_tokens(data)
+    paths = []
+    i = 0
+    while i < len(tokens):
+        status = tokens[i].decode("ascii", "strict")
+        i += 1
+        if not re.fullmatch(r"(?:[ADMTUXB]|[RCM][0-9]{1,3})", status):
+            raise ValueError("Unknown git diff-tree status")
+        if len(status) > 1 and int(status[1:]) > 100:
+            raise ValueError("Invalid Git similarity score")
+        count = 2 if status[0] in "RC" else 1
+        if len(tokens) - i < count:
+            raise ValueError("Truncated git diff-tree record")
+        paths.extend(_git_path(t) for t in tokens[i:i+count])
+        i += count
+    return paths
+
+
+def _parse_status(data):
+    tokens = _nul_tokens(data)
+    paths = []
+    i = 0
+    while i < len(tokens):
+        entry = tokens[i]
+        i += 1
+        if len(entry) < 4 or entry[2:3] != b" ":
+            raise ValueError("Malformed git status record")
+        code = entry[:2].decode("ascii", "strict")
+        if code != "??" and (code == "  " or any(c not in " MADRCUT" for c in code)):
+            raise ValueError("Unknown git status code")
+        paths.append(_git_path(entry[3:]))
+        if "R" in code or "C" in code:
+            if i == len(tokens):
+                raise ValueError("Missing git status rename/copy endpoint")
+            paths.append(_git_path(tokens[i]))
+            i += 1
+    return paths
+
+
+def _is_generated_metadata(path):
+    """Narrow fixed metadata names; user ignore rules do not grant exemptions."""
+    return (path in ("scripts/harness/harness_status.json", "git-checkpoint.log")
+            or pathlib.PurePosixPath(path).name == ".DS_Store")
+
+
+def git_hidden_flags(root):
+    """Check whether tracked files within the project subtree carry assume-unchanged (h) or skip-worktree (S/s) hidden flags.
+
+    Returns (flagged_list, error_message).
+    flagged_list is [("path", "flag_type"), ...]
+    """
     try:
-        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+        proc = _run_git(["git", "-C", str(root), "-c", "core.quotepath=false",
+                         "ls-files", "-v", "-z", "--", "."],
+                        capture_output=True, timeout=20)
+        if proc.returncode != 0:
+            return None, ("`git ls-files -v` execution failed "
+                          f"(exit {proc.returncode}; stderr {(_text_err(proc) or 'empty')[:120]}) "
+                          "— **⛔ not checked is not a pass**")
+        tokens = _nul_tokens(proc.stdout)
+        flagged = []
+        for token in tokens:
+            if not token:
+                continue
+            if len(token) < 3 or token[1:2] != b" ":
+                raise ValueError("Malformed git ls-files record")
+            tag = token[:1].decode("ascii", "strict")
+            if tag not in "HSMRCK?hsmrck":
+                raise ValueError("Unknown git ls-files flag")
+            _git_path(token[2:])
+            if tag in ("S", "s"):
+                flagged.append((_git_path(token[2:]), "skip-worktree"))
+            elif tag.islower():
+                flagged.append((_git_path(token[2:]), "assume-unchanged"))
+        return flagged, None
+    except (OSError, subprocess.SubprocessError, ValueError) as e:
+        return None, f"git flag inspection could not run: {e}"
+
+
+def git_ignored(root):
+    """Get list of all untracked files within the project subtree ignored by .gitignore.
+
+    Returns (ignored_paths_list, error_message).
+    """
+    try:
+        proc = _run_git(["git", "-C", str(root), "-c", "core.quotepath=false",
+                         "ls-files", "--others", "--ignored", "--exclude-standard", "-z", "--", "."],
+                        capture_output=True, timeout=20)
+        if proc.returncode != 0:
+            return None, ("`git ls-files --ignored` execution failed "
+                          f"(exit {proc.returncode}; stderr {(_text_err(proc) or 'empty')[:120]}) "
+                          "— **⛔ not checked is not a pass**")
+        tokens = _nul_tokens(proc.stdout)
+        paths = [_git_path(t) for t in tokens if t]
+        return paths, None
+    except (OSError, subprocess.SubprocessError, ValueError) as e:
+        return None, f"git ignored files inspection could not run: {e}"
+
+
+def git_changed(root):
+    """Union of touched paths from reviewed benchmark through HEAD plus working tree.
+
+    Returns (paths_list, error_message).
+    If verification fails or cannot be determined, paths_list is None, and error_message gives the diagnosis.
+    """
+    try:
+        top = _run_git(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
                              capture_output=True, text=True,
                              encoding="utf-8", errors="replace", timeout=20)
         if top.returncode != 0:
@@ -105,18 +255,7 @@ def git_changed(root):
                           "— **⛔ this is not a pass, it is could-not-check.** "
                           f"(stdout type {type(top.stdout).__name__}; "
                           f"stderr {(_text_err(top) or 'empty')[:120]})")
-        # 🔴 **When the project is a subdirectory of a repo, ⛔ stop refusing to report (v1.4.1).**
-        #
-        # ⚠️ **The old code always returned "sits inside another repository" and went INCOMPLETE.**
-        #    **⛔ The concern was right (⛔ never judge the wrong repo), ⛔ the remedy was too blunt:**
-        #    🔴 **this framework's own repository has exactly that shape (each edition is a
-        #    subdirectory), and so does a user who drops the project into an existing notes repo.**
-        #    **⇒ That is a light that is always on, and a permanent red light teaches people
-        #    to ignore the whole harness (`R-19`).**
-        #
-        # ✅ **The right move: narrow the report to this project's subtree, ⛔ not refuse it.**
-        #    `git status --porcelain` prints paths relative to the **repository root**,
-        #    ⛔ not to the directory named by `-C` — **so strip the prefix; ⛔ do not assume.**
+        # 🔴 **When the project is a subdirectory of a repo, narrow to this project's subtree (v1.4.1).**
         top_path, root_r = pathlib.Path(out).resolve(), root.resolve()
         prefix = ""
         if top_path != root_r:
@@ -127,23 +266,77 @@ def git_changed(root):
                 #    the case where refusing to report is correct.
                 return None, ("the repository root git reported ⛔ does not contain this "
                               "project — **refusing to report, to avoid judging the wrong repo**")
-        r = subprocess.run(["git", "-C", str(root), "-c", "core.quotepath=false",
-                            "status", "--porcelain", "--", "."],
-                           capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", timeout=20)
-        if r.returncode != 0 or not isinstance(r.stdout, str):
+
+        # 1. Verify reviewed tag exists (V145-E2)
+        rev_tag = _run_git(["git", "-C", str(root), "rev-parse", "--verify", "reviewed^{commit}"],
+                                 capture_output=True, text=True,
+                                 encoding="utf-8", errors="replace", timeout=20)
+        if rev_tag.returncode != 0:
+            return None, ("reviewed benchmark does not exist (no reviewed tag) "
+                          "— **⛔ not checked is not a pass**")
+
+        # 2. Verify reviewed tag is an ancestor of HEAD (V145-E2)
+        anc = _run_git(["git", "-C", str(root), "merge-base", "--is-ancestor", "reviewed", "HEAD"],
+                             capture_output=True, text=True,
+                             encoding="utf-8", errors="replace", timeout=20)
+        if anc.returncode != 0:
+            return None, ("reviewed benchmark is not an ancestor of HEAD (diverged history or unreviewed) "
+                          "— **⛔ not checked is not a pass**")
+
+        candidate_paths = []
+
+        # 3. Touch set across commits in reviewed..HEAD (historical union, not net diff; includes merge commits)
+        rev_list = _run_git(["git", "-C", str(root), "rev-list", "reviewed..HEAD"],
+                                  capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", timeout=30)
+        if rev_list.returncode != 0:
+            return None, ("git rev-list failed "
+                          f"(exit {rev_list.returncode}; stderr {(_text_err(rev_list) or 'empty')[:120]}) "
+                          "— **⛔ not checked is not a pass**")
+        if not isinstance(rev_list.stdout, str):
+            return None, "Unreadable git rev-list output"
+        commits = [c.strip() for c in _text(rev_list).splitlines() if c.strip()]
+        if commits:
+            diff_tree = _run_git(["git", "-C", str(root), "-c", "core.quotepath=false",
+                                        "diff-tree", "--stdin", "-r", "-z", "-m", "-M", "-C",
+                                        "--no-commit-id", "--name-status"],
+                                       input=("\n".join(commits) + "\n").encode("utf-8"),
+                                       capture_output=True, timeout=30)
+            if diff_tree.returncode != 0:
+                return None, ("git diff-tree failed "
+                              f"(exit {diff_tree.returncode}; stderr {(_text_err(diff_tree) or 'empty')[:120]}) "
+                              "— **⛔ not checked is not a pass**")
+            candidate_paths.extend(_parse_history(diff_tree.stdout))
+
+        # 4. Touch set in working tree (staged, unstaged, untracked)
+        status_proc = _run_git(["git", "-C", str(root), "-c", "core.quotepath=false",
+                                      "status", "--porcelain", "-z", "-uall"],
+                                     capture_output=True, timeout=20)
+        if status_proc.returncode != 0:
             return None, ("`git status` produced no readable output "
-                          f"(exit {r.returncode}; stdout type {type(r.stdout).__name__})"
-                          " — **⛔ not checked is not a pass**")
-        paths = [ln[3:].strip().strip('"') for ln in r.stdout.splitlines() if ln.strip()]
+                          f"(exit {status_proc.returncode}; stderr {(_text_err(status_proc) or 'empty')[:120]}) "
+                          "— **⛔ not checked is not a pass**")
+        candidate_paths.extend(_parse_status(status_proc.stdout))
+
+        # 5. Narrow to subtree prefix
+        project_paths = set()
         if prefix:
-            # ⛔ **Drop anything outside the subtree.** ⚠️ `-- .` already narrowed it once;
-            #    **this is the second pass** — ⛔ because "I assume it was narrowed" and
-            #    "it was narrowed" are two different things.
-            paths = [p[len(prefix) + 1:] for p in paths if p.startswith(prefix + "/")]
-        return paths, None
-    except (OSError, subprocess.SubprocessError) as e:
-        return None, f"git could not run：{e}"
+            prefix_slash = prefix + "/"
+            for p in candidate_paths:
+                p_norm = p
+                if p_norm.startswith(prefix_slash):
+                    rel = p_norm[len(prefix_slash):]
+                    if rel and rel != ".":
+                        project_paths.add(rel)
+        else:
+            for p in candidate_paths:
+                p_norm = p
+                if p_norm and p_norm != ".":
+                    project_paths.add(p_norm)
+
+        return sorted(project_paths), None
+    except (OSError, subprocess.SubprocessError, ValueError) as e:
+        return None, f"git execution failed: {e}"
 
 def main():
     root, cfg, as_json, name = cli("scope_and_t0")
@@ -183,14 +376,14 @@ def main():
     #    write". ⛔ Two different facts about the same files.**
     denied = [d.rstrip("/") for d in cfg.get("deny", [])]
 
+    def under(path, tops):
+        return any(path == a or path.startswith(a + "/") for a in tops)
+
     changed, err = git_changed(root)
     if changed is None:
         findings.append(("INCOMPLETE", "SCOPE_UNCHECKABLE",
                          f"{err} — **not checked, and that is not a pass**"))
     else:
-        def under(path, tops):
-            return any(path == a or path.startswith(a + "/") for a in tops)
-
         stats["changes this round"] = len(changed)
         stats["deny scope"] = len(denied)
         hits = [c for c in changed if under(c, denied)]
@@ -235,6 +428,90 @@ def main():
                                  + ("…" if len(hits) > 8 else "")
                                  + " — **⚠️ if you made them yourself this is normal; "
                                    "if not, read this list**"))
+
+        # ③ Hidden flags check (V145-E2b: assume-unchanged and skip-worktree)
+        flagged, ferr = git_hidden_flags(root)
+        if ferr:
+            findings.append(("INCOMPLETE", "SCOPE_UNCHECKABLE",
+                             f"{ferr} — **not checked, and that is not a pass**"))
+        elif flagged:
+            flag_details = [f"{p} ({t})" for p, t in flagged]
+            findings.append(("INCOMPLETE", "TRACKED_HIDDEN_FLAGS_PRESENT",
+                             f"found {len(flagged)} tracked file(s) with hidden flags (assume-unchanged or skip-worktree): "
+                             + ", ".join(flag_details[:8])
+                             + ("…" if len(flag_details) > 8 else "")
+                             + " — **⛔ hidden flags obscure working-tree changes; review cannot verify modification status, refusing evaluation**"))
+
+        # ④ Configuration conflicts and ignored files check (V145-E2b: .gitignore and excluded_dirs)
+        # 4.1 Configuration conflict: deny scope overlaps with excluded_dirs list
+        cfg_excluded = set(cfg.get("excluded_dirs", []))
+        conflicts = [d for d in denied if (set(pathlib.PurePosixPath(d).parts) & cfg_excluded)] + \
+                    [e for e in cfg_excluded if under(e, denied)]
+        conflicts = sorted(set(conflicts))
+        if conflicts:
+            findings.append(("INCOMPLETE", "CONFIGURATION_CONFLICT",
+                             f"deny scope path overlaps with excluded_dirs list ({', '.join(conflicts)}) — "
+                             "**⛔ deny scope must not be silently swallowed by excluded directories, please fix framework_config.py**"))
+
+        # 4.2 Ignored files check
+        ignored_files, ierr = git_ignored(root)
+        if ierr:
+            findings.append(("INCOMPLETE", "SCOPE_UNCHECKABLE",
+                             f"{ierr} — **not checked, and that is not a pass**"))
+        elif ignored_files:
+            denied_ignored = []
+            out_of_scope_ignored = []
+            generated_metadata = []
+            allowed = [a.rstrip("/") for v in scopes.values() for a in v] if scopes else []
+            for ig in ignored_files:
+                # An exact deny entry remains an explicit user instruction.
+                # Folder-level deny protects research, not generated OS/report metadata.
+                if _is_generated_metadata(ig) and ig not in denied:
+                    generated_metadata.append(ig)
+                    continue
+                ig_path = root / ig
+                is_denied = under(ig, denied)
+                is_excl = excluded(ig_path, root, cfg)
+
+                # Explicit deny must not be swallowed by exclusion rules
+                if is_denied:
+                    if is_excl and not conflicts:
+                        findings.append(("INCOMPLETE", "CONFIGURATION_CONFLICT",
+                                         f"file `{ig}` falls inside both deny scope and excluded_dirs list — "
+                                         "**⛔ deny scope must not be silently swallowed by excluded directories, please fix framework_config.py**"))
+                    else:
+                        denied_ignored.append(ig)
+                elif is_excl:
+                    # Framework caches and exclusions (non-deny) pass quietly
+                    continue
+                else:
+                    # Regular ignored files outside excluded directories:
+                    if scopes:
+                        # Multi-agent mode: must be within declared scope
+                        if not under(ig, allowed):
+                            out_of_scope_ignored.append(ig)
+                    else:
+                        # Solo mode: regular research attachments pass quietly
+                        pass
+
+            stats["ignored generated metadata excluded"] = len(generated_metadata)
+
+            if denied_ignored:
+                findings.append(("INCOMPLETE", "IGNORED_DENIED_PATH_PRESENT",
+                                 f"found {len(denied_ignored)} .gitignore-ignored file(s) inside deny scope: "
+                                 + ", ".join(denied_ignored[:8])
+                                 + ("…" if len(denied_ignored) > 8 else "")
+                                 + " — **⛔ ignored files inside deny scope cannot be proven to be from this round, review cannot pass**"))
+
+            if out_of_scope_ignored:
+                findings.append(("INCOMPLETE", "IGNORED_OUT_OF_SCOPE_PRESENT",
+                                 f"found {len(out_of_scope_ignored)} .gitignore-ignored file(s) outside all declared agent scopes: "
+                                 + ", ".join(out_of_scope_ignored[:8])
+                                 + ("…" if len(out_of_scope_ignored) > 8 else "")
+                                 + " — **⛔ ignored files outside declared scopes cannot be proven to be from this round, review cannot pass**"))
+
+    if any(f[1] in ("IGNORED_DENIED_PATH_PRESENT", "IGNORED_OUT_OF_SCOPE_PRESENT") for f in findings):
+        findings = [(level, code, message + ' Ask your AI to explain these paths: after your approval, track the protected research files locally (no upload), or move intentionally untracked material outside protected scope and update its references. Do not delete research data or advance reviewed merely to silence this finding.' if code in ("IGNORED_DENIED_PATH_PRESENT", "IGNORED_OUT_OF_SCOPE_PRESENT") else message) for level, code, message in findings]
 
     return emit("Scope and T0 sensor", findings, stats, as_json, name)
 

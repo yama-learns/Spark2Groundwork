@@ -47,7 +47,7 @@ is worse than none, because it makes you believe someone is watching.**
 |---|---|
 | **Claim ID** | `M-NN`. Append-only, never reused; deletion is a state change, not a removed row |
 | **Statement** | An excerpt containing the key number or assertion |
-| **Source** | Author (year). Must exist as a file in the corpus |
+| **Source** | Preferred: exact extraction filename (e.g. `Author - Year - Title.md` or without `.md`). Legacy `Author (year)` format accepted only when matching the author prefix/field conforming to conventions (cross-author unbounded substring matches are rejected). If multiple extractions exist for the same author and year or filenames do not follow conventions, an explicit filename is required to avoid `ANCHOR_SOURCE_AMBIGUOUS` or `ANCHOR_SOURCE_UNRESOLVED`. ⚠️ A legacy source that resolves to exactly one file is still an **inference** made by the sensor from the filename convention, not a fact the ledger states; the sensor prints, per claim, which rule matched which file so the inference can be reviewed by a human, but that does not promote it to verified |
 | **Verbatim anchor** | **Quoted exactly**, must match by string comparison in the corresponding extraction |
 | **Page** | The page the anchor sits on |
 | **Evidence type** | `source figure` / `source conclusion` / `project inference` / `⚠️ no source` |

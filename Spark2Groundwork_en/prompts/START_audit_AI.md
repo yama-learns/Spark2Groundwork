@@ -35,8 +35,16 @@ scratch/        ← your sandbox. ⚠️ If it does not exist, ask the user to m
 handoffs/       (shared — ⛔ your filenames must start with audit_)
 ```
 
-**⛔ Everything else is closed to you** — including `ledgers/`, `governance/`, `corpus_md/`
-and `PROJECT.md`.
+**⛔ Closed to you by default:**
+
+```
+ledgers/            ← the two ledgers; protected by deny in governance_config.json (Constitution §6.1/§6.3)
+governance/         ← governance specs and rules
+corpus/  corpus_md/ ← source papers and their extracts
+PROJECT.md          ← the user's project settings
+```
+
+⚠️ **Ledger permissions:** Ledgers record what the user has confirmed and are maintained by humans by default (protected by `deny` in `governance_config.json`). Unless explicitly authorized by the user and removed from the `deny` list, ⛔ you may not write to the ledgers (Constitution §6.1 / §6.3). Only when the user explicitly authorizes it and lifts the deny may you write within the authorized scope; however, the audit role's duty is independent verification and it may never derive authorization from procedural exemptions, nor modify ledgers on its own initiative.
 
 ⚠️ **Nothing in `scratch/` may be cited.**
 **It is not under version control, so when somebody opens your citation next round the file is
@@ -168,11 +176,8 @@ format:
 
 ⛔ **Never proceed silently.** All three workable cases require you to say so.
 
-⚠️ **Measured case:** an agent under test was told to write conjectures into the ledger, while
-four documents said no AI may write to the ledger. **It derived its own handling from the
-exemption clause and carried it out.**
-🔴 **An agent reasoning its own way to "I may make an exception" is exactly what this framework
-worries about most.**
+⚠️ **Historical case:** In past tests prior to explicit user-authorization mechanisms, a tested agent was instructed to "write conjectures into the ledger" while all files stated that no AI may write to the ledger. **Without authorization, it derived an "exception" from procedural exemption clauses and carried it out.**
+🔴 **An agent reasoning its own way to "I may make an exception" is exactly what this framework worries about most.**
 
 ---
 

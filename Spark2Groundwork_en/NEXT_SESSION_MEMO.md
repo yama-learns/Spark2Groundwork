@@ -46,10 +46,8 @@ not "adjudication stops" — and that shows no red light.**
 
 ## 5. Fixed actions before starting
 
-```
-python scripts/harness/run_all_sensors.py     # 0=PASS 1=FAIL 2=INCOMPLETE
-python scripts/harness/run_selftest.py        # only needed if you changed a sensor
-```
+- **AI assistant / automated environment:** Run `python scripts/harness/run_all_sensors.py` directly (0=PASS 1=FAIL 2=INCOMPLETE; `run_selftest.py` only needed if you changed a sensor).
+- **Human user:** Double-click the root launcher button (`check_project.bat` on Windows / `check_project.command` on macOS); standard workflows do not require copying and pasting terminal commands.
 
 ⚠️ **Green covers only what is mechanised.** Argument quality, whether a source substantively
 supports a claim, and honesty of generalisation are **deliberately not mechanised**.

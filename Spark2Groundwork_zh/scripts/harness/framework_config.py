@@ -255,7 +255,7 @@ def excluded(path, root, cfg):
     **造成自測全綠或全紅**，而兩種都看不出是排除邏輯的問題。
     """
     try:
-        parts = set(pathlib.Path(path).resolve().relative_to(root).parts)
+        parts = set(pathlib.Path(path).resolve().relative_to(pathlib.Path(root).resolve()).parts)
     except ValueError:
         return True
     return bool(parts & set(cfg["excluded_dirs"]))

@@ -43,6 +43,8 @@ SENSORS = [
 #        python3 scripts/harness/sensor_prompt_self_contained.py <prompt.md>
 ON_DEMAND = ["sensor_prompt_self_contained.py", "sensor_model_attribution.py"]
 
+from process_diagnostics import is_python_crash as _is_python_crash
+
 
 def main() -> int:
     results, worst = [], 0
@@ -65,7 +67,7 @@ def main() -> int:
         #    → 總結印出「整套 FAIL」，**而真正發生的是它們根本沒跑完。**
         #    ⛔ 那正是 `R-22`／憲章 §7.4 要擋的混淆，發生在執行器自己身上。
         #    → 判準：**非 0 退出 ＋ stderr 裡有 Python traceback ＝ 崩潰，不是 FAIL。**
-        crashed = r.returncode != 0 and "Traceback (most recent call last)" in (r.stderr or "")
+        crashed = _is_python_crash(r.returncode, r.stderr)
         if crashed:
             print(f"  [INCOMPLETE] SENSOR_CRASHED: {name} 崩潰了——**本項未檢查，⛔ 這不是 FAIL**")
             print((r.stderr or "").rstrip()[-600:])

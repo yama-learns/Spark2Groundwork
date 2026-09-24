@@ -1,5 +1,16 @@
 # Spark2Groundwork
 
+## v1.4.5 and the road to v2
+
+This candidate improves Mac/Windows buttons, dependency guidance and error classification. Normal use requires no pasted terminal commands; Mac buttons may display results in a terminal window. Final platform acceptance is still pending.
+
+v2 is in development: a shared core, updates for the selected language, separation of framework and project data, and traceable sources, claims and human decisions. These are development goals, not features already delivered in v1.4.5.
+
+Read [Preparing for v2](docs/V2_PREPARATION.md). Installing v1.4.5 will not be a prerequisite for migration.
+
+
+For initial setup or project checks, double-click **check_project.bat / check_project.command**. See the [startup guide](docs/START_HERE.html) if tools are missing. No pasted commands.
+
 **Turn a spark of an idea into a research proposal that holds up.**
 
 ---
@@ -9,11 +20,10 @@
 | What | Where |
 |---|---|
 | **Fill in two files** | `PROJECT.md` and `FIRST_IDEA.md` in this folder. ⛔ Every other governance document is looked after by the AI |
-| **Press three buttons** | snapshot / review changes / check update (`.bat` on Windows, `.command` on Mac) |
+| **Use the project buttons** | check project / snapshot / review changes / check update (`.bat` on Windows, `.command` on Mac) |
 | **Decide** | The AI proposes; you decide whether to accept. **This part cannot be handed off** |
 
-⚠️ **When a new version of the framework comes out you can swap it in wholesale, ⛔ and your
-own material — your ideas, your quotations, the papers you added — is never touched.**
+Back up the complete project before updating. Follow the [update guide](docs/UPDATE.md) to compare framework and custom files. Do not overwrite a research project with the entire download.
 
 ---
 
@@ -219,3 +229,6 @@ They are listed so you know what to watch for — ⛔ **not so you can assume yo
 ⚠️ **That covers the framework files only.**
 **The research you produce with them is yours** — ⛔ this framework claims no rights over your
 work, and takes no responsibility for it.
+
+
+Use save_progress for unread work; snapshot still confirms human review. See the [operation guide](docs/UPDATE.md) for updates and rule synchronization without commands.

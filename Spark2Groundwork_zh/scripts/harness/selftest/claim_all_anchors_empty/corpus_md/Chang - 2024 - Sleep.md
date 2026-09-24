@@ -1,0 +1,1 @@
+Sleep consolidates declarative memory.

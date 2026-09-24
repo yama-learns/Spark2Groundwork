@@ -45,9 +45,7 @@
 
 ## 5. 開工前的固定動作
 
-```
-python scripts/harness/run_all_sensors.py     # 0=PASS 1=FAIL 2=INCOMPLETE
-python scripts/harness/run_selftest.py        # 改過感測器才需要跑
-```
+- **AI 助手／自動化環境：** 直接執行 `python scripts/harness/run_all_sensors.py`（0=PASS 1=FAIL 2=INCOMPLETE；改過感測器才需跑 `run_selftest.py`）。
+- **使用者操作：** 雙擊專案根目錄的檢查按鈕（Windows `檢查專案.bat`／macOS `檢查專案.command`），正常流程不需手動複製貼上終端命令。
 
 ⚠️ **綠燈的範圍僅限已機械化的環節。** 論證品質、來源實質支持、外推誠實**刻意不機械化**。

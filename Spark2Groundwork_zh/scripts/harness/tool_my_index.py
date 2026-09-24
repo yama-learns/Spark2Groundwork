@@ -69,6 +69,10 @@ HEADER = """# 我的文件索引（**這個專案裡屬於你的東西**）
 """
 
 
+# macOS Finder 會在它開過的任何資料夾寫入 `.DS_Store`；upgrade.py 早已把它當暫存檔。
+OS_METADATA_NAMES = frozenset({".DS_Store"})
+
+
 def framework_owned(rel):
     """這個相對路徑是不是框架擁有的東西。"""
     top = rel.split("/", 1)[0]
@@ -95,6 +99,8 @@ def collect(root, cfg):
     for p in root.rglob("*"):
         if not p.is_file():
             continue
+        if p.name in OS_METADATA_NAMES:
+            continue                      # ⛔ Finder 中繼資料不是你的文件（Mac 實地測試 2026-09-11）
         if excluded(p, root, cfg):
             continue
         rel = p.relative_to(root).as_posix()

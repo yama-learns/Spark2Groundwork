@@ -111,3 +111,19 @@ python scripts/harness/sensor_model_attribution.py
 
 ⚠️ **Forcing these into the runner only produces a permanently-INCOMPLETE false signal —
 and INCOMPLETE is the one state this framework cannot afford to dilute.**
+
+
+## Environment and check entry
+
+- check_project.bat / check_project.command
+- scripts/harness/check_environment.py
+- [START_HERE.html](docs/START_HERE.html)
+
+
+New operations: [update and saving guide](docs/UPDATE.md); save_progress.bat / save_progress.command, sync_rules.bat / sync_rules.command. These are framework buttons, not research data.
+
+## v1.4.5 entry additions
+
+- [Release summary](docs/CHANGELOG.md)
+- [Preparing for v2](docs/V2_PREPARATION.md)
+- Shared process diagnostic classification: `scripts/harness/process_diagnostics.py`

@@ -22,6 +22,7 @@
   governance/WORKFLOW_CONSTITUTION.md
   governance/RULES.md
   governance/Incident_Log.md          ← 首次參與必讀
+  my/MY_RULES.md                     ← 專案自訂規則（若存在）
   ledgers/Conjecture_Ledger.md §0
   ledgers/Claim_Ledger.md §0–§1
   PROJECT.md
@@ -49,10 +50,18 @@
   - 哪兩條你認為其實是同一條
   - 原文中哪一句你認為最有價值而我可能沒有意識到
 
+═══ 第四步：收工儀式（憲章 §4.2） ═══
+
+拆解與決策請求整理完成後，依憲章 §4.2 順序收工：
+  1. 跑檢查：執行 `python scripts/harness/run_all_sensors.py`（若環境無終端權限，提醒使用者點擊 `檢查專案.bat` / `.command`）。
+  2. 覆寫狀態備忘：覆寫 `NEXT_SESSION_MEMO.md`，記錄當前拆解進度、未完成項目與等待裁決事項。
+  3. 產出交接封包：於 `handoffs/` 產出本輪初始交接封包（格式見 `governance/HANDOFF.md`，包含本輪完整變更清單）。
+  4. 提出第三步的決策請求，等待我的裁決。
+
 ═══ 你要知道的三件事 ═══
 
 1. 我是唯一的裁決者。你提決策請求，我裁決，你執行。
-   ⛔ 你不得直接寫入任何台帳。
+   ⛔ 台帳預設由使用者維護（受 governance_config.json 之 deny 保護）；未經我明確授權並自 deny 移除前，你不得寫入任何台帳。
 
 2. 每個帶數值或帶斷言的句子都要標查證等級標記。
    ⛔ [已查證] 等級的資料不得用來判定某主張為假，也不得用來建構新假說。

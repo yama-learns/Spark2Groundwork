@@ -292,7 +292,7 @@ def excluded(path, root, cfg):
     exclusion-logic problem.
     """
     try:
-        parts = set(pathlib.Path(path).resolve().relative_to(root).parts)
+        parts = set(pathlib.Path(path).resolve().relative_to(pathlib.Path(root).resolve()).parts)
     except ValueError:
         return True
     return bool(parts & set(cfg["excluded_dirs"]))

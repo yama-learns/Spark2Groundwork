@@ -1,43 +1,34 @@
 #!/bin/bash
-# ===========================================================
-#  Review what changed since your last checkpoint
-#
-#  This file is a BUTTON, not the program. All the logic lives
-#  in scripts/harness/review_changes.py so that macOS and Windows run
-#  exactly the same code. Do not copy logic back into here:
-#  two copies of one thing is how this framework's own
-#  "fixed one layer, missed another" incidents happened.
-#
-#  ⚠️ If double-clicking does nothing, this file may have lost its
-#     executable bit (that happens when the project arrives as a
-#     downloaded .zip rather than a git clone). In Terminal, run:
-#         chmod +x "<this file>"
-#     and if macOS says the file is "from the internet":
-#         xattr -dr com.apple.quarantine "<this project folder>"
-# ===========================================================
-cd "$(dirname "$0")" || exit 1
-
-PY=""
-command -v python3 >/dev/null 2>&1 && PY=python3
-[ -z "$PY" ] && command -v python >/dev/null 2>&1 && PY=python
-
-if [ -z "$PY" ]; then
-  echo
-  echo "[FAIL] Python was not found on this computer."
-  echo
-  echo "  This framework needs Python 3.9 or newer."
-  echo "  macOS: open Terminal and run   xcode-select --install"
-  echo "  or install from https://www.python.org/downloads/"
-  echo
-  echo "  Nothing was changed."
-  echo
-  printf "Press Return to close this window. "
-  read -r _
-  exit 1
+# A thin check button. No install, chmod, quarantine clearing or research writes.
+cd "$(dirname "$0")" || exit 2
+if [ "$#" -gt 1 ] || { [ "$#" -eq 1 ] && [ "$1" != "--no-pause" ]; }; then
+  echo "[INCOMPLETE] Unsupported button arguments."
+  exit 2
 fi
-
-"$PY" "scripts/harness/review_changes.py" "$@"
-echo
-echo "==========================================================="
-printf "Press Return to close this window. "
-read -r _
+PY=""
+probe() {
+  [ -n "$PY" ] && return
+  [ -x "$1" ] || return
+  "$1" -I -B -c 'import sys; sys.exit(0 if sys.version_info >= (3,9) else 2)' >/dev/null 2>&1 && PY="$1"
+}
+probe /Library/Frameworks/Python.framework/Versions/Current/bin/python3
+probe /opt/homebrew/bin/python3
+probe /usr/local/bin/python3
+candidate=$(command -v python3 || true)
+if [ "$candidate" = /usr/bin/python3 ]; then
+  /usr/bin/xcode-select -p >/dev/null 2>&1 && probe "$candidate"
+else
+  [ -n "$candidate" ] && probe "$candidate"
+fi
+if [ -z "$PY" ]; then
+  echo '[INCOMPLETE] Python 3.9+ was not found. See docs/START_HERE.html.'
+  /usr/bin/open "docs/START_HERE.html"
+  RC=2
+else
+  "$PY" -I -B "scripts/harness/check_environment.py" --lang zh --action review
+  RC=$?
+fi
+printf '\nResult code: %s (0=PASS, 1=FAIL, 2=INCOMPLETE)\n' "$RC"
+printf 'Press Return to close. '
+if [ "${1:-}" != "--no-pause" ]; then read -r _; fi
+exit "$RC"

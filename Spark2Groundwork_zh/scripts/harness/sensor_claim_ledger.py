@@ -9,10 +9,11 @@
 ⛔ **它不檢查「那段話是否支持該主張」**（環⑥）。那是人的工作，**刻意不機械化**。
 **錨點的作用是讓「有沒有人真的看過原文」變成可查的事實，不是替人看。**
 
-## 兩項檢查
+## 檢查項目
 
     ANCHOR_NOT_IN_SOURCE   錨點在提取物中查無                    FAIL
     CORPUS_MD_MODIFIED     提取物與 manifest 雜湊不符            FAIL
+    CLAIM_NONE_CHECKED     存在有效主張但全部未進入錨點查證      INCOMPLETE
 
 ⚠️ **第二項是「允許 AI 寫入語料庫」的前提條件，不是附加品。**
 錨點查證的全部效力來自「比對對象是程式化提取、模型未參與」這一件事。
@@ -50,6 +51,19 @@ def parse(text):
         if f:
             cur[f.group(1).strip()] = f.group(2).strip()
     return out
+
+
+def is_valid_claim(f):
+    """判斷一筆主張是否為實質有效主張（非純空白或樣板填空）。"""
+    stmt = f.get("陳述", "").strip().strip("`").strip()
+    src = f.get("來源", "").strip().strip("`").strip()
+    anc = f.get("原句錨點", "").strip().strip("`").strip()
+    # 只有整個欄位符合樣板語法才算空白；實質文字即使提到保留符號 `<<<`
+    # 也不能因此被忽略，否則會把未查主張誤報為 PASS。
+    is_empty_stmt = bool(PLACEHOLDER.fullmatch(stmt))
+    is_empty_src = bool(PLACEHOLDER.fullmatch(src))
+    is_empty_anc = bool(PLACEHOLDER.fullmatch(anc))
+    return not (is_empty_stmt and is_empty_src and is_empty_anc)
 
 
 def corpus_integrity(root, cfg, stats=None):
@@ -95,6 +109,13 @@ def corpus_integrity(root, cfg, stats=None):
         man = json.loads(mp.read_text(encoding="utf-8"))
     except Exception as e:                                    # noqa: BLE001
         return [("INCOMPLETE", "CORPUS_MANIFEST_UNREADABLE", f"manifest 無法解析：{e}")]
+    if not isinstance(man, list):
+        return [("INCOMPLETE", "CORPUS_MANIFEST_MALFORMED",
+                 f"{mp.name} 格式錯誤：預期為陣列物件清單，實際為 {type(man).__name__}")]
+    for idx, e in enumerate(man):
+        if not isinstance(e, dict):
+            return [("INCOMPLETE", "CORPUS_MANIFEST_MALFORMED",
+                     f"{mp.name} 第 #{idx} 筆條目非 JSON 物件：{type(e).__name__}")]
     known = {e["md"]: e.get("md_sha256") for e in man if "md" in e}
     for f in sorted(cdir.glob("*.md"), key=lambda p: p.as_posix()):
         want = known.get(f.name)
@@ -113,6 +134,78 @@ def corpus_integrity(root, cfg, stats=None):
     return out
 
 
+YEAR_PAT = re.compile(r"\b(19\d\d|20\d\d)\b")
+
+
+def resolve_source(src, corpus):
+    """解析來源參照至語料庫提取檔名。
+
+    返回：
+        ("EMPTY", None)
+        ("EXACT", filename)
+        ("UNIQUE", filename)
+        ("AMBIGUOUS", [matching_filenames])
+        ("UNRESOLVED", None)
+    """
+    clean_src = src.strip().strip("`").strip()
+    if not clean_src or PLACEHOLDER.match(clean_src) or "<<<" in clean_src:
+        return "EMPTY", None
+
+    # 1. 精確檔名匹配（包含或不含 .md 副檔名）
+    if clean_src in corpus:
+        return "EXACT", clean_src
+    if not clean_src.endswith(".md") and f"{clean_src}.md" in corpus:
+        return "EXACT", f"{clean_src}.md"
+
+    # 2. 提取作者姓氏/首標記與年份
+    m = SURNAME.match(clean_src)
+    if not m:
+        return "UNRESOLVED", None
+    author_key = m.group(1).lower()
+
+    year_m = YEAR_PAT.search(clean_src)
+    year = year_m.group(1) if year_m else None
+
+    matched = []
+    for fname in sorted(corpus.keys()):
+        fl = fname.lower()
+        # 既定語料檔名慣例為「作者 - 年份 - 標題.md」
+        # 僅對檔名的作者欄位比對，拒絕全檔名無邊界子字串比對（防範 Ang 誤配 Chang、Lee 誤配 Leeson、大文 誤配 陳大文）
+        if " - " not in fname:
+            continue
+        file_author = fname.split(" - ")[0].strip().lower()
+        author_match = (
+            file_author == author_key or
+            file_author.startswith(author_key + " ") or
+            file_author.startswith(author_key + "_") or
+            file_author.startswith(author_key + "-") or
+            file_author.startswith(author_key + ",")
+        )
+        if not author_match:
+            continue
+
+        if year:
+            if year in fl:
+                matched.append(fname)
+        else:
+            matched.append(fname)
+
+    if not matched:
+        return "UNRESOLVED", None
+    if len(matched) == 1:
+        # 覆核 B-2：單一命中仍然是一次「推論」，不是台帳明說的。呼叫端會把
+        # 用了哪一條規則印出來，讓這個推論可見，而不是靜默接受。
+        return ("UNIQUE_AUTHOR_YEAR" if year else "UNIQUE_AUTHOR_ONLY"), matched[0]
+    return "AMBIGUOUS", matched
+
+
+RESOLUTION_RULE_TEXT = {
+    "EXACT": "明示檔名",
+    "UNIQUE_AUTHOR_YEAR": "作者欄＋年份唯一命中（推論）",
+    "UNIQUE_AUTHOR_ONLY": "僅作者欄唯一命中、來源未寫年份（推論）",
+}
+
+
 def main():
     root, cfg, as_json, name = cli("claim_ledger")
     cstats = {}
@@ -129,6 +222,7 @@ def main():
     corpus = {p.name: norm(p.read_text(encoding="utf-8", errors="replace"))
               for p in cdir.glob("*.md")} if cdir.is_dir() else {}
     checked = matched = 0
+    resolutions = []
 
     for cid, f in entries.items():
         anchor = f.get("原句錨點", "").strip().strip("`")
@@ -140,21 +234,53 @@ def main():
             findings.append(("INCOMPLETE", "CORPUS_ABSENT",
                              f"{cid} 無法比對：語料庫為空——**未檢查 ≠ 通過**"))
             continue
-        m = SURNAME.match(src)
-        key = m.group(1).lower() if m else ""
-        cands = [t for n, t in corpus.items() if key and key in n.lower()] or list(corpus.values())
+
+        status, res = resolve_source(src, corpus)
+        if status in ("EMPTY", "UNRESOLVED"):
+            findings.append(("INCOMPLETE", "ANCHOR_SOURCE_UNRESOLVED",
+                             f"{cid} 來源無法解析：「{src}」——**未檢查 ≠ 通過**"))
+            continue
+        if status == "AMBIGUOUS":
+            findings.append(("INCOMPLETE", "ANCHOR_SOURCE_AMBIGUOUS",
+                             f"{cid} 來源具歧義（匹配到多個提取檔：{res}）——請於來源欄明示提取檔名"))
+            continue
+
+        target_fname = res
+        target_text = corpus[target_fname]
         checked += 1
-        if any(norm(anchor) in t for t in cands):
+        resolutions.append((cid, target_fname, RESOLUTION_RULE_TEXT[status]))
+        if norm(anchor) in target_text:
             matched += 1
         else:
             findings.append(("FAIL", "ANCHOR_NOT_IN_SOURCE",
-                             f"{cid} 錨點在語料庫中查無：「{anchor[:56]}…」"))
+                             f"{cid} 錨點在指定來源檔 {target_fname} 中查無：「{anchor[:56]}…」"))
+
+    # D-20260921-X87 / CLAIM-EXIT-1：存在有效主張但全部未進入錨點查證（checked == 0）時，
+    # 新增 INCOMPLETE finding，交由原 emit 產出 exit 2（文字與 --json 均回 2）。
+    # 保留既有 INCOMPLETE/FAIL 優先序：若已存在 FAIL（確定的缺陷診斷），不以 INCOMPLETE 掩蓋之。
+    valid_entries = [cid for cid, f in entries.items() if is_valid_claim(f)]
+    if valid_entries and checked == 0 and not any(l == "FAIL" for l, _, _ in findings):
+        findings.append(("INCOMPLETE", "CLAIM_NONE_CHECKED",
+                         f"本次 {len(valid_entries)} 筆有效主張全部未進入錨點查證"
+                         f"（空樣板、語料缺失或來源無法解析）——**未檢查 ≠ 通過**"))
 
     code = emit("主張台帳感測器", findings,
                 {"主張筆數": len(entries), "提取檔": len(corpus),
                  "逐檔比對雜湊": f"{cstats['hash_compared']} 份",
-                 "錨點查證": f"{matched}/{checked} 命中"}, as_json, name)
+                 "錨點查證": (f"{matched}/{checked} 命中"
+                              if checked
+                               else ("0/0 命中（本次未實際查證任何有效主張——**未檢查 ≠ 通過**）"
+                                     if valid_entries
+                                     else "0/0 命中（沒有實質主張需要查證）"))}, as_json, name)
     if not as_json:
+        # 覆核 B-2：把每一筆的解析結果印出來，讓「用哪條規則挑到哪個檔」可見。
+        # 明示檔名是台帳說的；作者欄唯一命中是本感測器的推論，使用者有權看到。
+        for cid, fname, rule in resolutions:
+            print(f"      ↳ {cid} → {fname}（{rule}）")
+        if valid_entries and checked == 0:
+            # 覆核 B-1 / D-20260921-X87：有主張卻一筆都沒查證時，明說未檢查不等於通過。
+            print(f"      ⚠️ 本次 {len(valid_entries)} 筆有效主張全部未進入錨點查證"
+                  f"（空樣板、語料缺失或來源無法解析）——**未檢查 ≠ 通過**")
         print("      ⚠️ 本感測器只驗錨點存在，不驗原文是否支持該主張（環⑥⑦）")
     return code
 

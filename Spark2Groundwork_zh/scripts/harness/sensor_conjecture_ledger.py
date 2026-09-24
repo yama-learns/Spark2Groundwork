@@ -28,14 +28,11 @@ import sys, pathlib as _pl
 _pl_here = _pl.Path(__file__).resolve().parent
 sys.path.insert(0, str(_pl_here))
 from _common import cli, emit                              # noqa: E402
-from framework_config import load as _load_cfg, ROOT as _ROOT, excluded as _cfg_excluded
-CFG = _load_cfg()
+from framework_config import excluded                       # noqa: E402
 
 import re
 import sys
 from pathlib import Path
-
-LEDGER_NAME = CFG["conjecture_ledger"]
 
 # ⚠️ **單一定義處：`governance/CONJECTURE_LEDGER_SPEC.md` §0.1。本表須與它同步。**
 #
@@ -100,15 +97,6 @@ def safe_read(path):
     except (UnicodeDecodeError, OSError):
         return None
 
-def _excluded(path: Path, root: Path) -> bool:
-    """排除判定一律委派給 `framework_config.excluded`（**單一定義處**）。
-
-    ⚠️ 本檔第 30 行原本就 `import excluded as _excluded`，
-    **然後在這裡用一個同名函式把它蓋掉了**——那個 import 從頭到尾是死的。
-    **「改一層漏另一層」的一種形態：兩個定義並存，而只有一個被更新。**
-    """
-    return _cfg_excluded(path, root, CFG)
-
 
 def is_placeholder(value: str) -> bool:
     return value.strip() in PLACEHOLDERS
@@ -150,20 +138,21 @@ def main() -> int:
     # ⚠️ 參數解析與輸出格式一律走 `_common`（憲章 §3.2：每條規則只有一個定義處）。
     #    ⛔ 本檔原本自帶一份 `emit()`——**兩份實作，兩份同一則事故註記。**
     #    程式碼當時是對的，**但下一次只會有一份被更新，而那正是那則註記描述的失效。**
-    root, _cfg, as_json, _name = cli("conjecture_ledger")
+    root, cfg, as_json, name = cli("conjecture_ledger")
     findings = []          # (level, code, message)
     # ⚠️ 台帳缺失為「確定的缺陷」，不是「無法判定」，故判 FAIL 而非 INCOMPLETE。
     #    INCOMPLETE 保留給「感測器無法完成檢查」的情形（如掃描範圍落空）。
-    ledger_path = root / LEDGER_NAME
+    ledger_rel = cfg["conjecture_ledger"]
+    ledger_path = root / ledger_rel
     if not ledger_path.exists():
-        findings.append(("FAIL", "LEDGER_MISSING", f"找不到 {LEDGER_NAME}（查找路徑：{ledger_path}）"))
-        return emit("猜想台帳感測器", findings, {}, as_json, "conjecture_ledger")
+        findings.append(("FAIL", "LEDGER_MISSING", f"找不到 {ledger_rel}（查找路徑：{ledger_path}）"))
+        return emit("猜想台帳感測器", findings, {}, as_json, name)
 
     entries, dup = parse_ledger(safe_read(ledger_path))
 
     if not entries:
-        findings.append(("FAIL", "LEDGER_MISSING", f"{LEDGER_NAME} 存在但解析不到任何 '### C-NN' 區塊——格式可能已變更"))
-        return emit("猜想台帳感測器", findings, {}, as_json, "conjecture_ledger")
+        findings.append(("FAIL", "LEDGER_MISSING", f"{ledger_rel} 存在但解析不到任何 '### C-NN' 區塊——格式可能已變更"))
+        return emit("猜想台帳感測器", findings, {}, as_json, name)
 
     for cid, lineno in dup:
         findings.append(("FAIL", "CONJECTURE_ID_DUPLICATE", f"{cid} 重複出現（第 {lineno} 行）"))
@@ -242,7 +231,7 @@ def main() -> int:
     _led_resolved = ledger_path.resolve()
     scan_targets = [p for p in root.rglob("*.md")
                     if p.resolve() != _led_resolved
-                    and not _excluded(p, root)]
+                    and not excluded(p, root, cfg)]
 
     if not scan_targets:
         # ⚠️ 「掃不到」是**查不了**，不是**查出缺陷**（`R-22`、憲章 §7.4）。
@@ -251,7 +240,7 @@ def main() -> int:
     else:
         # 🔴 提案檔豁免（裁決 8）。判準為**結構性**：位於 handoffs/ ＋ 檔名含標記。
         #    ⛔ 只豁免本項檢查，其餘照跑。⛔ 被豁免者一律印出。
-        markers = CFG.get("proposal_markers", [])
+        markers = cfg.get("proposal_markers", [])
         exempted = []
         for f_ in scan_targets:
             rel = f_.relative_to(root).as_posix()
@@ -283,7 +272,7 @@ def main() -> int:
         "反證條件為空": sum(1 for e in entries.values()
                             if is_placeholder(e["fields"].get("反證條件", ""))),
     }
-    return emit("猜想台帳感測器", findings, stats, as_json, "conjecture_ledger")
+    return emit("猜想台帳感測器", findings, stats, as_json, name)
 
 
 if __name__ == "__main__":

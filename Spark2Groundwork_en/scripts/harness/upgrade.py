@@ -202,7 +202,7 @@ FRAMEWORK_DIRS = ("governance", "profiles", "prompts", "scripts", "docs")
 #    so** — **⛔ an orphan folder nobody knows about is exactly a stale framework document.**
 #    Format: `dirname: (retired in, where the contents went)`.
 RETIRED_DIRS = {"policy": ("v1.4.4", "governance")}
-FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md",
+FRAMEWORK_FILES = ("save_progress.bat", "save_progress.command", "sync_rules.bat", "sync_rules.command", "check_project.bat", "check_project.command", "README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md",
                    "check_update.bat", "check_update.command",
                    "review_changes.bat", "review_changes.command",
                    "snapshot.bat", "snapshot.command")
@@ -957,7 +957,7 @@ def cmd_restore(root, token, path_arg, MSG):
     checkpoint_program = _checkpoint_program(root)
     if checkpoint_program is None:
         print(MSG["checkpoint_peer_missing"]); return 2
-    rc = subprocess.run([sys.executable, str(checkpoint_program),
+    rc = subprocess.run([sys.executable, "-B", str(checkpoint_program),
                          "--root", str(root), "--mode", "tool",
                          "--tool-id", "upgrade",
                          "--operation", f"restore-{pathlib.PurePosixPath(rel).name}"]).returncode
@@ -1019,7 +1019,7 @@ def cmd_apply(root, src, target, MSG):
     checkpoint_program = _checkpoint_program(root)
     if checkpoint_program is None:
         print(MSG["checkpoint_peer_missing"]); return 2
-    rc = subprocess.run([sys.executable, str(checkpoint_program),
+    rc = subprocess.run([sys.executable, "-B", str(checkpoint_program),
                          "--root", str(root), "--mode", "tool",
                          "--tool-id", "upgrade",
                          "--operation", f"apply-{target}"]).returncode

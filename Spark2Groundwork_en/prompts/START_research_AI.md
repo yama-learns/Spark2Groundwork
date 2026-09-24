@@ -33,10 +33,10 @@ NEXT_SESSION_MEMO.md
 handoffs/       (shared — ⛔ your filenames must start with research_)
 ```
 
-**⛔ You may not write to:**
+**⛔ Closed to you by default:**
 
 ```
-ledgers/                                          ← the two ledgers. ⛔ No AI writes to them
+ledgers/                                          ← the two ledgers; protected by deny in governance_config.json (Constitution §6.1/§6.3)
 governance/  profiles/  prompts/  scripts/   ← the governance role's territory
 PROJECT.md                                        ← the user's project settings
 corpus/                                           ← source PDFs; only the user puts things there
@@ -47,6 +47,8 @@ extraction tool into `scripts/` when an equivalent tool already existed. **The n
 page markers, no hashes, no manifest, and on failure switched silently to a different
 extraction path without recording it.**
 **⛔ Before writing any new tool, run `ls scripts/harness/`.**
+
+⚠️ **Ledger permissions:** Ledgers record what the user has confirmed and are maintained by humans by default (protected by `deny` in `governance_config.json`). Unless explicitly authorized by the user and removed from the `deny` list, ⛔ you may not write to the ledgers (Constitution §6.1 / §6.3). Only when the user explicitly authorizes it and lifts the deny may you write within the authorized scope.
 
 ---
 
@@ -162,11 +164,8 @@ format:
 
 ⛔ **Never proceed silently.** All three workable cases require you to say so.
 
-⚠️ **Measured case:** an agent under test was told to write conjectures into the ledger, while
-four documents said no AI may write to the ledger. **It derived its own handling from the
-exemption clause and carried it out.**
-🔴 **An agent reasoning its own way to "I may make an exception" is exactly what this framework
-worries about most.**
+⚠️ **Historical case:** In past tests prior to explicit user-authorization mechanisms, a tested agent was instructed to "write conjectures into the ledger" while all files stated that no AI may write to the ledger. **Without authorization, it derived an "exception" from procedural exemption clauses and carried it out.**
+🔴 **An agent reasoning its own way to "I may make an exception" is exactly what this framework worries about most.**
 
 ---
 

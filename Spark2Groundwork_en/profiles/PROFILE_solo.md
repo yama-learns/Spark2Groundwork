@@ -19,26 +19,25 @@
 | `my/MY_INCIDENTS.md` | **What went wrong in your project.** Section 5 explains why this is the important one |
 | `NEXT_SESSION_MEMO.md` | Where things stood at the end of a round; used to open the next one |
 | `scripts/harness/` | The automatic checks |
-| The three buttons at the top level | snapshot / review changes / check update |
+| `governance/Audit_Protocol.md` | Defines audit terms, self-certification specs, and sensor clauses. While solo mode does not run a two-model adversarial audit, automated sensors require its clauses and definitions; ⛔ keep it, do not delete |
+| All supplied files in `profiles/` | Other profiles remain referenced by `SETUP.md`, governance documents, and checks; keeping them does not activate those collaboration modes |
+| Root launchers (including `check_project.bat` / `.command`) | Entries for project checks, snapshots, reviewing changes, saving progress, syncing rules, and checking updates |
 
-| Safe to delete | Why |
-|---|---|
-| `governance/Audit_Protocol.md` | It is for a second model picking holes in the work, and you do not have one |
-| The other three files in `profiles/` | You have chosen this one |
-
-⛔ **Do not keep everything just because it looks more complete.**
-**A governance document nobody maintains is worse than not having it — it makes you think
-somebody is watching.**
+⛔ **Do not delete the other profile files to signal that you chose solo.**
+`governance/Audit_Protocol.md`, `governance/EXTERNAL_TOOLS.md`, and the checks still refer to them;
+removing them makes the reference check fail. Choosing solo changes how you collaborate this round;
+it does not activate the roles described by the other profiles.
 
 ---
 
-## 2. What deleting the audit document costs you
+## 2. What you lose without a second model
 
 **It costs you a second pair of eyes.**
 
 ⚠️ This is worth taking seriously: **several of the most important defences in this framework
 were not thought of by their author. Another model saw something the author could not see.**
 One model working from start to finish will stay blind to whatever it is blind to.
+(Solo mode keeps `Audit_Protocol.md` for automated sensors, but automated checks cannot replace substantive challenge.)
 
 **The cheapest possible replacement is one sentence:**
 

@@ -40,6 +40,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 # ⛔ Output encoding must be pinned to UTF-8 first, ⛔ or Windows dies at the
 #    first symbol printed. Single home: `_common._force_utf8` (see the case there).
 from _common import _force_utf8                            # noqa: E402
+from run_all_sensors import _is_python_crash               # noqa: E402
 _force_utf8()
 from collections import Counter
 
@@ -153,10 +154,29 @@ expect("correct anchor does not false-alarm", 0, "sensor_claim_ledger.py", "clai
 #    see where extractions go -- **and every fresh project then reported INCOMPLETE on its first
 #    run.** ⛔ A first run that cries wolf is what teaches people to ignore the output.
 expect("an empty extraction folder is not 'could not check'", 0, "sensor_claim_ledger.py",
-       "corpus_empty", "CORPUS_EMPTY", forbid=("CORPUS_MANIFEST_MISSING",))
+       "corpus_empty", "CORPUS_EMPTY",
+       forbid=("CORPUS_MANIFEST_MISSING", "not checked is not a pass"))
 # ⚠️ The paired half: extractions present but unprotected is still INCOMPLETE.
 expect("extractions with no manifest are INCOMPLETE", 2, "sensor_claim_ledger.py",
        "corpus_unmanifested", "CORPUS_MANIFEST_MISSING")
+expect("unresolvable source citation must INCOMPLETE", 2, "sensor_claim_ledger.py", "claim_unresolved", "ANCHOR_SOURCE_UNRESOLVED")
+expect("ambiguous multi-paper citation must INCOMPLETE", 2, "sensor_claim_ledger.py", "claim_ambiguous", "ANCHOR_SOURCE_AMBIGUOUS")
+expect("explicit filename and year distinction do not false-alarm", 0, "sensor_claim_ledger.py", "claim_explicit_match",
+       forbid=("ANCHOR_NOT_IN_SOURCE", "ANCHOR_SOURCE_UNRESOLVED", "ANCHOR_SOURCE_AMBIGUOUS"))
+expect("non-array manifest format error must INCOMPLETE", 2, "sensor_claim_ledger.py", "corpus_manifest_malformed", "CORPUS_MANIFEST_MALFORMED")
+expect("substring author match must not confuse papers and must INCOMPLETE", 2, "sensor_claim_ledger.py", "claim_author_substring", "ANCHOR_SOURCE_UNRESOLVED")
+# ⚠️ D-20260921-X87 / CLAIM-EXIT-1: When valid claims exist but none reached anchor
+#    verification, exit code contract is INCOMPLETE (exit 2), consistent in text and JSON.
+expect("all claims skipping verification must INCOMPLETE", 2, "sensor_claim_ledger.py",
+       "claim_all_anchors_empty", "CLAIM_NONE_CHECKED")
+expect("substantive text mentioning the template marker must not be treated as blank", 2,
+       "sensor_claim_ledger.py", "claim_embedded_marker_mixed",
+       "All 1 substantive claim(s)")
+# ⚠️ Review B-2: a unique author-field hit is this sensor's inference, not what the
+#    ledger stated; it has to be printed so the reader can see it happened.
+expect("author-field-only inference must be visible", 0, "sensor_claim_ledger.py",
+       "claim_noyear_inference", "unique match on author field only")
+
 
 # Self-certification
 expect("self-certification is caught", 1, "sensor_self_certification.py", "selfcert_bad")
@@ -229,6 +249,7 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
         subprocess.run(g + ["add", "-A"], capture_output=True)
         subprocess.run(g + ["-c", "user.name=t", "-c", "user.email=t@t",
                             "commit", "-q", "-m", "base"], capture_output=True)
+        subprocess.run(g + ["tag", "reviewed"], capture_output=True)
         for rel in changed_files:
             f = tmp / rel
             f.parent.mkdir(parents=True, exist_ok=True)
@@ -285,6 +306,368 @@ scope_case("covered by _human: no false alarm, and the count is printed",
            ["ledgers/Claim_Ledger.md"], 0, "_human", forbid=("WRITE_TO_DENIED_PATH",))
 scope_case("an in-scope change does not false-alarm", ["governance/SOURCES.md"], 0,
            forbid=("WRITE_TO_DENIED_PATH", "WRITE_OUT_OF_SCOPE"))
+
+
+# -- V145-E2: Scope check retains records despite commits or renames (8-family matrix) --
+def scope_matrix_cases():
+    global ok, bad
+    import json, shutil, subprocess, tempfile
+
+    def report(desc, hit, why=None):
+        global ok, bad
+        if hit:
+            print("  ✅ " + desc); ok += 1
+        else:
+            print("  ❌ " + desc + (" (" + "; ".join(why) + ")" if why else "")); bad += 1
+
+    def run_s(root_dir):
+        env = dict(os.environ, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([PY, str(HERE / "sensor_scope_and_t0.py"), "--root", str(root_dir)],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", env=env)
+        return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+    def setup_base(td, scopes=None, deny=None):
+        root = pathlib.Path(td)
+        (root / "governance").mkdir(parents=True, exist_ok=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (root / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (root / "governance_config.json").write_text(json.dumps({
+            "write_scopes": scopes if scopes is not None else {"governance": ["governance"]},
+            "deny": deny if deny is not None else ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
+        subprocess.run(["git", "-C", td, "init", "-q"], capture_output=True)
+        subprocess.run(["git", "-C", td, "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", td, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], capture_output=True)
+        return root
+
+    # 1. committed out-of-scope modification FAILs
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        (root / "ledgers").mkdir(parents=True, exist_ok=True)
+        (root / "ledgers" / "leak.md").write_text("leak\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "commit-leak"], capture_output=True)
+        c, o = run_s(root)
+        report("committed out-of-scope modification FAILs", c == 1 and "WRITE_TO_DENIED_PATH" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 2. committed and reverted change still leaves historical touch record
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "ledgers").mkdir(parents=True, exist_ok=True)
+        (root / "ledgers" / "history.md").write_text("orig\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base2"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        (root / "ledgers" / "history.md").write_text("modified\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-aqm", "mod"], capture_output=True)
+        (root / "ledgers" / "history.md").write_text("orig\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-aqm", "revert"], capture_output=True)
+        c, o = run_s(root)
+        report("committed and reverted change still leaves historical touch record", c == 1 and "WRITE_TO_DENIED_PATH" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 3. zero changes after reviewed baseline does not false-alarm
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        c, o = run_s(root)
+        report("zero changes after reviewed baseline does not false-alarm", c == 0 and "WRITE_OUT_OF_SCOPE" not in o and "WRITE_TO_DENIED_PATH" not in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 4. rename from allowed to denied FAILs
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "governance" / "f.md").write_text("f\n", encoding="utf-8")
+        (root / "ledgers").mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base2"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "mv", "governance/f.md", "ledgers/f.md"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "rename"], capture_output=True)
+        c, o = run_s(root)
+        report("rename from allowed to denied FAILs", c == 1 and "WRITE_TO_DENIED_PATH" in o and "ledgers/f.md" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 5. rename from denied to allowed includes both endpoints and FAILs
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "ledgers").mkdir(parents=True, exist_ok=True)
+        (root / "ledgers" / "f.md").write_text("f\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base2"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "mv", "ledgers/f.md", "governance/f.md"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "rename"], capture_output=True)
+        c, o = run_s(root)
+        report("rename from denied to allowed includes both endpoints and FAILs", c == 1 and "WRITE_TO_DENIED_PATH" in o and "ledgers/f.md" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 6. rename with both endpoints allowed does not false-alarm
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "governance" / "f1.md").write_text("f1\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base2"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "mv", "governance/f1.md", "governance/f2.md"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "rename"], capture_output=True)
+        c, o = run_s(root)
+        report("rename with both endpoints allowed does not false-alarm", c == 0 and "WRITE_OUT_OF_SCOPE" not in o and "WRITE_TO_DENIED_PATH" not in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 7. special path characters like Chinese, spaces, brackets, leading minus parse correctly
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        spec = root / "governance" / "測試 [字面] 空格 -減號.md"
+        spec.write_text("spec\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "special"], capture_output=True)
+        c, o = run_s(root)
+        report("special path characters like Chinese, spaces, brackets, leading minus parse correctly", c == 0 and "WRITE_OUT_OF_SCOPE" not in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 8. cross-subtree move into project detects destination endpoint
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        top = pathlib.Path(tmp)
+        proj = top / "sub_proj"
+        sibling = top / "sibling_proj"
+        proj.mkdir(); sibling.mkdir()
+        (proj / "governance").mkdir(parents=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (proj / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (proj / "governance_config.json").write_text(json.dumps({
+            "write_scopes": {"governance": ["governance"]},
+            "deny": ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
+        (proj / "ledgers").mkdir()
+        (sibling / "out.txt").write_text("out\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "init", "-q"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "mv", "sibling_proj/out.txt", "sub_proj/ledgers/in.txt"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "cross"], capture_output=True)
+        c, o = run_s(proj)
+        report("cross-subtree move into project detects destination endpoint", c == 1 and "WRITE_TO_DENIED_PATH" in o and "ledgers/in.txt" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 9. missing reviewed benchmark must INCOMPLETE and never claim pass
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        c, o = run_s(root)
+        report("missing reviewed benchmark must INCOMPLETE and never claim pass", c == 2 and "SCOPE_UNCHECKABLE" in o and "reviewed benchmark does not exist" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 10. reviewed not ancestor of HEAD must INCOMPLETE and never claim pass
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        subprocess.run(["git", "-C", str(tmp), "checkout", "-q", "--orphan", "unrelated"], capture_output=True)
+        (root / "unrelated.txt").write_text("x\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "other"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        main_br = "master" if subprocess.run(["git", "-C", str(tmp), "branch", "--list", "master"], capture_output=True).stdout else "main"
+        subprocess.run(["git", "-C", str(tmp), "checkout", "-q", main_br], capture_output=True)
+        c, o = run_s(root)
+        report("reviewed not ancestor of HEAD must INCOMPLETE and never claim pass", c == 2 and "SCOPE_UNCHECKABLE" in o and "not an ancestor of HEAD" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 11. sensor execution keeps HEAD and reviewed strictly read-only
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        hb = subprocess.run(["git", "-C", str(tmp), "rev-parse", "HEAD"], capture_output=True).stdout
+        rb = subprocess.run(["git", "-C", str(tmp), "rev-parse", "reviewed"], capture_output=True).stdout
+        sb = subprocess.run(["git", "-C", str(tmp), "status", "--porcelain"], capture_output=True).stdout
+        c, o = run_s(root)
+        ha = subprocess.run(["git", "-C", str(tmp), "rev-parse", "HEAD"], capture_output=True).stdout
+        ra = subprocess.run(["git", "-C", str(tmp), "rev-parse", "reviewed"], capture_output=True).stdout
+        sa = subprocess.run(["git", "-C", str(tmp), "status", "--porcelain"], capture_output=True).stdout
+        unchanged = (hb == ha) and (rb == ra) and (sb == sa)
+        report("sensor execution keeps HEAD and reviewed strictly read-only", c == 0 and unchanged, [f"code={c}", f"unchanged={unchanged}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 12. assume-unchanged modified file must INCOMPLETE
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "governance" / "tracked.md").write_text("initial\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "add-tracked"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "update-index", "--assume-unchanged", "governance/tracked.md"], capture_output=True)
+        (root / "governance" / "tracked.md").write_text("tampered\n", encoding="utf-8")
+        content_before = (root / "governance" / "tracked.md").read_bytes()
+        ls_before = subprocess.run(["git", "-C", str(tmp), "ls-files", "-v"], capture_output=True).stdout
+        c, o = run_s(root)
+        content_after = (root / "governance" / "tracked.md").read_bytes()
+        ls_after = subprocess.run(["git", "-C", str(tmp), "ls-files", "-v"], capture_output=True).stdout
+        read_only_ok = (content_before == content_after) and (ls_before == ls_after)
+        report("assume-unchanged modified file must INCOMPLETE", c == 2 and "TRACKED_HIDDEN_FLAGS_PRESENT" in o and "governance/tracked.md" in o and read_only_ok, [f"code={c}", f"read_only={read_only_ok}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 13. assume-unchanged unmodified file must INCOMPLETE and restore normal pass after flag removed
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "governance" / "tracked.md").write_text("initial\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "add-tracked"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "update-index", "--assume-unchanged", "governance/tracked.md"], capture_output=True)
+        c1, o1 = run_s(root)
+        subprocess.run(["git", "-C", str(tmp), "update-index", "--no-assume-unchanged", "governance/tracked.md"], capture_output=True)
+        c2, o2 = run_s(root)
+        pass_restored = (c2 == 0 and "TRACKED_HIDDEN_FLAGS_PRESENT" not in o2)
+        report("assume-unchanged unmodified file must INCOMPLETE and restore normal pass after flag removed", c1 == 2 and "TRACKED_HIDDEN_FLAGS_PRESENT" in o1 and pass_restored, [f"code1={c1}", f"code2={c2}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 14. skip-worktree modified and unmodified files must both INCOMPLETE
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / "governance" / "sw_unmod.md").write_text("orig1\n", encoding="utf-8")
+        (root / "governance" / "sw_mod.md").write_text("orig2\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "add-sw"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "update-index", "--skip-worktree", "governance/sw_unmod.md", "governance/sw_mod.md"], capture_output=True)
+        (root / "governance" / "sw_mod.md").write_text("modified\n", encoding="utf-8")
+        c1, o1 = run_s(root)
+        subprocess.run(["git", "-C", str(tmp), "update-index", "--no-skip-worktree", "governance/sw_unmod.md", "governance/sw_mod.md"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "checkout", "--", "governance/sw_mod.md"], capture_output=True)
+        c2, o2 = run_s(root)
+        report("skip-worktree modified and unmodified files must both INCOMPLETE", c1 == 2 and "TRACKED_HIDDEN_FLAGS_PRESENT" in o1 and c2 == 0, [f"code1={c1}", f"code2={c2}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 15. new file in deny ignored by gitignore must INCOMPLETE
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / ".gitignore").write_text("ledgers/ignored_new.txt\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", ".gitignore"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "add-gitignore"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        (root / "ledgers").mkdir(parents=True, exist_ok=True)
+        (root / "ledgers" / "ignored_new.txt").write_text("secret\n", encoding="utf-8")
+        c, o = run_s(root)
+        report("new file in deny ignored by gitignore must INCOMPLETE", c == 2 and "IGNORED_DENIED_PATH_PRESENT" in o and "ledgers/ignored_new.txt" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 16. pre-existing ignored file in deny must INCOMPLETE
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp))
+        (root / ".gitignore").write_text("ledgers/old_ignored.txt\n", encoding="utf-8")
+        (root / "ledgers").mkdir(parents=True, exist_ok=True)
+        (root / "ledgers" / "old_ignored.txt").write_text("pre-existing\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", ".gitignore"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "add-gitignore"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        c, o = run_s(root)
+        report("pre-existing ignored file in deny must INCOMPLETE", c == 2 and "IGNORED_DENIED_PATH_PRESENT" in o and "ledgers/old_ignored.txt" in o, [f"code={c}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 17. out of scope file ignored must INCOMPLETE while regular research attachments and caches pass
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        root = setup_base(str(tmp), scopes={"governance": ["governance"]})
+        (root / ".gitignore").write_text("unscoped/*.tmp\nscratch/\nselftest/\nresearch/*.pdf\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", ".gitignore"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "add-gitignore"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        (root / "unscoped").mkdir(parents=True, exist_ok=True)
+        (root / "unscoped" / "leak.tmp").write_text("leak\n", encoding="utf-8")
+        c1, o1 = run_s(root)
+        unscoped_ok = (c1 == 2 and "IGNORED_OUT_OF_SCOPE_PRESENT" in o1 and "unscoped/leak.tmp" in o1)
+
+        shutil.rmtree(root / "unscoped", ignore_errors=True)
+        (root / "scratch").mkdir(parents=True, exist_ok=True)
+        (root / "scratch" / "cache.bin").write_bytes(b"\x00\x01\x02")
+        c2, o2 = run_s(root)
+        cache_ok = (c2 == 0 and "IGNORED_OUT_OF_SCOPE_PRESENT" not in o2 and "IGNORED_DENIED_PATH_PRESENT" not in o2)
+
+        shutil.rmtree(root / "scratch", ignore_errors=True)
+        (root / "governance_config.json").write_text(json.dumps({
+            "write_scopes": {},
+            "deny": ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
+        (root / "research").mkdir(parents=True, exist_ok=True)
+        (root / "research" / "paper.pdf").write_bytes(b"%PDF-1.4\n")
+        c3, o3 = run_s(root)
+        solo_ok = (c3 == 0 and "IGNORED_OUT_OF_SCOPE_PRESENT" not in o3 and "IGNORED_DENIED_PATH_PRESENT" not in o3)
+
+        report("out of scope file ignored must INCOMPLETE while regular research attachments and caches pass", unscoped_ok and cache_ok and solo_ok, [f"c1={c1}", f"c2={c2}", f"c3={c3}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # 18. conflict between deny and exclusion must explicitly report configuration conflict and external flags do not contaminate
+    tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_matrix_"))
+    try:
+        top = pathlib.Path(tmp)
+        proj = top / "sub_proj"
+        sibling = top / "sibling_proj"
+        proj.mkdir(); sibling.mkdir()
+        (proj / "governance").mkdir(parents=True)
+        for t0 in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+            (proj / "governance" / t0).write_text("# T0\n", encoding="utf-8")
+        (proj / "governance_config.json").write_text(json.dumps({
+            "write_scopes": {},
+            "deny": ["ledgers", "scratch"]}, ensure_ascii=False), encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "init", "-q"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "base"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "reviewed"], capture_output=True)
+        c1, o1 = run_s(proj)
+        conflict_ok = (c1 == 2 and "CONFIGURATION_CONFLICT" in o1 and "scratch" in o1)
+
+        (proj / "governance_config.json").write_text(json.dumps({
+            "write_scopes": {},
+            "deny": ["ledgers"]}, ensure_ascii=False), encoding="utf-8")
+        (sibling / "sib_tracked.txt").write_text("sib\n", encoding="utf-8")
+        (top / ".gitignore").write_text("sibling_proj/sib_ignored.txt\n", encoding="utf-8")
+        (sibling / "sib_ignored.txt").write_text("ignored\n", encoding="utf-8")
+        subprocess.run(["git", "-C", str(tmp), "add", "."], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "sib-base"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "tag", "-f", "reviewed"], capture_output=True)
+        subprocess.run(["git", "-C", str(tmp), "update-index", "--assume-unchanged", "sibling_proj/sib_tracked.txt"], capture_output=True)
+        (sibling / "sib_tracked.txt").write_text("sib-changed\n", encoding="utf-8")
+        c2, o2 = run_s(proj)
+        isolation_ok = (c2 == 0 and "TRACKED_HIDDEN_FLAGS_PRESENT" not in o2 and "IGNORED_DENIED_PATH_PRESENT" not in o2)
+
+        report("conflict between deny and exclusion must explicitly report configuration conflict and external flags do not contaminate", conflict_ok and isolation_ok, [f"c1={c1}", f"c2={c2}"])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+scope_matrix_cases()
 
 
 # -- Prompt self-containment: both profiles need a self-test (`governance/WORKFLOW_CONSTITUTION.md` §7.1) ------------
@@ -429,17 +812,27 @@ expect("missing home is INCOMPLETE", 2, "sensor_clause_sync.py", "sync_home_miss
 def crash_case():
     import os as _os
     env = dict(_os.environ, PYTHONIOENCODING="utf-8")
-    r = subprocess.run([PY, str(HERE / "_selftest_crasher.py")],
+    runs = [
+        subprocess.run([PY, str(HERE / "_selftest_crasher.py")],
                        capture_output=True, text=True,
-                       encoding="utf-8", errors="replace", env=env)
-    crashed = r.returncode != 0 and "Traceback (most recent call last)" in (r.stderr or "")
+                       encoding="utf-8", errors="replace", env=env),
+        subprocess.run([PY, "-c", "def broken(:\n    pass"],
+                       capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", env=env),
+    ]
+    crashed = all(_is_python_crash(r.returncode, r.stderr) for r in runs)
+    from check_environment import _is_python_crash as button_crash
+    findings = ("finding: token SyntaxError: on line 12", "SyntaxError: quoted label",
+                "quoted Traceback (most recent call last): text")
+    crashed = (crashed and button_crash is _is_python_crash
+               and all(not _is_python_crash(1, text) for text in findings)
+               and not _is_python_crash(0, "Traceback (most recent call last):"))
     global ok, bad
     if crashed:
-        print("  ✅ a crashed sensor is judged INCOMPLETE, not FAIL"); ok += 1
+        print("  ✅ runtime and parse-time crashes are judged INCOMPLETE, not FAIL"); ok += 1
     else:
-        print("  ❌ a crashed sensor must be judged INCOMPLETE"
-              f" (exit {r.returncode}, traceback on stderr: "
-              f"{'yes' if 'Traceback' in (r.stderr or '') else 'no'})"); bad += 1
+        details = [(r.returncode, (r.stderr or "")[-120:]) for r in runs]
+        print(f"  ❌ runtime and parse-time crashes must be judged INCOMPLETE ({details})"); bad += 1
 
 
 crash_case()
@@ -677,6 +1070,7 @@ def subrepo_case():
         subprocess.run(g + ["add", "-A"], capture_output=True)
         subprocess.run(g + ["-c", "user.name=t", "-c", "user.email=t@t",
                             "commit", "-q", "-m", "base"], capture_output=True)
+        subprocess.run(g + ["tag", "reviewed"], capture_output=True)
         # one denied change inside the subtree, one change outside it
         (proj / "ledgers/Claim_Ledger.md").write_text("changed\n", encoding="utf-8")
         (tmp / "something_else/note.md").write_text("changed\n", encoding="utf-8")
@@ -1827,7 +2221,8 @@ def upgrade_target_only_case():
         custom.write_text("MY IDEA\n", encoding="utf-8")
         (root / "_upgrade/prompts").mkdir(parents=True)
         (root / "_upgrade/prompts/base.txt").write_text("new\n", encoding="utf-8")
-        _seed_upgrade_edition(root, root / "_upgrade")
+        _seed_upgrade_edition(root, root / "_upgrade",
+                              layout="command" if sys.platform == "darwin" else "bat")
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
         args = [PY, str(upgrade_tool), "apply", "prompts", "--root", str(root)]
         blocked = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
@@ -2170,6 +2565,49 @@ upgrade_target_only_case()
 upgrade_receipt_case()
 upgrade_peer_fail_case()
 upgrade_case()
+
+
+def checkpoint_same_stat_case():
+    global ok, bad
+    import tempfile
+    label = "CHECKPOINT-STAT: same-stat content is saved without moving reviewed"
+    try:
+        with tempfile.TemporaryDirectory(prefix="s2g_stat_") as temp:
+            root = pathlib.Path(temp)
+            def git(*args):
+                p = subprocess.run(["git", "-C", str(root), *args],
+                                   capture_output=True, timeout=30)
+                if p.returncode:
+                    raise RuntimeError(p.stderr.decode("utf-8", "replace"))
+                return p.stdout.strip()
+            git("init", "-q")
+            git("config", "user.name", "selftest")
+            git("config", "user.email", "selftest@local")
+            git("config", "core.trustctime", "false")
+            git("config", "core.checkStat", "minimal")
+            (root / "governance").mkdir()
+            for name in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+                (root / "governance" / name).write_text("fixture\n", encoding="utf-8")
+            (root / ".gitignore").write_text("git-checkpoint.log\n", encoding="utf-8")
+            path = root / "sample.txt"
+            path.write_bytes(b"old\n")
+            os.utime(path, (1600000000, 1600000000))
+            git("add", "."); git("commit", "-qm", "base"); git("tag", "reviewed")
+            reviewed = git("rev-parse", "reviewed")
+            path.write_bytes(b"new\n")
+            os.utime(path, (1600000000, 1600000000))
+            expected = git("hash-object", "--path=sample.txt", "--", str(path))
+            p = subprocess.run([PY, "-B", str(HERE / "checkpoint.py"), "--root", str(root),
+                                "--mode", "tool", "--tool-id", "selftest", "--operation", "stat"],
+                               capture_output=True, timeout=30,
+                               env=dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1"))
+            if p.returncode != 0 or git("rev-parse", "HEAD:sample.txt") != expected or git("rev-parse", "reviewed") != reviewed:
+                raise RuntimeError("checkpoint exit/content/reviewed mismatch: " + repr((p.returncode, p.stdout, p.stderr)))
+        print("  ✅ " + label); ok += 1
+    except Exception as exc:
+        print("  ❌ " + label + ": " + str(exc)); bad += 1
+
+checkpoint_same_stat_case()
 
 print("\n" + "=" * 48)
 print(f"  passed {ok} | failed {bad}")

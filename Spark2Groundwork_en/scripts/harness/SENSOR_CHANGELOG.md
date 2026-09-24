@@ -2080,3 +2080,77 @@ called missing**. **Self-tests 152 → 159.**
   nowhere to live that an upgrade will not overwrite ⇒ v1.5.0.**
 
 ---
+
+## V145-D | 2026-09-20 | Interpreter diagnostics
+
+Ordinary stderr quoting `SyntaxError:` was classified as a crash. Runner and buttons now import the same `process_diagnostics.is_python_crash`; parse errors need a file diagnostic plus an exception line, and runtime failures need a traceback header. Existing `crash_case` adds negative quoted-token controls, exit-zero control and callable identity coupling. This is diagnostic classification, not a proof that arbitrary tools completed correctly.
+
+---
+
+## V145-E2 | 2026-09-23 | Scope sensor git commit and rename tracking
+
+- **Triggering cases**: Once out-of-scope modifications are committed via `git commit` or committed and reverted (`commit` + `revert`), existing scope sensor inspecting only the working tree missed the out-of-scope write. Furthermore, boundary-crossing `git mv` renames or moves missed either the source or destination endpoint, causing escape or false alarm on valid moves. When the `reviewed` benchmark was absent, the sensor fell back or silently claimed pass.
+- **Fixes**:
+  1. `git_changed(root)` strictly anchors on `reviewed` tag benchmark (`git rev-parse --verify reviewed^{commit}` and `git merge-base --is-ancestor reviewed HEAD`). If missing or not an ancestor of HEAD, fail-closed returns `SCOPE_UNCHECKABLE` (exit 2); never claims pass or falls back.
+  2. Historical touch set uses `git rev-list reviewed..HEAD` coupled with `git diff-tree --stdin -r -z -m -M -C --no-commit-id --name-status` to inspect all commits' touched paths (union across commits, retaining revert/merge traces).
+  3. Working tree touch set uses `git status --porcelain -z -uall`.
+  4. Parses Git `-z` NUL-separated stream, capturing both source and destination endpoints for renames/copies (`R*`/`C*`).
+  5. Supports project residing in repository subdirectory, properly filtering by prefix and isolating sibling subtrees, capturing destination endpoint for cross-tree moves into the project.
+  6. Keeps execution strictly read-only, never modifying HEAD, `reviewed`, or user files.
+- **Paired samples and tests**: Bilingual harness selftests add 11 scope matrix test cases (covering all 8 test families), expanding selftests from 168 to 179 with 100% pass.
+
+---
+
+## V145-E2b | 2026-09-23 | Git visibility holes (hidden flags and ignored files inspection)
+
+- **Triggering cases**: Tracked files with `assume-unchanged` or `skip-worktree` flags modified, or `.gitignore` files hiding modifications inside deny areas or outside declared scopes, previously passed silently in the scope sensor. Such visibility holes obscure working-tree changes, preventing review from verifying the true file modification status.
+- **Fixes**:
+  1. Added `git_hidden_flags(root)`: runs `git ls-files -v -z -- .` to check if any tracked files in the project subtree carry `assume-unchanged` (`h`) or `skip-worktree` (`S`/`s`) flags. If any are present (regardless of whether content is modified), fail-closed emits `TRACKED_HIDDEN_FLAGS_PRESENT` (exit 2 `INCOMPLETE`), refusing evaluation. Removing flags restores normal check.
+  2. Added `git_ignored(root)`: runs `git ls-files --others --ignored --exclude-standard -z -- .` to discover untracked files ignored by `.gitignore` in the project subtree.
+  3. Configuration conflict check: if a path in `deny` overlaps with `excluded_dirs`, or an ignored file is subject to both deny and exclusion, explicitly reports `CONFIGURATION_CONFLICT` (exit 2 `INCOMPLETE`); exclusion rules are forbidden from silently swallowing deny scope.
+  4. Ignored files classification:
+     - Files inside `deny` scope report `IGNORED_DENIED_PATH_PRESENT` (exit 2 `INCOMPLETE`).
+     - In multi-agent mode, files outside all declared agent scopes report `IGNORED_OUT_OF_SCOPE_PRESENT` (exit 2 `INCOMPLETE`).
+     - Framework caches and exclusion directories (e.g. `.cache`, `scratch`) pass quietly.
+     - In solo mode (`write_scopes` empty), regular research attachments (outside deny) pass quietly.
+  5. Project subtree isolation: `-- .` guarantees that external flags and ignores outside the project subtree never contaminate the project.
+  6. Read-only inspection: strictly never clears flags, never touches the index, never stages, never moves `reviewed`, and never alters file bytes.
+- **Paired samples and tests**: Bilingual harness selftests add 7 visibility hole matrix cases (cases 12 to 18), expanding selftests from 179 to 186 with 100% pass.
+
+---
+
+## V145-E3a | 2026-09-24 | Chinese conjecture ledger sensor cross-tree target configuration
+
+- **Triggering cases**: The Chinese edition of `sensor_conjecture_ledger.py` evaluated `CFG = _load_cfg()` and `LEDGER_NAME = CFG["conjecture_ledger"]` at module load time, and wrapped `excluded()` with module-level `CFG`. When checking external target projects across tree boundaries via `--root`, `main()` ignored the target project's `cfg` returned by `cli("conjecture_ledger")`. Consequently, custom conjecture ledger paths, custom proposal markers, and custom excluded directories defined in the target's `governance_config.json` were ignored in favor of the sensor host's configuration, leading to false `LEDGER_MISSING` failures. The English edition already read `cfg` from `cli()` and was unaffected.
+- **Fixes**:
+  1. Removed module-level `CFG`, `LEDGER_NAME`, and the redundant local `_excluded()` wrapper.
+  2. `main()` binds `root, cfg, as_json, name = cli("conjecture_ledger")`, retrieves `ledger_rel = cfg["conjecture_ledger"]`, and anchors the ledger at `root / ledger_rel`.
+  3. Scan targets filter with `framework_config.excluded(p, root, cfg)` against the target's configuration.
+  4. Proposal exemption markers dynamically read from `cfg.get("proposal_markers", [])`.
+  5. Preserved the English edition's correct behavior with zero regressions.
+- **Paired samples and tests**: Added bilingual parameterized adjacent tests in `tests/test_ci_workflow.py` (`test_e3a_conjecture_cross_tree_target_config`), covering custom ledger paths, custom proposal markers, custom excluded directories, and paired negative controls (missing ledger, unexempted proposal citations, unexcluded citations). Bilingual harness selftests remain at 186 tests with 100% pass.
+
+---
+
+## V145-E3b | 2026-09-24 | Documentation contradictions repair (solo profile, start prompts, initialization, and closeout ritual)
+
+- **Triggering cases**: Multiple documentation layer contradictions (D-1 through D-6):
+  1. `PROFILE_solo.md` and `Audit_Protocol.md` previously instructed solo projects to safely delete `Audit_Protocol.md`. Empirical testing demonstrates that deleting this file directly triggers `sensor_clause_sync.py` to emit `SYNC_HOME_MISSING` (exit 2 `INCOMPLETE`, as it serves as the sync home); other sensors and self-certification specs also depend indirectly on its terms and clause definitions, and deleting it impairs governance consistency.
+  2. START prompts previously instructed writing custom rules into `governance/RULES.md`, which is overwritten during framework upgrades, contradicting the designated role of `my/MY_RULES.md`.
+  3. START prompts and `INITIALIZE_PROMPT.md` framed ledger access as an absolute hard prohibition, contradicting Constitution §6.1 / §6.3 (ledgers are human-maintained by default under `deny` in `governance_config.json`, but can be explicitly authorized by the user).
+  4. `INITIALIZE_PROMPT.md` omitted `my/MY_RULES.md` from the required reading list, and omitted the Constitution §4.2 closeout ritual.
+  5. `NEXT_SESSION_MEMO.md` §5 listed only CLI commands, neglecting standard user launchers and automated AI environments.
+- **Fixes**:
+  1. `PROFILE_solo.md` (bilingual): moved `Audit_Protocol.md` to the required keep list, explaining that while solo projects do not run two-model adversarial audits, the file is retained for automated sensors, ⛔ do not delete. Retitled section 2 to "What you lose without a second model".
+  2. `Audit_Protocol.md` (bilingual): updated line 4 to state that single-AI projects do not run adversarial audits but automated sensors rely on its definitions and self-certification specs, ⛔ keep this file, do not delete.
+  3. `START_治理AI.md` / `START_governance_AI.md`: custom rule proposals directed to `my/MY_RULES.md` and require user adjudication before enactment.
+  4. START prompts (bilingual): standardized exclusion headings to closed-by-default (`**⛔ Closed to you by default:**` / `**⛔ 預設不可以寫入：**`); ledger permissions across all three roles aligned with Constitution §6.1 / §6.3 and `deny` in `governance_config.json`, clarifying explicit user authorization and deny removal while prohibiting auditor self-exemption. Clarified §7 measured cases as historical cases.
+  5. `INITIALIZE_PROMPT.md` (bilingual): added `my/MY_RULES.md` to required reading; aligned ledger permissions with `deny`; added Step 4 closeout ritual strictly aligned with Constitution §4.2 order (checks → memo overwrite → initial handoff packet → decision requests).
+  6. `NEXT_SESSION_MEMO.md` (bilingual): section 5 clarifies direct execution by AI environments versus double-clicking root launcher buttons, without requiring users to copy-paste terminal commands.
+- **Paired samples and tests**: Sensor code unchanged; retained E3a r2 `tests/test_ci_workflow.py` acceptance tests, bilingual selftests maintain 186/186 pass, and 7/7 repo hygiene checks pass.
+
+### E3b r3: Actual entry-point review of Solo deletions
+
+- Deleting the other three profiles as instructed by the r2 Solo guide made `run_all_sensors.py` exit 1 in both editions; `sensor_reference_integrity.py` reported dangling references from governance documents and checker code. Deleting the external-tools or multi-agent profile individually also failed that sensor. Deleting the chat-only profile did not fail this sensor, but `SETUP.md` still references it.
+- r3 corrects both Solo guides to retain all supplied profiles and list the `check_project` launcher. Sensor code is unchanged.
+

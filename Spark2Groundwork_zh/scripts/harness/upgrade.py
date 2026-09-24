@@ -193,7 +193,7 @@ FRAMEWORK_DIRS = ("governance", "profiles", "prompts", "scripts", "docs")
 #    **⛔ 一個沒有人知道的孤兒資料夾，與一個過期的框架文件完全一樣。**
 #    格式：`目錄名: (退役版本, 內容去了哪裡)`。
 RETIRED_DIRS = {"policy": ("v1.4.4", "governance")}
-FRAMEWORK_FILES = ("README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md",
+FRAMEWORK_FILES = ("儲存進度.bat", "儲存進度.command", "同步規則.bat", "同步規則.command", "檢查專案.bat", "檢查專案.command", "README.md", "SETUP.md", "INITIALIZE_PROMPT.md", "file_index.md",
                    "查看變更.bat", "查看變更.command",
                    "檢查更新.bat", "檢查更新.command",
                    "記錄快照.bat", "記錄快照.command")
@@ -943,7 +943,7 @@ def cmd_restore(root, token, path_arg, MSG):
     checkpoint_program = _checkpoint_program(root)
     if checkpoint_program is None:
         print(MSG["checkpoint_peer_missing"]); return 2
-    rc = subprocess.run([sys.executable, str(checkpoint_program),
+    rc = subprocess.run([sys.executable, "-B", str(checkpoint_program),
                          "--root", str(root), "--mode", "tool",
                          "--tool-id", "upgrade",
                          "--operation", f"restore-{pathlib.PurePosixPath(rel).name}"]).returncode
@@ -1003,7 +1003,7 @@ def cmd_apply(root, src, target, MSG):
     checkpoint_program = _checkpoint_program(root)
     if checkpoint_program is None:
         print(MSG["checkpoint_peer_missing"]); return 2
-    rc = subprocess.run([sys.executable, str(checkpoint_program),
+    rc = subprocess.run([sys.executable, "-B", str(checkpoint_program),
                          "--root", str(root), "--mode", "tool",
                          "--tool-id", "upgrade",
                          "--operation", f"apply-{target}"]).returncode
