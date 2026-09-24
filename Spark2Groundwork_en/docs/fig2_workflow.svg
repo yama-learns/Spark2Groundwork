@@ -1,85 +1,72 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 700" width="980" height="700" font-family="Inter, Segoe UI, Helvetica Neue, Arial, sans-serif">
-<rect x="0" y="0" width="980" height="700" fill="#ffffff"/>
-<defs>
-  <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#5a6b7a"/></marker>
-  <marker id="ag" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#2e7d5b"/></marker>
-</defs>
-<text x="490" y="28" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a2733">Workflow — the evidence chain, who watches it, and the loop</text>
-<text x="490" y="49" text-anchor="middle" font-size="12" fill="#4a5b6a">Credibility is: how many steps it takes to trace a sentence back to the source, and whether each step left a trace.</text>
-<rect x="28" y="68" width="924" height="148" rx="7" fill="#eef4fa" stroke="#3d72a4" stroke-width="1.6"/>
-<text x="42" y="90" font-size="13" font-weight="bold" fill="#3d72a4">① evidence</text>
-<text x="42" y="108" font-size="10.5" fill="#4a5b6a">how it flows</text>
-<rect x="132" y="82" width="152" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="208" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">source PDF</text>
-<text x="208" y="118" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus/</text>
-<rect x="340" y="82" width="176" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="428" y="101" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">extraction</text>
-<text x="428" y="118" text-anchor="middle" font-size="9.5" fill="#4a5b6a">corpus_md / ⛔ never hand-edited</text>
-<rect x="132" y="152" width="152" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="208" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">your idea</text>
-<text x="208" y="188" text-anchor="middle" font-size="9.5" fill="#4a5b6a">FIRST_IDEA.md</text>
-<rect x="340" y="152" width="176" height="46" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="428" y="171" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">conjecture ledger</text>
-<text x="428" y="188" text-anchor="middle" font-size="9.5" fill="#4a5b6a">each with a falsifier</text>
-<rect x="566" y="108" width="206" height="62" rx="5" fill="#e4f1e9" stroke="#2e7d5b" stroke-width="1.8"/>
-<text x="669" y="127" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f6b4a">claim ledger</text>
-<text x="669" y="144" text-anchor="middle" font-size="9.5" fill="#4a5b6a">every sentence has a verbatim</text>
-<text x="669" y="159" text-anchor="middle" font-size="9.5" fill="#4a5b6a">anchor + page</text>
-<rect x="800" y="108" width="138" height="62" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.3"/>
-<text x="869" y="127" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">research output</text>
-<text x="869" y="144" text-anchor="middle" font-size="9.5" fill="#4a5b6a">proposal / paper</text>
-<line x1="286" y1="105" x2="334" y2="105" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<text x="310" y="97" text-anchor="middle" font-size="9.5" fill="#4a5b6a">programmatic</text>
-<line x1="286" y1="175" x2="334" y2="175" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<text x="310" y="167" text-anchor="middle" font-size="9.5" fill="#4a5b6a">decompose</text>
-<path d="M518,105 L542,105 L542,126 L560,126" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#ag)"/>
-<text x="540" y="97" text-anchor="middle" font-size="9.5" fill="#1f6b4a">verbatim match</text>
-<path d="M518,175 L542,175 L542,152 L560,152" fill="none" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<text x="600" y="192" text-anchor="middle" font-size="9.5" fill="#4a5b6a">load-bearing claims carry an ID</text>
-<line x1="774" y1="139" x2="794" y2="139" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<rect x="28" y="228" width="924" height="140" rx="7" fill="#fdf3e7" stroke="#b8802f" stroke-width="1.6"/>
-<text x="42" y="250" font-size="13" font-weight="bold" fill="#b8802f">② who watches</text>
-<text x="42" y="268" font-size="10.5" fill="#4a5b6a">machine / human</text>
-<rect x="150" y="240" width="390" height="116" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="166" y="260" font-size="12" font-weight="bold" fill="#1a2733">What a machine can check — the sensor set, one command</text>
-<text x="166" y="280" font-size="10" fill="#2b2b2b">is the anchor in the source　|　are the fields complete　|　do files agree</text>
-<text x="166" y="297" font-size="10" fill="#2b2b2b">do cited files exist　|　does an artefact certify itself</text>
-<text x="166" y="314" font-size="10" fill="#2b2b2b">did your rules miss a new framework clause　|　is your file index stale</text>
-<text x="166" y="334" font-size="10.5" font-weight="bold" fill="#96661a">exit code　0 pass　|　1 defect　|　2 could not check</text>
-<text x="166" y="350" font-size="10" font-weight="bold" fill="#8f2d2d">⛔ 2 is not a pass — "could not check" and "checked, fine" must stay apart</text>
-<rect x="556" y="240" width="382" height="116" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="572" y="260" font-size="12" font-weight="bold" fill="#1a2733">Deliberately left to a person — ⛔ not mechanised</text>
-<text x="572" y="282" font-size="10" fill="#2b2b2b">does that passage support this sentence</text>
-<text x="572" y="301" font-size="10" fill="#2b2b2b">does that sample generalise to here</text>
-<text x="572" y="320" font-size="10" fill="#2b2b2b">that is not a to-do; it is a judgement.</text>
-<text x="572" y="350" font-size="10" font-weight="bold" fill="#8f2d2d">⚠️ Mechanise it anyway and you get a sensor that fires on correct text</text>
-<path d="M634,224 L634,176" fill="none" stroke="#2e7d5b" stroke-width="1.6" marker-end="url(#ag)"/>
-<rect x="28" y="380" width="924" height="132" rx="7" fill="#eef7f1" stroke="#2e7d5b" stroke-width="1.6"/>
-<text x="42" y="402" font-size="13" font-weight="bold" fill="#2e7d5b">③ each round</text>
-<text x="42" y="420" font-size="10.5" fill="#4a5b6a">three buttons</text>
-<text x="42" y="436" font-size="10.5" fill="#4a5b6a">in the root</text>
-<rect x="150" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
-<text x="226" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">snapshot</text>
-<text x="226" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">make a checkpoint</text>
-<line x1="304" y1="422" x2="336" y2="422" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<rect x="342" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
-<text x="418" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">the AI works</text>
-<text x="418" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">hands over a packet</text>
-<line x1="496" y1="422" x2="528" y2="422" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<rect x="534" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.8"/>
-<text x="610" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f6b4a">review changes</text>
-<text x="610" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">what it actually changed</text>
-<line x1="688" y1="422" x2="720" y2="422" stroke="#3c4a56" stroke-width="1.5" marker-end="url(#ar)"/>
-<rect x="726" y="396" width="152" height="52" rx="5" fill="#fff" stroke="#2e7d5b" stroke-width="1.3"/>
-<text x="802" y="415" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">you decide</text>
-<text x="802" y="432" text-anchor="middle" font-size="9.5" fill="#4a5b6a">the only adjudicator</text>
-<path d="M880,422 L916,422 L916,474 L226,474 L226,454" fill="none" stroke="#2e7d5b" stroke-width="1.8" marker-end="url(#ag)"/>
-<text x="571" y="492" text-anchor="middle" font-size="11" font-weight="bold" fill="#1f6b4a">Press snapshot again = "I have seen it": the reviewed mark moves forward, and the next "what changed" starts here</text>
-<rect x="28" y="522" width="924" height="158" rx="7" fill="#fffbea" stroke="#c9a227" stroke-width="1.5"/>
-<text x="44" y="544" font-size="12.5" font-weight="bold" fill="#7d6209">What this figure is actually saying</text>
-<text x="44" y="570" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">① Green covers only what is mechanised.</tspan>　An all-green run ⛔ does not mean the research is right — it means the machine-checkable parts are fine.</text>
-<text x="44" y="596" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">② Every defence corresponds to a failure that really happened.</tspan>　⛔ No measured case, no sensor — false alarms teach people to switch the whole thing off.</text>
-<text x="44" y="622" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">③ You are the only adjudicator, and that is measured.</tspan>　Across two predecessor projects the user caught more novel errors than any other layer.</text>
-<text x="58" y="644" font-size="11.5" fill="#2b2b2b">And the most effective interception was supplying external material the AI did not have.</text>
-<text x="44" y="668" font-size="11" fill="#4a5b6a">→ So: any proposal that removes the user from the loop must first answer "who takes this layer".</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1040" viewBox="0 0 1280 1040" role="img" aria-labelledby="title desc">
+<title id="title">From an idea to a proposal, with evidence at each step</title><desc id="desc">Separate research evidence, automated checks and human review</desc>
+<style>text{font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Segoe UI',sans-serif;fill:#142b40}.muted{fill:#506779}</style>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7b919f"/></marker></defs>
+<rect width="1280" height="1040" rx="24" fill="#f4f7fa"/>
+<text x="48" y="44" font-size="14" font-weight="700" style="fill:#087f81">Spark2Groundwork  /  v1.4.5  /  RESEARCH WORKFLOW</text>
+<text x="48" y="91" font-size="34" font-weight="700" style="fill:#142b40">From an idea to a proposal, with evidence at each step</text>
+<text x="48" y="125" font-size="19" font-weight="400" style="fill:#506779">AI helps organise and check. You make research decisions and confirm what you have reviewed.</text>
+<rect x="48" y="158" width="356" height="96" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="70" y="196" font-size="23" font-weight="700" style="fill:#142b40">Original idea</text>
+<text x="70" y="227" font-size="17" font-weight="400" style="fill:#506779">Keep motivations and unknowns</text>
+<path d="M413 206L453 206" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="462" y="158" width="356" height="96" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="484" y="196" font-size="23" font-weight="700" style="fill:#142b40">Conjecture ledger</text>
+<text x="484" y="227" font-size="17" font-weight="400" style="fill:#506779">Record reasons and falsifiers</text>
+<path d="M827 206L867 206" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="876" y="158" width="356" height="96" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="898" y="196" font-size="23" font-weight="700" style="fill:#142b40">Questions and proposal</text>
+<text x="898" y="227" font-size="17" font-weight="400" style="fill:#506779">State assumptions and scope</text>
+<rect x="48" y="275" width="356" height="96" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="70" y="313" font-size="23" font-weight="700" style="fill:#142b40">Sources and extracted text</text>
+<text x="70" y="344" font-size="17" font-weight="400" style="fill:#506779">Preserve source locations</text>
+<path d="M413 323L453 323" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="462" y="275" width="356" height="96" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="484" y="313" font-size="23" font-weight="700" style="fill:#142b40">Claim ledger</text>
+<text x="484" y="344" font-size="17" font-weight="400" style="fill:#506779">Anchors, pages and check status</text>
+<path d="M827 323L867 323" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="876" y="275" width="356" height="96" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="898" y="313" font-size="23" font-weight="700" style="fill:#142b40">Research argument</text>
+<text x="898" y="344" font-size="17" font-weight="400" style="fill:#506779">Judge support for the inference</text>
+<rect x="48" y="400" width="574" height="172" rx="18" fill="#eaf1fb" stroke="#cfdded"/>
+<rect x="644" y="400" width="588" height="172" rx="18" fill="#e7f4f1" stroke="#badbd4"/>
+<text x="72" y="440" font-size="23" font-weight="700" style="fill:#2764ae">What automated checks can help with</text>
+<text x="72" y="477" font-size="18" font-weight="400" style="fill:#506779">Text anchors, required fields and referenced files</text>
+<text x="72" y="506" font-size="18" font-weight="400" style="fill:#506779">Consistency of defined cross-document rules</text>
+<text x="72" y="535" font-size="18" font-weight="400" style="fill:#506779">Distinguish passed, defect found and inconclusive</text>
+<text x="668" y="440" font-size="23" font-weight="700" style="fill:#087f81">What you need to judge and decide</text>
+<text x="668" y="477" font-size="18" font-weight="400" style="fill:#506779">Does the source support the inference and method?</text>
+<text x="668" y="506" font-size="18" font-weight="400" style="fill:#506779">Can findings generalise? Which limits still apply?</text>
+<text x="668" y="535" font-size="18" font-weight="400" style="fill:#506779">Finding the text does not establish the conclusion.</text>
+<text x="48" y="623" font-size="25" font-weight="700" style="fill:#142b40">Each round: agree on the task, then review the result</text>
+<rect x="48" y="654" width="220" height="112" rx="18" fill="#fff" stroke="#d2e0e2"/>
+<text x="64" y="684" font-size="14" font-weight="700" style="fill:#087f81">01</text>
+<text x="64" y="717" font-size="20" font-weight="700" style="fill:#142b40">AI works</text>
+<text x="64" y="746" font-size="16" font-weight="400" style="fill:#506779">Leave a handoff</text>
+<path d="M271 710L284 710" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="289" y="654" width="220" height="112" rx="18" fill="#fff" stroke="#d2e0e2"/>
+<text x="305" y="684" font-size="14" font-weight="700" style="fill:#087f81">02</text>
+<text x="305" y="717" font-size="20" font-weight="700" style="fill:#142b40">Save progress</text>
+<text x="305" y="746" font-size="16" font-weight="400" style="fill:#506779">Not human review</text>
+<path d="M512 710L525 710" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="530" y="654" width="220" height="112" rx="18" fill="#fff" stroke="#d2e0e2"/>
+<text x="546" y="684" font-size="14" font-weight="700" style="fill:#087f81">03</text>
+<text x="546" y="717" font-size="20" font-weight="700" style="fill:#142b40">Check &amp; inspect</text>
+<text x="546" y="746" font-size="16" font-weight="400" style="fill:#506779">Resolve gaps</text>
+<path d="M753 710L766 710" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="771" y="654" width="220" height="112" rx="18" fill="#fff" stroke="#d2e0e2"/>
+<text x="787" y="684" font-size="14" font-weight="700" style="fill:#087f81">04</text>
+<text x="787" y="717" font-size="20" font-weight="700" style="fill:#142b40">You decide</text>
+<text x="787" y="746" font-size="16" font-weight="400" style="fill:#506779">Read the contents</text>
+<path d="M994 710L1007 710" fill="none" stroke="#7b919f" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="1012" y="654" width="220" height="112" rx="18" fill="#dcf0e9" stroke="#d2e0e2"/>
+<text x="1028" y="684" font-size="14" font-weight="700" style="fill:#087f81">05</text>
+<text x="1028" y="717" font-size="20" font-weight="700" style="fill:#142b40">Human snapshot</text>
+<text x="1028" y="746" font-size="16" font-weight="400" style="fill:#506779">Only after review</text>
+<rect x="48" y="794" width="1184" height="133" rx="18" fill="#fff5e6" stroke="#ead6b4"/>
+<text x="72" y="831" font-size="23" font-weight="700" style="fill:#865516">Saved is not reviewed. Passing checks is not proof of sound research.</text>
+<text x="72" y="868" font-size="18" font-weight="400" style="fill:#506779">Review initial contents and establish a baseline first. Without one, do not assume there is no unread work.</text>
+<text x="72" y="897" font-size="18" font-weight="400" style="fill:#506779">AI must not confirm human review. Snapshots may exclude files; keep complete backups of important material.</text>
+<text x="48" y="974" font-size="18" font-weight="400" style="fill:#506779">Other entry points: sync rules and check updates. See SETUP.md and docs/UPDATE.md in your project.</text>
+<text x="48" y="1007" font-size="16" font-weight="400" style="fill:#506779">This is the v1.4.5 workflow. The v2 preview describes its planned layout and capabilities separately.</text>
 </svg>

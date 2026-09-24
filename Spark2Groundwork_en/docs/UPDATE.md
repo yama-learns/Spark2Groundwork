@@ -12,7 +12,7 @@ Double-click .bat on Windows or the same-named .command on Mac. Read the result 
 | check_update | Look up the release and, when _upgrade exists, compare local packages; does not apply updates |
 | sync_rules | Save a tool restore point first; stop if it fails. Append missing rules without replacing existing text, then check for drift |
 
-Use save_progress for unread work. In a new project, read your starting contents and press snapshot before assigning work to establish a human baseline. Without that marker, review_changes explicitly reports its HEAD fallback; do not treat it as a human-reviewed point.
+Use save_progress for unread work. In a new project, read your starting contents and press snapshot before assigning work to establish a human baseline. Without that marker, review_changes reports INCOMPLETE (exit 2) and does not substitute HEAD for human review. If work was saved before you read it, ask your AI to inventory it and read it yourself; only then personally press snapshot.
 
 ## Update with your file manager
 

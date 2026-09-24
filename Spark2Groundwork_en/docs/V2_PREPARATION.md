@@ -9,4 +9,4 @@ v2 is in development. There is no converter yet and no promise that every custom
 
 The planned v2 layout separates `agents framework/` (replaceable framework), `agents data/` (project-owned collaboration data) and `research data/` (project-owned research), with short entry documents at the root. Initialization selects one language; updates fetch the core and that language, without translating research drafts. Final details will be specified in the v2 release documentation.
 
-Migration from v1.4.4 will not require installing v1.4.5 first. Updates must preserve original research. Source location, verification and human acceptance remain separate; a passing check does not establish research correctness.
+Updates must preserve original research. Source location, verification and human acceptance remain separate; a passing check does not establish research correctness.

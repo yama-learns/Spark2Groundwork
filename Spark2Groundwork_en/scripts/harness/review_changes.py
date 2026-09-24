@@ -20,11 +20,12 @@
 ## ⚠️ 一個沒有 HEAD 的倉庫是正常狀態，不是錯誤
 
 剛 `git init` 而還沒有任何提交時，`git diff HEAD` 會以 fatal 中止。
-**那不是壞掉，是還沒有東西可以比。** ⛔ 不得把它當成錯誤丟給使用者。
+**That is not corruption, but a human-reviewed comparison is incomplete.** Show the next step.
 
-退出碼：0 正常（**包含「沒有變更」**）｜1 前置條件不成立｜2 我沒能查
+Exit codes: 0 valid human baseline and completed comparison | 1 wrong project location | 2 missing baseline or incomplete query
 """
 import argparse
+import os
 import pathlib
 import subprocess
 import sys
@@ -45,16 +46,20 @@ MSG = {
  "wrong_folder": """[FAIL] This is not the project root.
        Missing: {missing}
        Current location: {root}""",
- "no_git": """[FAIL] git was not found.
-       -> Windows: https://git-scm.com/download/win
-       -> macOS: run `xcode-select --install`, or `brew install git`""",
- "no_repo": """[FAIL] This folder is not under version control yet.
-       -> Press the snapshot button once; it will set that up.""",
+ "no_git": """[INCOMPLETE] Git could not run; this is not a reliable comparison.
+       Open docs/START_HERE.html and use its graphical installation guidance, then review again.""",
+ "no_repo": """[INCOMPLETE] This folder has no Git history or human-reviewed baseline.
+       Read the starting contents first, then personally press Snapshot after confirming them. An AI must not press it for you.""",
  "wrong_repo": "[FAIL] This folder sits inside another git repository.",
- "no_head": """No checkpoints yet — **there is nothing to compare against.**
-⚠️ This is a normal state, ⛔ not an error. Press snapshot once to make the first one.""",
+ "no_head": """[INCOMPLETE] There is no first checkpoint yet, so changes since human review cannot be compared.
+       Read the starting contents first, then personally press Snapshot after confirming them. An AI must not press it for you.""",
+ "no_reviewed": """[INCOMPLETE] The human-reviewed baseline tag is missing. Save Progress does not mean you read the work.
+       Inventory and read the current contents yourself; only then personally press Snapshot. No unread-change conclusion is available yet.""",
+ "invalid_reviewed": """[INCOMPLETE] The reviewed tag is not a valid commit baseline in the current HEAD history.
+       Preserve the files and tag. Ask an AI with local execution access to investigate; decide on a new baseline only after your own review.""",
+ "git_error": """[INCOMPLETE] A Git query did not finish; this is not a reliable comparison.
+       Preserve the files and ask an AI with local execution access to investigate, then retry. Do not treat blank output as reviewed.""",
  "base_is": "Comparing against: {base}",
- "base_none": "HEAD (⚠️ no reviewed tag yet — you have not made a human checkpoint)",
  "s1": "[1] Files touched, and how many lines",
  "s1_empty": "(blank means: no tracked file differs from {base})",
  "s2": "[2] New files not yet under version control",
@@ -76,8 +81,12 @@ SENTINELS = ("governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md")
 
 
 def run(args, cwd):
-    p = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True,
-                       encoding="utf-8", errors="replace")
+    try:
+        p = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30,
+                           env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"))
+    except (OSError, subprocess.TimeoutExpired):
+        return -1, "", "Git did not finish"
     return p.returncode, (p.stdout or ""), (p.stderr or "")
 
 
@@ -101,59 +110,100 @@ def main(MSG):
     if a.help:
         print(MSG["usage"]); return 0
 
-    root = pathlib.Path(a.root).resolve() if a.root else \
-        pathlib.Path(__file__).resolve().parents[2]
-
+    root = pathlib.Path(a.root).resolve() if a.root else pathlib.Path(__file__).resolve().parents[2]
     print("=" * 46); print(MSG["title"]); print("=" * 46); print()
 
     missing = [s for s in SENTINELS if not (root / s).is_file()]
     if missing:
         print(MSG["wrong_folder"].format(missing=", ".join(missing), root=root)); return 1
-    try:
-        subprocess.run(["git", "--version"], cwd=str(root), capture_output=True, check=True)
-    except (OSError, subprocess.CalledProcessError):
-        print(MSG["no_git"]); return 1
 
-    rc, _, _ = run(["git", "rev-parse", "--is-inside-work-tree"], root)
-    if rc != 0:
-        print(MSG["no_repo"]); return 1
+    rc, version, _ = run(["git", "--version"], root)
+    if rc != 0 or not version.startswith("git version "):
+        print(MSG["no_git"]); return 2
+    rc, inside, _ = run(["git", "rev-parse", "--is-inside-work-tree"], root)
+    if rc != 0 or inside.strip() != "true":
+        print(MSG["no_repo"]); return 2
     rc, prefix, _ = run(["git", "rev-parse", "--show-prefix"], root)
+    if rc != 0:
+        print(MSG["git_error"]); return 2
     if prefix.strip():
         print(MSG["wrong_repo"]); return 1
 
-    rc, _, _ = run(["git", "rev-parse", "--verify", "HEAD"], root)
+    rc, head, _ = run(["git", "rev-parse", "--verify", "--quiet", "HEAD^{commit}"], root)
     if rc != 0:
-        # ⚠️ 還沒有任何提交。**這是正常狀態**，⛔ 不是錯誤。
-        print(MSG["no_head"]); return 0
-
-    rc, _, _ = run(["git", "rev-parse", "--verify", "reviewed"], root)
-    base = "reviewed" if rc == 0 else "HEAD"
-    print(MSG["base_is"].format(base=base if rc == 0 else MSG["base_none"]))
-    print()
+        print(MSG["no_head"]); return 2
+    head = head.strip()
+    rc, base, _ = run(["git", "rev-parse", "--verify", "--quiet",
+                       "refs/tags/reviewed^{commit}"], root)
+    if rc != 0:
+        tag_rc, _, _ = run(["git", "show-ref", "--verify", "--quiet",
+                            "refs/tags/reviewed"], root)
+        if tag_rc == 1:
+            print(MSG["no_reviewed"]); return 2
+        if tag_rc == 0:
+            print(MSG["invalid_reviewed"]); return 2
+        print(MSG["git_error"]); return 2
+    base = base.strip()
+    rc, _, _ = run(["git", "merge-base", "--is-ancestor", base, head], root)
+    if rc == 1:
+        print(MSG["invalid_reviewed"]); return 2
+    if rc != 0:
+        print(MSG["git_error"]); return 2
 
     G = ["git", "-c", "core.quotepath=false", "--no-pager"]
-    _, stat, _ = run(G + ["diff", "--stat", base], root)
-    section(MSG["s1"], stat, MSG["s1_empty"].format(base=base))
+    rc, stat, _ = run(G + ["diff", "--stat", base], root)
+    if rc != 0:
+        print(MSG["git_error"]); return 2
+    rc, others, _ = run(G + ["ls-files", "--others", "--exclude-standard"], root)
+    if rc != 0:
+        print(MSG["git_error"]); return 2
+    rc, log, _ = run(G + ["log", "--oneline", base + ".." + head], root)
+    if rc != 0:
+        print(MSG["git_error"]); return 2
 
-    _, others, _ = run(G + ["ls-files", "--others", "--exclude-standard"], root)
-    section(MSG["s2"], others, MSG["s2_empty"])
-
-    _, log, _ = run(G + ["log", "--oneline", f"{base}..HEAD"], root) if base == "reviewed" \
-        else (0, "", "")
-    section(MSG["s3"], log, MSG["s3_empty"])
-
+    file_kind = None
+    file_diff = ""
     if a.file:
-        rel = a.file
-        rc_i, _, _ = run(["git", "check-ignore", "-q", rel], root)
-        if rc_i == 0:
-            print(MSG["s4"].format(f=rel)); print("-" * 46)
-            print(MSG["f_ignored"]); print("-" * 46); print(); return 0
-        rc_t, tracked, _ = run(["git", "ls-files", "--error-unmatch", rel], root)
-        if rc_t != 0:
-            print(MSG["s4"].format(f=rel)); print("-" * 46)
-            print(MSG["f_untracked"]); print("-" * 46); print(); return 0
-        _, d, _ = run(G + ["diff", base, "--", rel], root)
-        section(MSG["s4"].format(f=rel), d, MSG["s4_empty"].format(f=rel, base=base))
+        rc, _, _ = run(G + ["check-ignore", "-q", "--", a.file], root)
+        if rc == 0:
+            file_kind = "ignored"
+        elif rc != 1:
+            print(MSG["git_error"]); return 2
+        else:
+            rc, tracked, _ = run(G + ["ls-files", "--", a.file], root)
+            if rc != 0:
+                print(MSG["git_error"]); return 2
+            if not tracked.strip():
+                file_kind = "untracked"
+            else:
+                rc, file_diff, _ = run(G + ["diff", base, "--", a.file], root)
+                if rc != 0:
+                    print(MSG["git_error"]); return 2
+                file_kind = "tracked"
+
+    # A concurrent tag/HEAD change invalidates the comparison just collected.
+    rc_h, final_head, _ = run(["git", "rev-parse", "--verify", "--quiet", "HEAD^{commit}"], root)
+    rc_b, final_base, _ = run(["git", "rev-parse", "--verify", "--quiet",
+                               "refs/tags/reviewed^{commit}"], root)
+    if rc_h != 0 or rc_b != 0 or final_head.strip() != head or final_base.strip() != base:
+        print(MSG["git_error"]); return 2
+
+    print(MSG["base_is"].format(base="reviewed")); print()
+    section(MSG["s1"], stat, MSG["s1_empty"].format(base="reviewed"))
+    section(MSG["s2"], others, MSG["s2_empty"])
+    section(MSG["s3"], log, MSG["s3_empty"])
+    if a.file:
+        print(MSG["s4"].format(f=a.file))
+        print("-" * 46)
+        if file_kind == "ignored":
+            print(MSG["f_ignored"])
+        elif file_kind == "untracked":
+            print(MSG["f_untracked"])
+        elif file_diff.strip():
+            print(file_diff.rstrip())
+        else:
+            print(MSG["s4_empty"].format(f=a.file, base="reviewed"))
+        print("-" * 46); print()
 
     print(MSG["footer"])
     return 0

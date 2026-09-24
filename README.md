@@ -1,259 +1,111 @@
-# 學術研究神器 · AI 論文發想框架 · Spark2Groundwork
+# 學術研究神器｜Spark2Groundwork：與 AI 一起，把構想寫成研究提案
 
-> v1.4.5 release candidate / 發行候選，尚未發布。See the edition README and CHANGELOG for changes and v2 preparation; final platform acceptance is pending.
+**留下想法的來路、論述的依據，以及每一次由你做出的決定。**
 
-### The Researcher's Power Tool · An AI Framework for Paper Ideation
+[English edition](README.en.md) ｜ [What changed in each release](CHANGELOG.md)
 
-**把一個發想，變成一份站得住的研究提案。**
-**Turn a spark of an idea into a research proposal that holds up.**
+## 讓 AI 幫忙，也讓你看得清楚
 
-[English edition](Spark2Groundwork_en/README.md) ｜ [繁體中文版](Spark2Groundwork_zh/README.md)
-｜ [What changed in each release](CHANGELOG.md)
+你有一個研究構想，想找文獻、拆解問題、打磨論證，最後寫成提案。AI 可以幫你推進這些工作，但流暢的文字不一定有根據，完整的答案也可能藏著未經查證的推論。
 
-> 這份說明以英文撰寫。**中文使用者請點上面的「繁體中文版」**，那裡有完整的中文說明。
+Spark2Groundwork 是一套放在研究專案資料夾裡的工作規則、文件模板與檢查工具。它讓 AI 記錄構想、標示來源、交代修改，再把需要判斷的地方交回給你。
 
----
-
-## What this is
-
-A set of files you copy into your project folder. They give your AI assistant a way of
-working, and they give you a way of checking what it did.
-
-It starts from one assumption: **the AI will be wrong, and it will be wrong in the places
-where it sounds most certain.** Every check in here exists because that actually happened
-to someone.
-
-| The questions it helps you answer |
-|---|
-| Which page does this sentence rest on? |
-| What would it take to prove this idea wrong? |
-| What did the AI just change, and have I looked at it? |
-
-⛔ **It does not promise your research is correct.** It promises something narrower and more
-useful: **when something goes wrong, it leaves a trace instead of quietly becoming your
-conclusion.**
-
----
-
-## How it works
-
-<p align="center">
-  <img src="Spark2Groundwork_en/docs/fig2_workflow.svg" alt="Workflow: the evidence chain, who watches it, and the loop" width="100%">
-</p>
-
-**Four ideas hold the whole thing together.**
-
-**1. Getting from a source to a sentence takes several steps, and they break differently.**
-One of those steps — *is this passage actually in the paper?* — can be settled by comparing
-text, at no cost. That one is automated, and the rest of the design leans on it.
-Two other steps — *does the passage really support the claim?* and *can you generalise from
-that study to yours?* — ⛔ **are deliberately left to you.** A check that fires on correct work
-teaches you to ignore it, which is worse than having no check at all.
-
-**2. Two records, two different jobs.** One tracks your ideas and what would prove each of
-them wrong. The other tracks your sentences and the exact passage each one rests on.
-
-**3. Mistakes come in families.** Writing down one mistake does not help, because the next one
-looks different. What you write down is the *pattern* — so you recognise it next time.
-
-**4. You are the one who decides.** This is not caution; it is what happened. Across two
-earlier projects, the user caught more genuinely new errors than any other part of the system,
-and the most effective thing they did was **bring in information the AI did not have.**
-
----
-
-## There is no perfect framework — only one that gets better as you use it
-
-🔴 **This is the idea the whole thing is built on.**
-
-**No framework arrives already suited to your topic, your AI and your working habits.**
-⛔ **We are not going to pretend otherwise.**
-
-**It is built on a different premise: every hole you fall into becomes a railing for next time.**
-
-| What you do | What the framework grows |
+| 你想知道的事 | 框架提供的協助 |
 |---|---|
-| Catch the AI getting something wrong and say "log that" | One more entry in your project's incident log |
-| After a few entries, ask the AI to find the repeating patterns | You see a shape that **will happen again** |
-| You decide whether it becomes a rule | One more working rule — **specific to your project** |
+| 這個構想值得繼續嗎？ | 用猜想台帳記錄理由、未知與反證條件 |
+| 這句論述的依據在哪裡？ | 用主張台帳連到文獻中的逐字錨點與頁碼 |
+| AI 改了什麼？哪些還沒看過？ | 保存工作進度、查看差異，分開記錄人工已閱 |
+| 換了 AI 或隔了一段時間，怎麼接著做？ | 透過交接封包與工作備忘錄接續 |
 
-⚠️ **The middle step is not optional.** One mistake on its own does not help, because the next
-one will not look the same; **what is worth having is the shape that repeats.**
+**你不必懂程式，但需要參與研究判斷。** 框架協助暴露缺漏、留下可追溯的紀錄；它不能保證找出所有錯誤，也不能替你保證研究結論正確。
 
-⛔ **The last step is always your decision, never the AI's** — because that rule will bind both
-of you afterwards.
+## 沒有一開始就完美的框架，只有越用越適合你的框架
 
-**After a while your copy will not look like anyone else's.**
-🔴 **That is not drift. That is the point.**
+**這是 Spark2Groundwork 的設計起點：框架需要和你的研究一起成長。** 不同題目、不同 AI、不同工作習慣，會遇到不同的問題。下載一份框架，不代表從此不會出錯；真正有價值的是，把使用中發現的問題，變成下一次能派上用場的經驗。
 
-⚠️ **It is also why upgrading is safe, for a reason that is easy to read backwards:**
-**the upgrade tool uses its explicit replaceable list as the authority and ⛔ refuses everything else.**
-**Your ledgers, your papers, your incident log, `PROJECT.md`, and any folder you created
-yourself are all left alone. You never have to register them anywhere.**
-
----
-
-## Getting started
-
-**You do not need to know Git, and there is nothing to install for this step.**
-
-1. Click the green **Code** button at the top of this page, then **Download ZIP**.
-2. Unzip the file you downloaded.
-3. Inside it you will find two folders. **Take the one in your language:**
-   - `Spark2Groundwork_en` — English
-   - `Spark2Groundwork_zh` — 繁體中文
-4. **Copy that folder to wherever you keep your work, and rename it to your project name.**
-   For example `bilingual-memory-study`.
-5. ⛔ **Delete the rest of the download.** You only need the one folder.
-6. Open `SETUP.md` inside your new folder and follow it.
-
-**What you will need later:** Python (free, from [python.org](https://www.python.org/downloads/)),
-Git (free, from [git-scm.com](https://git-scm.com/downloads)), and whichever AI you already use.
-`SETUP.md` walks you through installing them.
-
----
-
-## Pointing your AI at the folder
-
-The framework is just files, so **any AI that can read your folder can use it.** Three common
-setups, with the steps as of this writing:
-
-### Claude — use Cowork
-
-1. Open the Claude desktop app.
-2. In the left panel, find **Projects** and click **+**.
-3. Choose **Use an existing folder on your computer**.
-4. Pick your project folder, give the project a name, and click **Create**.
-
-Claude can then read and write the files directly, and can run the checks for you.
-
-### Gemini — use Antigravity
-
-1. Open Antigravity.
-2. Click **Select Project → New Project**.
-3. Use **Add Folder** to add your project folder, then create the project.
-4. Chat with the agent in the main panel. **Open IDE** gives you a full editor if you want one.
-
-A project can hold more than one folder, so you can add related material alongside it.
-
-### ChatGPT — use Work mode in the desktop app
-
-1. Open the ChatGPT desktop app and switch to the **Work** tab at the top.
-2. Click **Select project** below the input box, then **New project**.
-3. In the dialog that opens, type a **project name**.
-4. Under **Source folder**, click the box offering to add a folder ChatGPT can read and edit.
-   A file picker opens, titled **Select Project Root** — choose your project folder.
-5. Click **Create project**.
-
-Work can then read and write files in that folder, and the link stays put between sessions —
-⛔ **you do not re-upload anything.**
-
-⚠️ **Local file access depends on your plan and, in an organisation, on your workspace
-settings.** If the option to link a folder is not offered, that is why.
-
-⚠️ **Web ChatGPT is a different thing.** There, a project holds uploaded copies rather than a
-live folder, with a file limit (5 on Free, 25 on Go/Plus, 40 on the higher plans).
-It still works, with more copying and pasting —
-**`profiles/PROFILE_chat_only.md` in your folder is written for exactly that case.**
-
-### Already using a coding agent?
-
-**Claude Code and ChatGPT's Codex both work with this framework too**, and they are the most
-direct fit — they live in a folder, read files and run commands natively.
-
-⚠️ **We have not tested either of them with this framework, so we are not giving you steps.**
-Point them at the folder the way you normally would, and start from `SETUP.md`.
-
-⛔ **One thing to know before you do:** a coding agent will happily edit files and run commands
-without pausing. **The protection in this framework comes from the checkpoint habit** — press
-snapshot before you hand out work, and again after you have reviewed it.
-**Nothing enforces that for you.**
-
-⚠️ **Menus change.** If what you see does not match the steps above, look for the wording that
-means the same thing — "add a folder", "link a folder", "project instructions".
-
----
-
-## What is in the box
-
-<p align="center">
-  <img src="Spark2Groundwork_en/docs/fig1_architecture.svg" alt="Architecture: what belongs to the framework and what belongs to you" width="100%">
-</p>
-
-```
-Spark2Groundwork_en/     the whole framework, in English
-Spark2Groundwork_zh/     完整框架，繁體中文
-```
-
-**The two are independent and say the same things.** Take one; you do not need both.
-
-Inside either one:
-
-🔴 **Everything splits into two piles, and the line is who owns a file.**
-
-**Yours — an upgrade never touches any of it:**
-
-| | |
+| 在研究中發生的事 | 讓它留下什麼 |
 |---|---|
-| `PROJECT.md` | 🔴 **The only file you have to write yourself** |
-| `my/MY_RULES.md` | **Your working rules.** The framework's are copied into §1; the `P-xx` you write go in §2 |
-| `my/MY_INCIDENTS.md` | What actually went wrong in this project |
-| `my/MY_INDEX.md` | An index of everything here that is yours — **generated, never hand-written** |
-| `my/tools/` | Scripts you wrote. ⛔ Not in `scripts/`, which is replaced on upgrade |
-| `corpus/` | **Your source PDFs go here**, along with your bibliography |
-| `corpus_md/` | The plain text pulled out of those PDFs, for checking quotations |
-| `ledgers/` | Where your ideas and your quoted evidence are recorded |
-| `handoffs/` | Handoff packets: what each round did |
-| `NEXT_SESSION_MEMO.md` | Working state, overwritten each round |
-| `governance_config.json` | **You decide where the AI may write** |
+| 你發現 AI 犯錯，或某個流程不適合這個專案 | 請 AI 記下事件、影響與當時的情境 |
+| 累積幾次經驗後，請 AI 一起回頭整理 | 找出反覆出現的原因與失誤模式，而不只記住某一次錯誤 |
+| AI 提出改進建議，你衡量是否適合 | 由你決定要不要調整流程、加入或修訂專案規則 |
 
-**The framework's — if it breaks, download it again:**
+**中間的整理很重要。** 下一次的錯誤未必長得一樣；理解反覆失誤的原因，才有機會在新的情境中認出它。改進也不等於每出一次事就加一條禁令，還要看規則能否幫忙、會不會增加不必要的負擔。
 
-| | |
+**最後的決定始終在你手上。** AI 可以記錄、分析和提案，但不能自行把建議變成往後約束整個專案的規則。
+
+用了一段時間，你的框架可能和別人的不同，因為它累積了你的研究經驗，逐漸適合你的工作。**這正是設計目的。** 保留修改的理由，下一位 AI 才能理解這些選擇；把專案自訂規則與事故紀錄放在 `my/`，也讓它們能與公版框架的更新分開保存。
+
+## 從一個資料夾開始
+
+1. 從 [正式版本下載頁](https://github.com/yama-learns/Spark2Groundwork/releases) 下載並解壓縮。要開始正式研究，請選已發布版本；開發分支可能尚未完成驗收。
+2. 只取 `Spark2Groundwork_zh/`，複製到你的工作位置，改成自己的專案名稱。若偏好英文，取 `Spark2Groundwork_en/`；**兩者各自完整，不必同時保留。**
+3. 打開資料夾裡的 `SETUP.md`，把專案資料夾交給能讀取本機檔案的 AI，依 `INITIALIZE_PROMPT.md` 開始。
+4. 填寫 `PROJECT.md` 與 `第一個想法.md`，說明研究方向、界線與原始構想。其餘紀錄可由 AI 協助維護。
+5. 依設定指引檢查工具、確認初始內容，再開始第一輪工作。
+
+自動檢查與快照需要可用的 Python、Git；設定指引與本機啟動說明會引導安裝。Windows 使用 `.bat`，Mac 使用 `.command`。按鈕可能開啟終端機視窗顯示結果，日常操作不以輸入或貼上命令為前提。若啟動受阻，依 [啟動說明](Spark2Groundwork_zh/docs/START_HERE.html) 處理。
+
+AI 能讀檔，不代表它能在你的電腦執行工具。只有聊天／上傳附件的環境，也可以使用 [純對話工作方式](Spark2Groundwork_zh/profiles/PROFILE_chat_only.md)，但需要手動傳遞文件，不能把遠端執行結果當成本機檢查通過。
+
+## 一輪工作，怎麼進行？
+
+![研究工作流程：構想、證據、檢查與人工決定](Spark2Groundwork_zh/docs/fig2_workflow.svg)
+
+先說清楚這輪要解決的問題，再讓 AI 工作。收工時，請它交代改動、證據、仍未查明的部分，以及需要你決定的事項。你檢視研究內容與修改後，才確認已閱。
+
+v1.4.5 將常用操作分開，避免把「檔案已存好」誤當成「你已經看過」：
+
+| 按鈕 | 什麼時候用 |
 |---|---|
-| `SETUP.md` | The setup guide. Start here |
-| `INITIALIZE_PROMPT.md` | The text you paste to your AI the first time |
-| `governance/` | The rules the AI works under, and the two ledgers' field specifications |
-| `policy/` | Rules for particular topics: sources, handovers, model identity, outside tools |
-| `profiles/` | Pick the one that matches how you work |
-| `prompts/` | Ready-made instructions you can paste |
-| `scripts/harness/` | The automatic checks |
-| `docs/` | The figures |
-| `file_index.md` | The framework's own index. ⛔ Do not register your documents here |
-| Three buttons | snapshot / review changes / check update (`.bat` for Windows, `.command` for Mac) |
+| 儲存進度 | 先保存目前工作；不表示你已閱讀，也不移動已閱標記 |
+| 查看變更 | 查看與人工已閱基準的差異；缺少可信基準時，不能據此認定沒有未讀工作 |
+| 記錄快照 | **你確實看完之後才按**，建立或更新人工已閱基準；AI 不得代按 |
+| 檢查專案 | 檢查工具環境與可自動檢查的項目，閱讀通過、缺陷或無法判定的結果 |
+| 同步規則 | 補入缺少的框架條文、檢查既有條文差異；差異仍需由你決定如何處理 |
+| 檢查更新 | 查詢版本與已下載更新的差異；不會直接套用更新 |
 
-🔴 **Why the split: a file may have exactly one owner.** Mix the framework's content with
-yours and an upgrade will lose one of them. ⚠️ **So your rules live in `my/`, ⛔ not in
-`governance/` — and when the framework adds a rule, a tool copies the new text into your file
-verbatim while leaving the rules you wrote alone.**
+新專案先依設定指引閱讀初始內容、建立人工已閱基準，再派工。尚未讀完只需儲存進度。詳細操作見 [更新、儲存與已閱](Spark2Groundwork_zh/docs/UPDATE.md)。
 
----
+## 檢查通過，代表什麼？
 
-## Versions
+自動檢查可以協助確認：引用錨點是否出現在提取文字中、必填欄位是否齊全、引用檔案是否存在，以及部分跨文件規則是否一致。
 
-Each release is tagged in Git, and **the folder names carry no version number** — if they did,
-every path and bookmark would break on each release.
+**原文是否支持你的推論、研究方法是否適切、結果能否外推，仍需要實質判讀。** 文字比對成功，不等於論據成立；有填反證條件，也不等於它真的能被觀察或檢驗。
 
-See [CHANGELOG.md](CHANGELOG.md) for what changed, and
-[Releases](https://github.com/yama-learns/Spark2Groundwork/releases) for the downloads.
+結果分為「通過」「有缺陷」「無法判定」。缺資料、缺工具或未進入查證，不能當成通過。感測器只涵蓋已定義的檢查範圍；人工已閱標記也只是工作紀錄，不是程式能驗證你已理解的證明。
 
-To find out whether you are up to date, press the **check update** button in your project folder.
+## 你的研究，與可更新的框架分開放
 
----
+![資料歸屬：框架可更新，專案內容由你保有](Spark2Groundwork_zh/docs/fig1_architecture.svg)
 
-## Where this came from
+研究稿、文獻、台帳、自訂規則與專案設定，都是你需要保全的內容。框架的公版規則、提示模板、工具與說明則可以更新。自建工具放在 `my/tools/`，避免混進更新時會替換的 `scripts/`。
 
-**Two real research projects, and forty-odd recorded mistakes between them.**
-Every check and every rule here carries the case that caused it.
+**升級前，先在專案外完整備份。** Git 快照可能排除部分檔案，不能取代完整備份。依 [更新指引](Spark2Groundwork_zh/docs/UPDATE.md) 比對並逐包處理，不要拿整個下載資料夾覆蓋你的研究專案。
 
-⚠️ Some of the mistake patterns listed in `governance/Incident_Log.md` are marked
-`[inherited]`, `[framework's own]` or `[predicted]`. **Those have not happened in your
-project.** They are listed so you know what to watch for — ⛔ not so you can assume you are
-already safe from them.
+## v1.4.5，以及接下來的 v2
 
----
+v1.4.5 聚焦 Windows／Mac 的操作入口、依賴與錯誤提示、保存與人工已閱的區分，以及舊專案的更新準備。
 
-## Licence
+> 平台驗證範圍：v1.4.5 的 Mac 自動化程序由 GitHub Actions 驗證；Finder／Gatekeeper／實機雙擊操作另待後續驗證，尚未完成，不視為已通過。
 
-MIT — see [LICENSE](LICENSE). The framework files are covered; **the research you produce with
-them is yours.**
+**v2 正在開發，是一次重新設計。** 目標包括更清楚的資料歸屬、單一核心與所選語言更新，以及更完整的來源、主張、查證與人類裁決紀錄。這些是開發方向，並非 v1.4.5 已提供的能力。
+
+詳見 [版本紀錄中的 v2 預告](CHANGELOG.md#v2-preview)。現在不需要改造研究資料夾；先依 [v2 升級準備](Spark2Groundwork_zh/docs/V2_PREPARATION.md) 備份與盤點。未來會在 v2 接近完成時規劃 AI 協助的遷移指引。
+
+## AI 協作與致謝
+
+Spark2Groundwork 由 **Yama 主持設計與維護**，負責研究需求、產品方向、工作指派及最終裁決。開發過程使用多家 AI 協助規劃、實作、測試、覆核與文件撰寫。
+
+| AI 協作工具 | 在本專案中的參與 |
+|---|---|
+| **OpenAI Codex** | 以 Astra、Sol 等專案角色參與規劃、實作、測試與覆核 |
+| **Anthropic Claude** | 參與實作、獨立覆核、研究工作流評估與文件整理 |
+| **Google Gemini** | 參與主要施工、返修、測試與設計提案 |
+
+上述為累積參與情況，各輪任務由 Yama 指派；個別工作的角色、模型版本與驗證範圍依實際紀錄區分。使用 AI 不代表每項成果都經所有模型覆核，也不代表其供應商參與維護、贊助或背書。
+
+我們保留 AI 協作的貢獻，也保留人的責任：AI 提供建議與產物，Yama 決定專案方向及是否接受成果；使用者仍需自行判讀其研究內容。
+
+## 授權
+
+框架採用 [MIT 授權](LICENSE)。你使用框架產生的研究內容，仍由你保有；所引用文獻的權利依原來源處理。

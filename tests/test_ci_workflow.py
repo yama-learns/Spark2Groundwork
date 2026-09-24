@@ -929,3 +929,112 @@ def test_fault_receipt_matches_existing_fixture_not_path_spelling(tmp_path):
     for bad in (None, {}, '--root', ['--root'], ['--root', None],
                 ['--wrong', str(fixture)], ['--root', str(fixture), '--extra']):
         assert not check_repo_hygiene._same_fixture_invocation(bad, fixture)
+
+
+@pytest.mark.parametrize('lang', ['zh', 'en'])
+def test_review_changes_requires_real_human_baseline(tmp_path, lang):
+    """Exercise the real CLI, including failures before and after AI saves work."""
+    root = tmp_path / 'project'
+    root.mkdir()
+    (root / 'governance').mkdir()
+    for name in ('AGENTS.md', 'WORKFLOW_CONSTITUTION.md'):
+        (root / 'governance' / name).write_text('fixture\n', encoding='utf-8')
+    tracked = root / 'tracked.txt'
+    tracked.write_bytes(b'initial\n')
+    script = ROOT / f'Spark2Groundwork_{lang}/scripts/harness/review_changes.py'
+    raw = tmp_path / 'raw'
+    raw.mkdir()
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONIOENCODING='utf-8')
+
+    def git(*args, input_text=None):
+        result = subprocess.run(['git', '-C', str(root), *args], input=input_text,
+                                capture_output=True, text=True, encoding='utf-8',
+                                env=env, timeout=30)
+        assert result.returncode == 0, result.stderr
+        return result.stdout.strip()
+
+    def review(case, *, path=None, extra_env=None):
+        run_env = dict(env)
+        if extra_env:
+            run_env.update(extra_env)
+        args = [sys.executable, '-B', str(script), '--root', str(root)]
+        if path:
+            args.append(path)
+        result = subprocess.run(args, capture_output=True, text=True, encoding='utf-8',
+                                errors='replace', env=run_env, timeout=40)
+        (raw / f'{case}.stdout').write_text(result.stdout, encoding='utf-8')
+        (raw / f'{case}.stderr').write_text(result.stderr, encoding='utf-8')
+        (raw / f'{case}.exit').write_text(str(result.returncode) + '\n', encoding='ascii')
+        return result
+
+    assert review('no_repo').returncode == 2
+    git('init', '-q')
+    git('config', 'user.name', 'Review fixture')
+    git('config', 'user.email', 'review@example.invalid')
+    assert review('empty_repo').returncode == 2
+    git('add', '.')
+    git('commit', '-qm', 'initial')
+    head = git('rev-parse', 'HEAD')
+    no_tag = review('head_without_reviewed')
+    assert no_tag.returncode == 2
+    assert 'INCOMPLETE' in no_tag.stdout and 'HEAD' not in no_tag.stdout.splitlines()[-1]
+    assert 'no new checkpoints since' not in no_tag.stdout.lower()
+
+    # A branch with this name is not the human tag.
+    git('branch', 'reviewed')
+    assert review('branch_alias').returncode == 2
+    git('branch', '-D', 'reviewed')
+
+    # A real tag that names a tree is still not a commit baseline.
+    git('tag', 'reviewed', 'HEAD^{tree}')
+    assert review('tag_to_tree').returncode == 2
+    git('tag', '-d', 'reviewed')
+
+    # A valid commit tag from a different lineage cannot stand in for human review.
+    tree = git('rev-parse', 'HEAD^{tree}')
+    orphan_env = dict(env, GIT_AUTHOR_NAME='Review fixture',
+                      GIT_AUTHOR_EMAIL='review@example.invalid',
+                      GIT_COMMITTER_NAME='Review fixture',
+                      GIT_COMMITTER_EMAIL='review@example.invalid')
+    orphan = subprocess.run(['git', '-C', str(root), 'commit-tree', tree],
+                            input='other lineage\n', capture_output=True, text=True,
+                            encoding='utf-8', env=orphan_env, timeout=30)
+    assert orphan.returncode == 0, orphan.stderr
+    git('tag', 'reviewed', orphan.stdout.strip())
+    assert review('non_ancestor').returncode == 2
+    git('tag', '-d', 'reviewed')
+
+    git('tag', 'reviewed', head)
+    tracked.write_bytes(b'AI saved\n')
+    git('add', 'tracked.txt')
+    git('commit', '-qm', 'auto: saved unread work')
+    tracked.write_bytes(b'AI saved and edited again\n')
+    (root / 'new-research.txt').write_bytes(b'unread new work\n')
+    saved_head = git('rev-parse', 'HEAD')
+    reviewed = git('rev-parse', 'refs/tags/reviewed^{commit}')
+    index_before = (root / '.git/index').read_bytes()
+    bytes_before = tracked.read_bytes()
+    valid = review('valid_with_unread_work')
+    assert valid.returncode == 0, valid.stdout + valid.stderr
+    assert 'reviewed' in valid.stdout and 'tracked.txt' in valid.stdout
+    assert 'new-research.txt' in valid.stdout and 'auto: saved unread work' in valid.stdout
+    detail = review('valid_file_detail', path='tracked.txt')
+    assert detail.returncode == 0 and 'AI saved and edited again' in detail.stdout
+    assert git('rev-parse', 'HEAD') == saved_head
+    assert git('rev-parse', 'refs/tags/reviewed^{commit}') == reviewed
+    assert tracked.read_bytes() == bytes_before
+    assert (root / '.git/index').read_bytes() == index_before
+
+    # A real Git diff failure must never be converted to an empty successful report.
+    bad_index = root / 'index-is-a-directory'
+    bad_index.mkdir()
+    broken = review('git_diff_failure', extra_env={'GIT_INDEX_FILE': str(bad_index)})
+    assert broken.returncode == 2 and 'INCOMPLETE' in broken.stdout
+    assert '[1]' not in broken.stdout and 'no new checkpoints since' not in broken.stdout.lower()
+    assert git('rev-parse', 'HEAD') == saved_head
+    assert git('rev-parse', 'refs/tags/reviewed^{commit}') == reviewed
+    assert tracked.read_bytes() == bytes_before
+
+    no_git = review('git_unavailable', extra_env={'PATH': str(tmp_path / 'empty-path')})
+    assert no_git.returncode == 2 and 'INCOMPLETE' in no_git.stdout
+    assert 'docs/START_HERE.html' in no_git.stdout

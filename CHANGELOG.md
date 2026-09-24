@@ -17,11 +17,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) ｜ Versioning:
 
 ---
 
-## [1.4.5] — Unreleased / 尚未發布
+<a id="v2-preview"></a>
+## v2 預告：讓構想、證據與決定更容易被追溯 / v2 preview
 
-Mac/Windows entry and compatibility fixes; separate save and human-reviewed snapshot actions; actionable dependency/update failure guidance; shared interpreter-error classification avoids treating quoted exception names as crashes. Bilingual release summaries and v2 backup/inventory guidance are included. v2 features and migration are not delivered in this version. Final platform acceptance and release approval remain pending.
+**開發中，尚未發布；以下是目標，不是本版功能清單，也不是上線日期承諾。**
 
-改善 Mac／Windows 入口與相容性、區分保存及人工已閱快照、補齊依賴與更新失敗出口；錯誤分級共用同一實作，不把普通文字內的例外名稱當成崩潰。提供雙語更新摘要與 v2 備份／盤點指引；尚未提供 v2 功能或遷移器，待最終平台驗收及發布批准。
+Spark2Groundwork v2 將重新設計框架的核心與工作方式。它希望讓研究者把注意力留在研究問題上，同時更清楚看見：一個想法怎麼演變、哪些主張已有依據、哪些仍未查證，以及哪些決定是由人做出的。
+
+- **更清楚的資料歸屬。** 預計以 `agents framework/` 放可替換的框架，`agents data/` 放專案自有的協作紀錄與設定，`research data/` 放研究材料；根目錄保留簡短入口。
+- **一份核心，更新你使用的語言。** 初始化選擇語言，後續更新核心與所選語言資源；不自動翻譯或重寫研究稿。
+- **從來源到論述，保留推論與未確定之處。** 強化來源定位、主張與論證關係、查證狀態及人類裁決的紀錄。找到相同文字、完成查證與證據支持結論，是不同的事。
+- **改動可先看，失敗能交代。** 規劃更清楚的變更預覽、操作收據與中斷恢復，分開框架更新和專案資料，降低部分完成卻被誤認為成功的風險。
+- **以沒有程式背景的研究者為使用者。** 正常工作與常見錯誤處理不應要求使用者貼終端機命令；保留跨平台的簡單入口、AI 協助及人的最後判斷。
+
+v2 採乾淨重構，不維持 v1 舊內部格式的相容層。目前沒有遷移器；先繼續使用既有版本，完整備份文獻、研究稿、台帳、自訂規則與歷史。等 v2 接近完成，再依新的規格製作 **AI 協助、在副本上比對與驗證** 的遷移指引；保留原專案，由你決定何時切換。v1.4.5 提供備份與盤點的準備指引。
+
+**In development, not released. These are goals, not features in this release or a promised delivery date.**
+
+v2 will redesign the core and workflow so researchers can focus on their questions while seeing how ideas evolved, which claims have support, which remain unverified, and which decisions were made by a person.
+
+- **Clearer ownership:** `agents framework/` for replaceable framework files, `agents data/` for project-owned collaboration records and settings, and `research data/` for research materials, with brief entry documents at the root.
+- **One core, updates for your selected language:** choose a language during setup and update the core plus that language's resources, without translating or rewriting research drafts.
+- **Trace sources, reasoning, and uncertainty:** strengthen source locations, claim and argument relationships, verification states, and human decision records. Matching text, completing verification, and establishing support remain distinct.
+- **Preview changes and account for failures:** clearer change previews, operation receipts, and recovery after interruption, with framework updates separate from project data and partial completion reported honestly.
+- **Researcher-facing operation:** routine tasks and common error recovery should not require pasting terminal commands. Simple cross-platform entry points and AI assistance retain human judgment.
+
+v2 is a clean rebuild without a compatibility layer for v1's internal formats. No migration tool is available now. Continue using your existing version and keep complete backups of sources, drafts, ledgers, custom rules, and history. As v2 approaches completion, an **AI-assisted migration guide using a separate copy, comparison, and verification** will be planned against its new specification. Keep the original project and decide when to switch. v1.4.5 supplies backup and inventory guidance.
+
+Preparation / 準備指引：[繁體中文](Spark2Groundwork_zh/docs/V2_PREPARATION.md) · [English](Spark2Groundwork_en/docs/V2_PREPARATION.md)
+
+## [1.4.5] — 2026-09-24
+
+Mac/Windows entry and compatibility fixes; separate save and human-reviewed snapshot actions; actionable dependency/update failure guidance; shared interpreter-error classification avoids treating quoted exception names as crashes. Bilingual release summaries and v2 backup/inventory guidance are included. v2 features and migration are not delivered in this version. Mac automated processes are checked in GitHub Actions; native Finder, Gatekeeper and physical-machine double-click acceptance remain pending and are not reported as passed. Missing or invalid human-reviewed baselines now return INCOMPLETE (exit 2), without falling back to HEAD.
+
+改善 Mac／Windows 入口與相容性、區分保存及人工已閱快照、補齊依賴與更新失敗出口；錯誤分級共用同一實作，不把普通文字內的例外名稱當成崩潰。提供雙語更新摘要與 v2 備份／盤點指引；尚未提供 v2 功能或遷移器，v1.4.5 的 Mac 自動化程序由 GitHub Actions 驗證；Finder／Gatekeeper／實機雙擊操作另待後續驗證，尚未完成，不視為已通過。 缺少或無效的人工已閱基準回報 INCOMPLETE（exit 2），不退回 HEAD 比較。
 
 ## [1.4.4] — 2026-09-03
 

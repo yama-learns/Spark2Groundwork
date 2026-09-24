@@ -1,11 +1,11 @@
-# v1.4.5 changes (release candidate)
+# v1.4.5 changes (2026-09-24)
 
 - Mac index/configuration compatibility fixes preserve custom exclusions.
 - Buttons for checks, saves, human-reviewed snapshots, diffs, update checks and rule sync; saving is not human review.
 - Missing dependencies and interpreter crashes report incomplete, with clearer guidance.
 - [Preparing for v2](V2_PREPARATION.md) adds backup and inventory guidance, without moving research data.
 
-Final release acceptance is pending; this summary does not claim final Mac or Intel testing.
+Mac automated processes are checked in GitHub Actions; native Finder, Gatekeeper and physical-machine double-click acceptance remain pending and are not reported as passed.
 
 - Scope checks now include committed and reverted changes since the human-reviewed snapshot. A missing or unrelated `reviewed` baseline reports INCOMPLETE. Inspect the project and use the existing human-reviewed snapshot button to establish a baseline only after you have reviewed it; saving alone does not establish human review.
 - The check is read-only, including Git index metadata. Malformed Git output reports INCOMPLETE.
@@ -37,3 +37,6 @@ Fixed documentation contradictions (D-1 through D-6):
 
 Following the earlier Solo guide and deleting the other three profiles made the full sensor run fail in both editions because of dangling references. Solo users should retain all supplied profile files; retaining a file does not activate another collaboration mode. The required keep list now also includes the root `check_project` launcher.
 
+### V145-REVIEW-BASELINE-1: Stop comparison without a human-reviewed baseline
+
+Both Review Changes entry points now report INCOMPLETE / exit 2 when HEAD is missing, `refs/tags/reviewed` is not a valid commit, the tag is outside the current HEAD history, or a Git query fails. They no longer substitute HEAD and announce no unread changes. With a valid human baseline, they still list AI-saved commits, working-tree changes, and untracked files without moving the reviewed tag.

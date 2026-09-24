@@ -1,101 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 812" width="980" height="812" font-family="Noto Sans CJK TC, Noto Sans TC, PingFang TC, Microsoft JhengHei, sans-serif">
-<rect x="0" y="0" width="980" height="812" fill="#ffffff"/>
-<defs>
-  <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#5a6b7a"/></marker>
-  <marker id="ag" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#2e7d5b"/></marker>
-</defs>
-<text x="490" y="28" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a2733">框架架構 —— 哪些是框架，哪些是你的</text>
-<text x="490" y="49" text-anchor="middle" font-size="12" fill="#4a5b6a">分界不是「重不重要」，是「一份文件的主人是誰」。框架的整包換新，你的一律不碰。</text>
-<rect x="28" y="68" width="924" height="80" rx="7" fill="#eef4fa" stroke="#3d72a4" stroke-width="1.6"/>
-<text x="42" y="90" font-size="13" font-weight="bold" fill="#3d72a4">T0 必讀法</text>
-<text x="42" y="108" font-size="10.5" fill="#4a5b6a">幾乎不動</text>
-<text x="42" y="126" font-size="10.5" font-weight="bold" fill="#1f6b4a">✅ 整包換新</text>
-<rect x="160" y="80" width="282.969" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
-<text x="301.485" y="99" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a2733">governance/AGENTS.md</text>
-<text x="301.485" y="116" text-anchor="middle" font-size="9.5" fill="#4a5b6a">查證規範｜學術底線｜決策權</text>
-<rect x="456.969" y="80" width="481.031" height="56" rx="5" fill="#fff" stroke="#3d72a4" stroke-width="1.4"/>
-<text x="697.485" y="99" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1a2733">governance/WORKFLOW_CONSTITUTION.md</text>
-<text x="697.485" y="116" text-anchor="middle" font-size="9.5" fill="#4a5b6a">拓撲｜證據鏈｜儀式｜寫入範圍｜一份文件只能有一個主人</text>
-<rect x="28" y="160" width="924" height="130" rx="7" fill="#fdf3e7" stroke="#b8802f" stroke-width="1.6"/>
-<text x="42" y="182" font-size="13" font-weight="bold" fill="#b8802f">T1 規格</text>
-<text x="42" y="200" font-size="10.5" fill="#4a5b6a">每出一次事＋一條</text>
-<text x="42" y="218" font-size="10.5" font-weight="bold" fill="#1f6b4a">✅ 整包換新</text>
-<rect x="160" y="172" width="203.124" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="261.562" y="191" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/RULES.md</text>
-<text x="261.562" y="208" text-anchor="middle" font-size="9.5" fill="#4a5b6a">框架的工作守則</text>
-<rect x="377.124" y="172" width="264.649" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="509.449" y="191" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/Incident_Log.md</text>
-<text x="509.449" y="208" text-anchor="middle" font-size="9.5" fill="#4a5b6a">失效家族與其機制</text>
-<rect x="655.773" y="172" width="282.227" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="796.886" y="191" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/Audit_Protocol.md</text>
-<text x="796.886" y="208" text-anchor="middle" font-size="9.5" fill="#4a5b6a">對抗審計規範</text>
-<rect x="160" y="222" width="274.432" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="297.216" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/*_LEDGER_SPEC.md</text>
-<text x="297.216" y="258" text-anchor="middle" font-size="9.5" fill="#4a5b6a">兩本台帳的欄位與硬性規則</text>
-<rect x="448.432" y="222" width="240.27" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="568.567" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance/ 的分主題規則</text>
-<text x="568.567" y="258" text-anchor="middle" font-size="9.5" fill="#4a5b6a">來源｜模型身分｜交接｜外部工具</text>
-<rect x="702.702" y="222" width="235.298" height="40" rx="5" fill="#fff" stroke="#b8802f" stroke-width="1.3"/>
-<text x="820.351" y="241" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">profiles/　＋　prompts/</text>
-<text x="820.351" y="258" text-anchor="middle" font-size="9.5" fill="#4a5b6a">選一個情境　＋　零件庫與模板</text>
-<rect x="28" y="302" width="924" height="90" rx="7" fill="#eef2f6" stroke="#5a6b7a" stroke-width="1.6"/>
-<text x="42" y="324" font-size="13" font-weight="bold" fill="#5a6b7a">工具</text>
-<text x="42" y="342" font-size="10.5" fill="#4a5b6a">scripts/　docs/</text>
-<text x="42" y="360" font-size="10.5" font-weight="bold" fill="#1f6b4a">✅ 整包換新</text>
-<rect x="160" y="314" width="262.154" height="66" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>
-<text x="291.077" y="333" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">感測器組</text>
-<text x="291.077" y="350" text-anchor="middle" font-size="9.5" fill="#4a5b6a">一個指令跑完，退出碼 0／1／2</text>
-<text x="291.077" y="365" text-anchor="middle" font-size="9.5" fill="#4a5b6a">run_all_sensors.py ｜ run_selftest.py</text>
-<rect x="436.154" y="314" width="273.777" height="66" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>
-<text x="573.043" y="333" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">三個按鈕背後的程式</text>
-<text x="573.043" y="350" text-anchor="middle" font-size="9.5" fill="#4a5b6a">邏輯只有一份，Windows 與 macOS 共用</text>
-<text x="573.043" y="365" text-anchor="middle" font-size="9.5" fill="#4a5b6a">checkpoint ｜ review_changes ｜ upgrade</text>
-<rect x="723.931" y="314" width="214.069" height="66" rx="5" fill="#fff" stroke="#5a6b7a" stroke-width="1.3"/>
-<text x="830.966" y="333" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">說明圖</text>
-<text x="830.966" y="350" text-anchor="middle" font-size="9.5" fill="#4a5b6a">docs/ —— 就是你正在看的這兩張</text>
-<line x1="28" y1="414" x2="952" y2="414" stroke="#b03a3a" stroke-width="1.6" stroke-dasharray="6 4"/>
-<rect x="377.065" y="402" width="225.87" height="32" rx="16" fill="#fdeeee" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="490" y="422" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#8f2d2d">以下是你的東西 —— 升級時一律不碰</text>
-<rect x="28" y="438" width="924" height="210" rx="7" fill="#fdeeee" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="42" y="460" font-size="13" font-weight="bold" fill="#b03a3a">你的東西</text>
-<text x="42" y="478" font-size="10.5" fill="#4a5b6a">只增不改寫</text>
-<text x="42" y="494" font-size="10.5" fill="#4a5b6a">🔴 無法還原</text>
-<rect x="160" y="450" width="288.233" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="304.116" y="469" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a2733">PROJECT.md　＋　第一個想法.md</text>
-<text x="304.116" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">🔴 你需要親筆填的兩個檔案</text>
-<rect x="462.233" y="450" width="262.133" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="593.299" y="469" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">猜想台帳｜主張台帳</text>
-<text x="593.299" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">構想＋反證條件　｜　逐字錨點＋頁碼</text>
-<rect x="738.366" y="450" width="199.634" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.6"/>
-<text x="838.183" y="469" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">corpus/　corpus_md/</text>
-<text x="838.183" y="486" text-anchor="middle" font-size="9.5" fill="#4a5b6a">原文 PDF 與程式化提取物</text>
-<rect x="160" y="506" width="309.491" height="46" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="314.745" y="525" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">my/MY_RULES.md</text>
-<text x="314.745" y="542" text-anchor="middle" font-size="9.5" fill="#4a5b6a">你的守則。框架那幾條逐字複製在 §1，你的 P-xx 在 §2</text>
-<rect x="483.491" y="506" width="158.653" height="46" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="562.817" y="525" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">my/MY_INCIDENTS.md</text>
-<text x="562.817" y="542" text-anchor="middle" font-size="9.5" fill="#4a5b6a">你這個專案實際出過的事</text>
-<rect x="656.144" y="506" width="161.41" height="46" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="736.849" y="525" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">my/MY_INDEX.md</text>
-<text x="736.849" y="542" text-anchor="middle" font-size="9.5" fill="#4a5b6a">你的文件索引（程式產生）</text>
-<rect x="831.554" y="506" width="106.446" height="46" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="884.777" y="525" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">my/tools/</text>
-<text x="884.777" y="542" text-anchor="middle" font-size="9.5" fill="#4a5b6a">你自己寫的腳本</text>
-<rect x="160" y="564" width="197.065" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="258.533" y="583" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">handoffs/</text>
-<text x="258.533" y="600" text-anchor="middle" font-size="9.5" fill="#4a5b6a">交接封包，只增不改</text>
-<rect x="371.065" y="564" width="265.457" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="503.794" y="583" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">NEXT_SESSION_MEMO.md</text>
-<text x="503.794" y="600" text-anchor="middle" font-size="9.5" fill="#4a5b6a">狀態，每輪覆寫</text>
-<rect x="650.523" y="564" width="287.477" height="44" rx="5" fill="#fff" stroke="#b03a3a" stroke-width="1.3"/>
-<text x="794.261" y="583" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1a2733">governance_config.json</text>
-<text x="794.261" y="600" text-anchor="middle" font-size="9.5" fill="#4a5b6a">你決定 AI 能寫哪裡</text>
-<path d="M160,192 L151,192 L151,506 L156,506" fill="none" stroke="#2e7d5b" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#ag)"/>
-<text x="168" y="300" font-size="10" font-weight="bold" fill="#1f6b4a">升級時：框架新增的守則由工具原句補進去，⛔ 你的 P-xx 不動</text>
-<rect x="28" y="664" width="924" height="132" rx="7" fill="#fffbea" stroke="#c9a227" stroke-width="1.5"/>
-<text x="44" y="686" font-size="12.5" font-weight="bold" fill="#7d6209">這張圖真正要說的三件事</text>
-<text x="44" y="712" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">① 你只需要填兩個檔案。</tspan>　其餘治理文件都由 AI 維護——你不需要打開它們，也不需要看懂它們。</text>
-<text x="44" y="738" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">② 上半部壞了就重新下載。</tspan>　所以治理 AI 對上半部有完整刪改權——給權限的理由不是信任，是那裡有還原路徑。</text>
-<text x="44" y="764" font-size="11.5" fill="#2b2b2b"><tspan font-weight="bold">③ 一份文件只能有一個主人。</tspan>　混了框架與你的內容，升級時一定會傷到其中一個——所以你的規則住在 my/，⛔ 不在 governance/。</text>
-<text x="44" y="790" font-size="11" fill="#4a5b6a">⛔ 本框架不設一條你無法解除的禁令。一條解除不了的規則，會在你真的需要時被整個繞過——而繞過不會留下紀錄。</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="950" viewBox="0 0 1280 950" role="img" aria-labelledby="title desc">
+<title id="title">框架可以換新，研究由你保有</title><desc id="desc">v1.4.5檔案歸屬與備份界線</desc>
+<style>text{font-family:'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC','Segoe UI',sans-serif;fill:#142b40}.muted{fill:#506779}</style>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#7b919f"/></marker></defs>
+<rect width="1280" height="950" rx="24" fill="#f4f7fa"/>
+<text x="48" y="44" font-size="14" font-weight="700" style="fill:#087f81">Spark2Groundwork  /  v1.4.5  /  資料歸屬</text>
+<text x="48" y="91" font-size="34" font-weight="700" style="fill:#142b40">框架可以換新，研究由你保有</text>
+<text x="48" y="125" font-size="19" font-weight="400" style="fill:#506779">更新前先辨認檔案歸屬；公版工具不等於專案自訂內容。</text>
+<rect x="48" y="158" width="1184" height="284" rx="18" fill="#eaf1fb" stroke="#cfdded"/>
+<text x="76" y="197" font-size="24" font-weight="700" style="fill:#2764ae">框架公版｜依更新指引逐包替換</text>
+<text x="76" y="249" font-size="21" font-weight="700" style="fill:#142b40">governance/</text>
+<text x="76" y="279" font-size="17" font-weight="400" style="fill:#506779">工作規則、查證規範與台帳規格</text>
+<text x="648" y="249" font-size="21" font-weight="700" style="fill:#142b40">profiles/  ·  prompts/</text>
+<text x="648" y="279" font-size="17" font-weight="400" style="fill:#506779">工作情境與提示模板</text>
+<text x="76" y="334" font-size="21" font-weight="700" style="fill:#142b40">scripts/  ·  docs/</text>
+<text x="76" y="364" font-size="17" font-weight="400" style="fill:#506779">檢查工具、入口說明與操作指引</text>
+<text x="648" y="334" font-size="21" font-weight="700" style="fill:#142b40">README.md  ·  SETUP.md</text>
+<text x="648" y="364" font-size="17" font-weight="400" style="fill:#506779">專案入口與設定；另含初始化提示、框架索引</text>
+<text x="76" y="419" font-size="18" font-weight="400" style="fill:#2764ae">Windows／Mac 操作按鈕也是框架檔；先保全其中的自訂內容。</text>
+<path d="M48 475H1232" stroke="#b75658" stroke-width="2"/>
+<text x="48" y="507" font-size="20" font-weight="700" style="fill:#984a4c">紅線以下是專案自有內容，不用新版模板覆蓋。</text>
+<rect x="48" y="529" width="1184" height="269" rx="18" fill="#e7f4f1" stroke="#badbd4"/>
+<text x="76" y="568" font-size="24" font-weight="700" style="fill:#087f81">你的研究｜另做完整備份</text>
+<text x="76" y="617" font-size="20" font-weight="700" style="fill:#142b40">PROJECT.md  ·  第一個想法.md</text>
+<text x="76" y="645" font-size="17" font-weight="400" style="fill:#506779">研究方向、限制與最初構想</text>
+<text x="648" y="617" font-size="20" font-weight="700" style="fill:#142b40">corpus/  ·  corpus_md/  ·  ledgers/</text>
+<text x="648" y="645" font-size="17" font-weight="400" style="fill:#506779">文獻、提取物、猜想與主張紀錄</text>
+<text x="76" y="695" font-size="20" font-weight="700" style="fill:#142b40">my/  ·  my/tools/</text>
+<text x="76" y="723" font-size="17" font-weight="400" style="fill:#506779">自訂規則、事故紀錄、索引與自建工具</text>
+<text x="648" y="695" font-size="20" font-weight="700" style="fill:#142b40">handoffs/  ·  NEXT_SESSION_MEMO.md</text>
+<text x="648" y="723" font-size="17" font-weight="400" style="fill:#506779">交接紀錄與工作備忘錄</text>
+<text x="76" y="773" font-size="18" font-weight="400" style="fill:#087f81">另含 governance_config.json、研究稿及任意自建資料夾。</text>
+<rect x="48" y="822" width="1184" height="91" rx="18" fill="#fff" stroke="#d7e1e8"/>
+<text x="72" y="854" font-size="18" font-weight="400" style="fill:#506779">更新前：在專案外備份完整資料夾，包含隱藏檔；Git 快照不能取代完整備份。</text>
+<text x="72" y="883" font-size="18" font-weight="400" style="fill:#506779">.gitignore／.gitattributes 含自訂設定時須逐項合併；不要整份覆蓋。</text>
 </svg>
