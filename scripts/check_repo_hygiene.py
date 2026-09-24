@@ -895,6 +895,16 @@ def check_cleanliness(root: pathlib.Path) -> list:
 FAULT_CASES = {'zh': {'sensor_conjecture_ledger.py': {'case': '競爭解釋為空須 FAIL', 'code': 1, 'fixture': 'conj_norival'}, 'sensor_claim_ledger.py': {'case': '錨點查無須 FAIL', 'code': 1, 'fixture': 'claim_ghost'}, 'sensor_self_certification.py': {'case': '自我背書須抓到', 'code': 1, 'fixture': 'selfcert_bad'}, 'sensor_model_attribution.py': {'case': '產出物無型號欄須 FAIL', 'code': 1, 'fixture': 'attrib_missing'}, 'sensor_reference_integrity.py': {'case': '引用不存在的檔案須 FAIL', 'code': 1, 'fixture': 'ref_dangling'}, 'sensor_clause_sync.py': {'case': '條款清單一字之差須 FAIL', 'code': 1, 'fixture': 'sync_drift'}}, 'en': {'sensor_conjecture_ledger.py': {'case': 'empty rival hypothesis FAILs', 'code': 1, 'fixture': 'conj_norival'}, 'sensor_claim_ledger.py': {'case': 'missing anchor FAILs', 'code': 1, 'fixture': 'claim_ghost'}, 'sensor_self_certification.py': {'case': 'self-certification is caught', 'code': 1, 'fixture': 'selfcert_bad'}, 'sensor_model_attribution.py': {'case': 'an artefact with no model field FAILs', 'code': 1, 'fixture': 'attrib_missing'}, 'sensor_reference_integrity.py': {'case': 'a reference to a missing file FAILs', 'code': 1, 'fixture': 'ref_dangling'}, 'sensor_clause_sync.py': {'case': 'a one-character difference in the list FAILs', 'code': 1, 'fixture': 'sync_drift'}}}
 
 
+def _same_fixture_invocation(args, fixture):
+    """Match the same existing fixture, including OS path aliases, fail closed."""
+    if not isinstance(args, list) or len(args) != 2 or args[0] != '--root' or not isinstance(args[1], str):
+        return False
+    try:
+        return pathlib.Path(args[1]).resolve(strict=True) == pathlib.Path(fixture).resolve(strict=True)
+    except (OSError, ValueError, RuntimeError):
+        return False
+
+
 def check_fault_propagation(target, lang, baseline_output, env):
     """Require a named passing case to fail after a loaded sensor is changed.
 
@@ -935,8 +945,8 @@ def check_fault_propagation(target, lang, baseline_output, env):
             invocations = [json.loads(line) for line in loaded.read_text('utf-8').splitlines()]
         except (OSError, ValueError):
             pass
-        fixture = str(fault / 'scripts/harness/selftest' / case['fixture'])
-        was_loaded = ['--root', fixture] in invocations
+        fixture = fault / 'scripts/harness/selftest' / case['fixture']
+        was_loaded = any(_same_fixture_invocation(args, fixture) for args in invocations)
         marker = (' (expected exit ' if lang == 'en' else '（期望 exit ')
         detail = (f"{case['code']}, got {wrong_code}" if lang == 'en'
                   else f"{case['code']}，實得 {wrong_code}")

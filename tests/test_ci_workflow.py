@@ -910,3 +910,22 @@ def test_e3a_conjecture_cross_tree_target_config(tmp_path, lang):
     assert data["status"] == "FAIL"
     assert "CITATION_NOT_IN_LEDGER" in codes
     regular_note.unlink()
+
+
+def test_fault_receipt_matches_existing_fixture_not_path_spelling(tmp_path):
+    parent = tmp_path / 'alias-parent'
+    parent.mkdir()
+    fixture = tmp_path / 'fixture'
+    fixture.mkdir()
+    alias = parent / '..' / 'fixture'
+    assert str(alias) != str(fixture)
+    assert check_repo_hygiene._same_fixture_invocation(['--root', str(alias)], fixture)
+    assert check_repo_hygiene._same_fixture_invocation(['--root', str(fixture)], alias)
+    other = tmp_path / 'other' / 'fixture'
+    other.mkdir(parents=True)
+    assert not check_repo_hygiene._same_fixture_invocation(['--root', str(other)], fixture)
+    missing = tmp_path / 'missing'
+    assert not check_repo_hygiene._same_fixture_invocation(['--root', str(missing)], missing)
+    for bad in (None, {}, '--root', ['--root'], ['--root', None],
+                ['--wrong', str(fixture)], ['--root', str(fixture), '--extra']):
+        assert not check_repo_hygiene._same_fixture_invocation(bad, fixture)
