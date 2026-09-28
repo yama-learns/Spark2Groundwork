@@ -23,7 +23,7 @@ State belongs only in `NEXT_SESSION_MEMO.md`.
 
 ### 2.1 Verification-level tags
 
-**Every sentence carrying a number or an assertion takes one.**
+Use natural prose for ordinary discussion, reading recommendations and research explanations; no sentence-by-sentence bracket labels are required. Readers must still be able to distinguish originals, abstracts or secondary accounts, background and the author's reasoning. State what was actually read near the relevant passage, and provide source locators and material limitations for claims that affect conclusions. Phrases such as "I suggest" or "this may mean" can express judgment. Formal citations still require checking the original; ledger fields and the evidence categories below remain unchanged. Display labels where useful for audits, structured records or an explicit user request.
 
 | Tag | Meaning |
 |---|---|
@@ -83,9 +83,8 @@ declared dead is never checked again.**
 **Full specification: `governance/MODEL_IDENTITY.md` and the chosen `profiles/PROFILE_*.md`.
 This section lists only what cannot be violated.**
 
-1. **The first act of every session is to declare the model**, read verbatim from the authority.
-   ⛔ If it cannot be read, output "unreadable"; **never substitute a platform name**.
-2. ⛔ **Generation and checking must not be done by the same party.**
+1. Record the model and its source from the readable environment, the user or an interface confirmation; leave unknown versions unknown. Without a switch or new conflict in the same conversation, do not ask again or require a header in every reply or research document. Unknown identity does not stop ordinary research.
+2. Authors may check and fix their work. Only reviewers who did not author the material may call their review independent; changing roles does not erase authorship.
 3. ⛔ **Do not run git commands that rewrite the working tree** (`reset --hard` / `checkout -- .` / `clean`).
 4. **Any report claiming "restored / done / passed" must state which aspects were checked.**
 

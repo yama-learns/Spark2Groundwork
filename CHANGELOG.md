@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.5.0 — 2026-09-28
+
+- 放寬預設角色寫入：研究筆記／草稿、治理維護、審計報告可直接落地；舊專案自訂限制保留。這是預設調整，不是新增權限引擎。
+- Permissive default role writes for research, governance and audit work; existing project restrictions remain intact. This adjusts defaults without adding a permission engine.
+
+- 自然閱讀：一般正文移除逐句證據標籤義務，重要主張仍保留來源與限制。
+- 型號資訊記錄來源並延續；已知稱呼／家族名／unknown 可用於 AI 檢查點，不取得真人已閱或獨立覆核資格。
+- 舊交接來源提示合併摘要；JSON 明細、新缺漏／矛盾與每次完整掃描保留。
+- 修正雙語入口與閱讀改善的相鄰說明。Mac 原生／Finder／Gatekeeper 尚未驗證，延期補測。
+- 歷史紀錄中預告的 v1.5.0 研究目錄、新權限引擎、跨工具收據、版別欄位與模式必填均不屬本次有界版本；不應當成已交付功能。v2 仍在開發。
+
+- Natural prose replaces mandatory sentence labels; consequential claims keep sources and limitations.
+- Model-source records persist; known names/families/unknown work for AI checkpoints without granting human review or independence.
+- Historical provenance notices are summarized; JSON details, new failures and full scans remain.
+- Bilingual entry guidance is aligned. Native Mac/Finder/Gatekeeper checks are deferred, not passed.
+- Earlier roadmap references to v1.5.0 research directories, a new permission engine, shared receipts, edition fields and mandatory modes do not describe features delivered in this bounded release. v2 remains in development.
+
+
 All notable changes to this project are recorded here.
 本專案的重要變更記錄於此。
 

@@ -109,7 +109,7 @@ def _skip_note(body, marker):
 
 def main(argv=None):
     # Parse every argument before any read or write. argparse still rejects an unknown
-    # option with exit 2; harmonising that semantic is explicitly deferred to v1.5.0.
+    # option with exit 2; harmonising that semantic remains future tool work, outside v1.5.0.
     ap = argparse.ArgumentParser(
         description="Append newly added framework rules verbatim to a project's my/MY_RULES.md")
     ap.add_argument("--root", default=None,

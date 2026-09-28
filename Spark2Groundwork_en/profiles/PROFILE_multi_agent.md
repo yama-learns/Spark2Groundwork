@@ -1,46 +1,16 @@
 # Profile: several AIs with separate jobs
 
-**For:** you use two or more AIs at once, and **at least two of them are from different
-companies.**
-
-⚠️ **If all your models come from one company, this profile buys you much less** —
-**section 1 explains why.**
+**For:** two or more AIs sharing work. Different models or vendors may add perspectives but are optional. Independent review requires a worker who did not author or repair that material. See sections 1 and 2 for roles and handoffs.
 
 ---
 
-## 1. Three roles
+## 1. Role division
 
-| Role | Responsible for | Which model |
-|---|---|---|
-| **Governance** | Maintaining rules, logging incidents, maintaining the checks | Your main model |
-| **Research** | The content itself: reading papers, analysis, testing hypotheses | Your main model |
-| **Audit** | Finding holes. ⛔ **Produces nothing and fixes nothing** | 🔴 **Must be a different company's model** |
+Default research, governance and audit permissions live in `governance/WORKFLOW_CONSTITUTION.md` §6. Roles do not prescribe a model or vendor. Independent reviewers must not have authored the material; diverse models may add perspectives but do not guarantee freedom from blind spots.
 
-🔴 **If the auditor is the same model as the one being audited, that layer is doing nothing.**
+## 2. Shared work and handoffs
 
-**The reason is not that it would favour itself. The reason is that it cannot see.**
-A model has its own blind spots — it will not notice what it left out,
-in the same way that you do not notice the thing you did not think of.
-**Switching companies switches the set of blind spots.**
-
-⚠️ **This is why "two companies" matters more than "two models".**
-Two models from the same company have blind spots that overlap heavily.
-
----
-
-## 2. Three points of contact, ⛔ all of which go through you
-
-| Contact point | Rule |
-|---|---|
-| **The two ledgers** | ⛔ **No AI writes to them directly.** An AI files a "please decide" request → you decide → the governance role writes it in |
-| **State documents** | **One per line of work**, ⛔ never writing into each other's, never copying each other's content |
-| **`handoffs/`** | All three roles may write here. ⚠️ **Filenames must carry a role prefix, or they will overwrite each other** |
-
-**Why the ledgers must go through you:**
-A ledger records **what you have confirmed**.
-**If an AI writes straight into it, that column no longer means anyone confirmed anything.**
-
----
+AIs may maintain ledger working records; human decisions need actual sources. Roles may write their working folders, shared memos and handoffs. Coordinate concurrent edits instead of overwriting unmerged work. Auditors may create reports and tests; disclose authorship after assigned repairs.
 
 ## 3. How each round goes
 
@@ -167,46 +137,4 @@ three hands: someone proposed it, someone costed it, someone decided.**
 
 ## 6. Configuration
 
-**Open `governance_config.json` in the project root** and state the write scopes:
-
-```json
-"write_scopes": {
-  "governance": ["governance", "scripts", "my",
-                 "file_index.md", "NEXT_SESSION_MEMO.md"],
-  "research":   ["corpus_md", "RESEARCH_MEMO.md"],
-  "audit":      ["scratch"],
-  "_shared":    ["handoffs"]
-}
-```
-
-⚠️ **Giving `audit` only a sandbox is deliberate: real reports go to `handoffs/` (`_shared`).**
-
-🔴 **`my` in the governance role's write scope is deliberate too.** That role must be able to
-maintain this project's `my/MY_RULES.md`, `my/MY_INCIDENTS.md`,
-`my/MY_INDEX_notes.json`, and `my/tools/`. Project-built tools live there, ⛔ not under
-wholesale-replaced `scripts/`. Write access is not adjudication authority: the principal still
-decides whether a rule is adopted.
-
-⚠️ **After upgrading an older project, inspect `governance_config.json` by hand.** If the
-governance role's `write_scopes` lacks `my`, add it when the principal authorises that scope;
-an upgrade never overwrites this project-owned setting.
-
-🔴 **⚠️ ⛔ Do not edit `scripts/harness/framework_config.py`.**
-**That is a framework file, replaced wholesale on upgrade — ⛔ settings changed there
-disappear, and nothing tells you.**
-**⚠️ `governance_config.json` is on the upgrade tool's never-replace list.**
-
-⛔ **A misspelled key is not silently absorbed**: the sensor FAILs and names the closest valid key.
-
-🔴 **`scratch/` does not come with the framework — ⛔ you create it yourself.**
-**Just make a folder called `scratch` at the top level of your project.**
-⚠️ **Leaving it out is deliberate: `scratch/` is defined as the place that is not under
-version control, ⛔ and a sandbox that is under version control is no longer a sandbox.**
-
-⚠️ **The audit role must have a sandbox (`scratch/`).**
-**If you ask it to run adversarial tests but give it nowhere to make a mess,
-⛔ you are asking it to either not test or overstep.**
-
-⚠️ **Nothing in `scratch/` is under version control, ⛔ so nothing in it may be cited.**
-**A citation into it reads exactly like a well-founded one, ⛔ and points at something that can
-vanish at any moment.**
+New projects use `deny: []`, `write_scopes: {}`; no manual directory assignment is needed. Constitution §6 defines role capabilities. Auditors may create their sandbox and persistent reports. The sensor checks the scope union, not role identity. Upgrades preserve custom settings; AI may help with user-chosen minimal adjustments without silently removing restrictions. Personal settings belong in `governance_config.json`, not replaceable framework defaults. Move evidence out of scratch before citing it.

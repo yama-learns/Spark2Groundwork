@@ -1,132 +1,128 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""感測器：模型歸屬（隨選）
+"""模型歸屬感測器：檢查紀錄是否一致，⛔ 不驗證後端身份。
 
-**規則來源：** `governance/MODEL_IDENTITY.md` §3.4（產出物之作者欄須寫具體型號）
-與 §3.6 規則 2（平台名不是型號）；`governance/HANDOFF.md` §3（封包必備五項第一項）。
-
-## 檢查
-
-    MODEL_ATTRIBUTION_MISSING     產出物檔頭沒有型號欄                    FAIL
-    MODEL_ATTRIBUTION_VAGUE       只寫家族名或平台名，無具體型號          FAIL
-    MODEL_UNREADABLE_DECLARED     正確地宣告「無法讀取」                  WARN
-    SCAN_GLOB_MATCHES_NOTHING     掃描範圍命中 0 個檔案                   WARN
-
-## 🔴 這支感測器整個重寫過，理由值得記在這裡
-
-**舊版帶著兩份硬編白名單**（`GRANDFATHERED` 13 筆、`FROZEN_HANDOFFS` 12 筆），
-列的全是**另一個專案的檔名**——一個 `mve/` 底下的檔、另一個目錄底下的 git 政策檔等等，
-**在本框架中沒有一個存在。**
-⚠️ **此處刻意不逐字寫出那些檔名**——寫出來，它們就成為本檔的懸空引用。
-**「描述缺陷時不要實例化它」**（先行專案在同一個機制上撞過三次）。它還帶著 5 筆懸空章節引用（⚠️ **理由同上，此處刻意不寫出那些章節編號**——
-它們在本框架的憲章中都不存在，寫出來就成為本檔自己的懸空引用），並且**在一個全新的乾淨模板上第一次執行就報三筆 WARN**。
-
-> ⛔ `R-21`：白名單／硬編清單**不得**作為掃描範圍的定義方式。
-> ⛔ `R-19`：一支會對正確文本報警的感測器，會教人忽略它。
-
-### 🔴 但真正的根因不是白名單，是**掃描範圍錯了**
-
-舊版掃「根目錄所有 `.md`」。**而根目錄的 `.md` 是框架提供的模板
-（`README.md`、`SETUP.md`、`file_index.md` …），不是 AI 的產出物——它們本來就不該有作者欄。**
-於是它必須靠一張愈長愈好的豁免清單來壓住自己製造的告警。
-
-> **那張白名單是為了補償一個錯的掃描範圍而存在的。**
-> **範圍改對，白名單就不需要了——這一版一筆硬編檔名都沒有。**
-
-**現在的範圍：`framework_config.py` 的 `attribution_globs`（發現式，預設 `handoffs/*.md`）
-——只掃 AI 實際產出的東西。**
-
-## ⚠️ 「具體型號」怎麼機械判定
-
-⛔ **不列舉型號清單**——那是另一種白名單，而且一定會過期。
-**判準是結構性的：具體型號幾乎必然帶版本數字**
-（`opus-5`、`sonnet-5`、`gemini-3.7-flash`、`o4-mini`、`haiku-4.5`），
-**而家族名與平台名不帶**（`Claude`、`Gemini`、`Antigravity`、`Cowork`）。
-
-⚠️ 平台名另以一份**取值域**清單輔助（⛔ 這是取值域，不是掃描範圍，故不違反 `R-21`
-——同 `ai_checkpoint.sh` 的角色白名單）。
-
-## ✅ 「無法讀取」是正確答案，⛔ 不得判為缺陷
-
-`governance/MODEL_IDENTITY.md` §3.6.3 規則 1 逐字：標記不在可見上下文內時，
-**唯一正確的輸出**是 `[Model: 無法讀取——…]`。
-⛔ **判它 FAIL 會逼下一個模型退回寫平台名，而 §3.6 規則 2 說那比留空更糟。**
-→ 判 WARN，並提醒依 §3.6 規則 3 請使用者補填。
-
-退出碼：0 PASS｜1 FAIL｜2 INCOMPLETE（**⛔ 未完成 ≠ 通過**）
+契約：governance/MODEL_IDENTITY.md §3.4 與 governance/HANDOFF.md §3。
+掃描範圍仍是 attribution_globs（預設 handoffs/*.md）；沒有型號白名單。
+新格式以來源／狀態配對型號名稱或明示 unknown。帶版本數字的舊格式仍可讀，
+但會提示未記來源；數字不能認證型號。如實宣告未知或衝突不算文件不合格，
+提示也不要求使用者反覆確認。
+退出碼：0 無失敗，1 紀錄無效，2 檢查未完成。WARN 保持可見。
 """
 import pathlib
 import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _common import cli, emit, dead_glob_findings            # noqa: E402
-from framework_config import resolve_globs                   # noqa: E402
+from _common import cli, emit, dead_glob_findings  # noqa: E402
+from framework_config import resolve_globs  # noqa: E402
 
-# 型號欄的兩種寫法：`[Model: X]` 與 `**建立：** X，日期`
-MODEL_TAG = re.compile(r"\[Model:\s*([^\]]+)\]", re.I)
+FIELD = re.compile(r"^\s*\[Model(?P<kind> source| status)?:\s*(?P<value>[^\]\r\n]*)\]\s*$", re.I)
 AUTHOR_FIELD = re.compile(r"^\*{0,2}(?:建立|作者|撰寫|執行模型|Created|Author|Model)"
-                          r"\*{0,2}\s*[:：]\s*\*{0,2}\s*([^\n，,]+)", re.M)
-# ✅ 正確的「讀不到」宣告——⛔ 不是缺陷
-UNREADABLE = re.compile(r"無法讀取|cannot read|unreadable|not in the visible context")
-# ⚠️ 取值域，不是掃描範圍（故不違反 R-21）。平台名可跑不同模型，寫它等於沒寫。
-PLATFORMS = ("antigravity", "cowork", "claude code", "ai studio", "gemini app",
-             "chatgpt", "copilot", "openai", "anthropic", "google")
-# 具體型號幾乎必然帶版本數字；家族名與平台名不帶。
-HAS_VERSION = re.compile(r"\d")
+                          r"\*{0,2}\s*[:：]\s*\*{0,2}\s*([^\n，,]+)", re.I)
+UNREADABLE = re.compile(r"^(?:unknown|未知|無法讀取|cannot read|unreadable|not in the visible context)(?:$|\s|[—–:：-])", re.I)
+PLATFORMS = {"antigravity", "cowork", "claude code", "ai studio", "gemini app",
+             "chatgpt", "copilot", "openai", "anthropic", "google"}
+PAIRS = {"environment": "read", "user": "reported", "ui": "reported",
+         "unknown": "unknown", "conflict": "conflict"}
 HEAD_LINES = 15
 
 
-def attribution(text):
-    """回傳檔頭宣告的型號字串，找不到時回傳 None。"""
-    head = "\n".join(text.splitlines()[:HEAD_LINES])
-    m = MODEL_TAG.search(head)
-    if m:
-        return m.group(1).strip()
-    m = AUTHOR_FIELD.search(head)
-    return m.group(1).strip() if m else None
+def header_fields(text):
+    """只讀整行檔頭欄位；忽略檔頭內的程式碼示例。"""
+    values = {"model": [], "source": [], "status": []}
+    fence = None
+    for line in text.splitlines()[:HEAD_LINES]:
+        mark = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if mark:
+            token = mark[1]
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+            continue
+        if fence is not None:
+            continue
+        m = FIELD.fullmatch(line)
+        if m:
+            key = (m['kind'] or 'model').strip().lower()
+            values[key].append(m['value'].strip())
+        else:
+            m = AUTHOR_FIELD.match(line)
+            if m:
+                values['model'].append(m[1].strip())
+    return values
+
+
+def inspect_record(text):
+    fields = header_fields(text)
+    if not fields['model'] or any(not v or v == '...' for items in fields.values() for v in items):
+        return 'FAIL', 'MODEL_ATTRIBUTION_MISSING', '必要的型號值缺漏或仍是模板省略號。'
+    if any(len({v.casefold() for v in items}) > 1 for items in fields.values()):
+        return 'FAIL', 'MODEL_ATTRIBUTION_CONFLICT', '檔頭欄位值互相矛盾；請保留各來源並釐清。'
+    who = fields['model'][0]
+    source = fields['source'][0].lower() if fields['source'] else None
+    status = fields['status'][0].lower() if fields['status'] else None
+    unknown = bool(UNREADABLE.search(who))
+    if source is not None or status is not None:
+        if source not in PAIRS or PAIRS[source] != status:
+            return 'FAIL', 'MODEL_ATTRIBUTION_STATE_INVALID', '來源／狀態缺漏、不在取值表內或彼此不相容。'
+        if source in ('unknown', 'conflict'):
+            if not unknown:
+                return 'FAIL', 'MODEL_ATTRIBUTION_STATE_INVALID', '未知／衝突狀態不得同時寫出已確認的型號。'
+            if source == 'conflict':
+                return 'WARN', 'MODEL_IDENTITY_CONFLICT_DECLARED', '已如實宣告來源衝突；只有任務資格需要時才釐清。'
+            return 'WARN', 'MODEL_UNREADABLE_DECLARED', '型號未知；普通工作可繼續，不必反覆詢問。'
+        if unknown:
+            return 'FAIL', 'MODEL_ATTRIBUTION_STATE_INVALID', '未知值不能標為 read 或 reported 的型號。'
+        if who.casefold() in PLATFORMS:
+            return 'FAIL', 'MODEL_ATTRIBUTION_VAGUE', '平台名不是型號；請記已知型號或 unknown。'
+        return None
+    # 舊格式相容：明示不是來源或後端證據。
+    if unknown:
+        return 'WARN', 'MODEL_UNREADABLE_DECLARED', '舊格式的未知宣告；不需要反覆確認。'
+    if who.casefold() in PLATFORMS or not re.search(r'\d', who):
+        return 'FAIL', 'MODEL_ATTRIBUTION_VAGUE', '舊格式只有名稱而無版本，請補記實際來源／狀態。'
+    return 'WARN', 'MODEL_SOURCE_UNRECORDED', '舊格式歸屬可讀，但未記來源，也未經認證。'
+
+
+def human_findings(findings):
+    """Summarise only legacy source notices after the complete scan."""
+    count = sum(level == 'WARN' and code == 'MODEL_SOURCE_UNRECORDED'
+                for level, code, _ in findings)
+    if not count:
+        return findings
+    result, shown = [], False
+    for item in findings:
+        if item[:2] == ('WARN', 'MODEL_SOURCE_UNRECORDED'):
+            if not shown:
+                message = ('{count} 份歷史紀錄未載來源；這不是新增錯誤，不需逐份追補。' '使用 --json 查看完整路徑與逐筆明細。').format(count=count)
+                result.append(('WARN', 'MODEL_SOURCE_UNRECORDED_SUMMARY', message))
+                shown = True
+        else:
+            result.append(item)
+    return result
 
 
 def main():
-    root, cfg, as_json, name = cli("model_attribution")
-    globs = cfg.get("attribution_globs", ["handoffs/*.md"])
-    files, dead = resolve_globs(globs, root, cfg)
-    findings = dead_glob_findings(dead, "attribution_globs", root)
-    vague = missing = unread = 0
-
+    root, cfg, as_json, name = cli('model_attribution')
+    files, dead = resolve_globs(cfg.get('attribution_globs', ['handoffs/*.md']), root, cfg)
+    findings = dead_glob_findings(dead, 'attribution_globs', root)
+    checked = 0
     for p in files:
         try:
-            text = p.read_text(encoding="utf-8")
+            text = p.read_text(encoding='utf-8')
         except (UnicodeDecodeError, OSError):
-            findings.append(("INCOMPLETE", "FILE_NOT_DECODABLE",
-                             f"{p.relative_to(root)} 非 UTF-8，本檔未檢查——**不等於通過**"))
+            findings.append(('INCOMPLETE', 'FILE_NOT_DECODABLE', f'{p.relative_to(root)}：無法以 UTF-8 讀取，⛔ 未檢查 ≠ 通過。'))
             continue
-        who = attribution(text)
-        if who is None:
-            missing += 1
-            findings.append(("FAIL", "MODEL_ATTRIBUTION_MISSING",
-                             f"{p.relative_to(root)} 檔頭無型號欄"
-                             "——`governance/HANDOFF.md` §3：缺一即視為未交付"))
-            continue
-        if UNREADABLE.search(who):
-            # ✅ 這是 MODEL_IDENTITY §3.6.3 規則 1 指定的唯一正確輸出
-            unread += 1
-            findings.append(("WARN", "MODEL_UNREADABLE_DECLARED",
-                             f"{p.relative_to(root)} 正確地宣告了「無法讀取」"
-                             "——⛔ 這不是缺陷。依 §3.6 規則 3，請使用者補填"))
-            continue
-        low = who.lower()
-        if any(pf in low for pf in PLATFORMS) or not HAS_VERSION.search(who):
-            vague += 1
-            findings.append(("FAIL", "MODEL_ATTRIBUTION_VAGUE",
-                             f"{p.relative_to(root)}：「{who[:40]}」不是具體型號"
-                             "——**寫平台名或家族名比留空更糟，它讀起來像有答案，"
-                             "會讓下游停止追問**（`governance/MODEL_IDENTITY.md` §3.6.3 規則 2）"))
-
-    stats = {"掃描產出物": len(files), "無型號欄": missing,
-             "只有家族名／平台名": vague, "已宣告無法讀取": unread}
-    return emit("模型歸屬感測器", findings, stats, as_json, name)
+        checked += 1
+        result = inspect_record(text)
+        if result:
+            level, code, message = result
+            findings.append((level, code, f'{p.relative_to(root)}：{message}'))
+    display = findings if as_json else human_findings(findings)
+    return emit('模型歸屬感測器', display, {'掃描產出物': len(files), '已檢查': checked}, as_json, name)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

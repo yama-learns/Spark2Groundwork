@@ -96,7 +96,7 @@ def _skip_note(body, marker):
 
 def main(argv=None):
     # ⚠️ 參數必須在任何讀寫前解析。未知參數仍由 argparse 以 exit 2 拒絕；
-    #    退出碼語意的統一已由主持人裁決延至 v1.5.0。
+    #    退出碼語意統一留待後續工具設計；v1.5.0 不改此介面。
     ap = argparse.ArgumentParser(
         description="把框架新增的規則原句補進指定專案的 my/MY_RULES.md")
     ap.add_argument("--root", default=None,

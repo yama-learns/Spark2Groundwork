@@ -82,11 +82,11 @@ Research drafts, sources, ledgers, custom rules, and project settings are yours 
 
 **Make a complete backup outside the project before upgrading.** A Git snapshot may exclude files and is not a substitute for that backup. Follow the [update guide](Spark2Groundwork_en/docs/UPDATE.md) to compare and update packages individually; do not overwrite your research project with an entire downloaded folder.
 
-## v1.4.5 and the coming v2
+## v1.5.0 and the coming v2
 
-v1.4.5 focuses on Windows/Mac entry points, dependency and error guidance, the distinction between saving and human review, and update preparation for existing projects.
+v1.5.0 focuses on natural reading and interaction: ordinary prose needs no sentence labels; model-source records persist without repeated demands for an unknown full version; historical notices are summarized with details retained. Saving remains separate from human review.
 
-> Platform verification scope: Mac automated processes are checked in GitHub Actions; native Finder, Gatekeeper and physical-machine double-click acceptance remain pending and are not reported as passed.
+> Platform verification scope: native Windows validation for v1.5.0 is complete. Native Mac, Finder, Gatekeeper and human double-click checks remain deferred for this release, not passed.
 
 **v2 is in development as a redesign.** Its goals include clearer file ownership, one shared core with updates for the selected language, and more complete records of sources, claims, verification, and human decisions. These are development goals, not features delivered by v1.4.5.
 

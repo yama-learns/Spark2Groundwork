@@ -343,6 +343,12 @@ def main():
     findings = []
 
     # (1) T0 uniqueness
+    # Required T0 presence is independent of write permission or scan exclusions.
+    for rel in cfg["t0_docs"]:
+        if not (root / rel).is_file():
+            findings.append(("FAIL", "T0_REQUIRED_FILE_MISSING",
+                             f"{rel} — Required governance file is missing or not a file; restore it from a trusted backup or matching release, not an empty placeholder."))
+
     t0_names = {pathlib.Path(t).name for t in cfg["t0_docs"]}
     t0_paths = {(root / t).resolve() for t in cfg["t0_docs"]}
     for p in root.rglob("*.md"):
@@ -365,15 +371,8 @@ def main():
     scopes = cfg.get("write_scopes") or {}
     stats = {"T0 documents": len(cfg["t0_docs"])}
 
-    # 🔴 **`deny` is `deny`. ⛔ Nothing is appended to it here (v1.4.1).**
-    # ⚠️ **The old code folded in `t0_docs` unconditionally, so no configuration could turn
-    #    T0 protection off — while the comment in `framework_config.py` said the opposite:
-    #    "the two T0 files are deliberately absent here; a governance agent may maintain them".**
-    #    🔴 **Two comments by the same author with opposite intent: the absence of T0 from
-    #    `deny` is a gap, and a gap carries no intent, so each side gave it its own meaning.**
-    # ✅ **T0 is now listed verbatim in the `deny` default. ⚠️ That is ⛔ not "one rule written
-    #    twice" — `t0_docs` says "exactly one copy exists project-wide"; `deny` says "who may
-    #    write". ⛔ Two different facts about the same files.**
+    # v1.5 defaults to empty deny; use explicit overrides, never append t0_docs.
+    # Required presence/uniqueness does not forbid authorized T0 maintenance.
     denied = [d.rstrip("/") for d in cfg.get("deny", [])]
 
     def under(path, tops):
@@ -402,7 +401,7 @@ def main():
                         continue
                     findings.append(("FAIL", "WRITE_TO_DENIED_PATH",
                                      f"{c} falls inside the deny scope — **⛔ no AI role may "
-                                     f"write here** (constitution §6, general rule 2)"))
+                                     f"write here** (constitution §6.3)"))
                     continue
                 if not under(c, allowed):
                     findings.append(("FAIL", "WRITE_OUT_OF_SCOPE",
@@ -422,8 +421,8 @@ def main():
                                     "this round; changes inside the deny scope are listed")
             if hits:
                 findings.append(("WARN", "DENIED_PATH_TOUCHED_UNATTRIBUTED",
-                                 f"{len(hits)} change(s) this round fall inside the AI's "
-                                 "default no-write area: "
+                                 f"{len(hits)} change(s) this round fall inside the configured "
+                                 "deny area (governance_config.json): "
                                  + ", ".join(hits[:8])
                                  + ("…" if len(hits) > 8 else "")
                                  + " — **⚠️ if you made them yourself this is normal; "

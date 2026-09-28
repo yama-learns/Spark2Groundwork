@@ -1,12 +1,12 @@
 # Spark2Groundwork
 
-## v1.4.5 and the road to v2
+## v1.5.0 and the road to v2
 
-This candidate improves Mac/Windows buttons, dependency guidance and error classification. Normal use requires no pasted terminal commands; Mac buttons may display results in a terminal window. Final platform acceptance is still pending.
+v1.5.0 builds on the v1.4.5 entry points with natural reading, continuity of model-source records and concise historical notices. Native Mac, Finder and Gatekeeper checks remain deferred for this release; they are not reported as passed.
 
 v2 is in development: a shared core, updates for the selected language, separation of framework and project data, and traceable sources, claims and human decisions. These are development goals, not features already delivered in v1.4.5.
 
-Read [Preparing for v2](docs/V2_PREPARATION.md). Installing v1.4.5 will not be a prerequisite for migration.
+Read [Preparing for v2](docs/V2_PREPARATION.md).
 
 
 For initial setup or project checks, double-click **check_project.bat / check_project.command**. See the [startup guide](docs/START_HERE.html) if tools are missing. No pasted commands.
@@ -232,3 +232,14 @@ work, and takes no responsibility for it.
 
 
 Use save_progress for unread work; snapshot still confirms human review. See the [operation guide](docs/UPDATE.md) for updates and rule synchronization without commands.
+
+## Updating reading and model-identity rules
+
+v1.5.0 improves reading and interaction. Ordinary paper guides need no sentence-by-sentence evidence labels. Formal claims still retain sources, verification scope and limitations. Keep the source of a user-provided model name rather than repeatedly asking for an unknown full version.
+
+For an existing project, preserve original files and custom rules first. Ask your AI to compare the old and new documents and list proposed edits before you approve applying them. Do not overwrite research data, ledgers or personal rules with a whole template tree. If a custom rule still requires labels on every sentence, decide whether to keep or change it; do not remove it silently.
+
+After applying changes in the same conversation, you can say: "Reload the updated AGENTS, RULES, MODEL_IDENTITY and my current role's START, preserving my custom rules. Use natural prose for ordinary research and retain the model source already confirmed in this conversation." For a new conversation, paste the full updated role START. Ask for a short actual reading-guide example to check that it has loaded; replacing disk files alone does not guarantee that an old conversation has adopted them.
+
+
+Role permissions: v1.5 uses permissive work defaults. Research may write to `my/research/`, governance may maintain rules/tools, and audit may create reports/tests. Human decisions and original-data protection remain action-specific. See the [permission table](governance/WORKFLOW_CONSTITUTION.md#6-write-scopes). Existing project settings are preserved; ask AI to help align them with your task.

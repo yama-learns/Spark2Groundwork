@@ -231,7 +231,7 @@ expect("clean governance text does not false-alarm", 0, "sensor_governance_text.
 # ⚠️ **The base files must be committed first.** The first version did not commit, so
 #    `governance/AGENTS.md` and `governance_config.json` counted as changes themselves and
 #    **all three tests failed** — caught by the self-test, not by reading the code.
-def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=None, deny=None):
+def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=None, deny=None, missing_t0=None, as_directory=False):
     global ok, bad
     import json, shutil, subprocess, tempfile
     tmp = pathlib.Path(tempfile.mkdtemp(prefix="s2g_scope_"))
@@ -250,6 +250,11 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
         subprocess.run(g + ["-c", "user.name=t", "-c", "user.email=t@t",
                             "commit", "-q", "-m", "base"], capture_output=True)
         subprocess.run(g + ["tag", "reviewed"], capture_output=True)
+        if missing_t0:
+            target = tmp / "governance" / missing_t0
+            target.unlink()
+            if as_directory:
+                target.mkdir()
         for rel in changed_files:
             f = tmp / rel
             f.parent.mkdir(parents=True, exist_ok=True)
@@ -273,6 +278,15 @@ def scope_case(desc, changed_files, want_code, needle=None, forbid=(), scopes=No
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+
+# Required-file checks execute the real sensor in isolated Git fixtures.
+for missing in ("AGENTS.md", "WORKFLOW_CONSTITUTION.md"):
+    scope_case("Required T0 missing: " + missing, [], 1, "T0_REQUIRED_FILE_MISSING",
+               scopes={}, deny=[], missing_t0=missing)
+scope_case("T0 directory is not a file", [], 1, "T0_REQUIRED_FILE_MISSING",
+           scopes={}, deny=[], missing_t0="AGENTS.md", as_directory=True)
+scope_case("Existing T0 files remain valid", [], 0,
+           forbid=("T0_REQUIRED_FILE_MISSING",), scopes={}, deny=[])
 
 scope_case("writing into deny FAILs", ["ledgers/Claim_Ledger.md"], 1, "WRITE_TO_DENIED_PATH",
            scopes={"governance": ["governance", "profiles"]})
@@ -735,15 +749,22 @@ expect("a family name alone FAILs", 1, "sensor_model_attribution.py", "attrib_va
        "MODEL_ATTRIBUTION_VAGUE")
 expect("a platform name FAILs", 1, "sensor_model_attribution.py", "attrib_platform",
        "MODEL_ATTRIBUTION_VAGUE")
-expect("a concrete model does not false-alarm", 0, "sensor_model_attribution.py", "attrib_clean",
+expect("a concrete model does not false-alarm", 0, "sensor_model_attribution.py", "attrib_clean", "MODEL_SOURCE_UNRECORDED_SUMMARY",
        forbid=("MODEL_ATTRIBUTION_VAGUE", "MODEL_ATTRIBUTION_MISSING"))
-# 🔴 The most important of this group: ⛔ "cannot read" is the **only correct output** per
-#    MODEL_IDENTITY §3.6 rule 1. FAILing it would push the next model back to writing a
-#    platform name, and §3.6 rule 2 says that is worse than a blank.
+# 🔴 The most important of this group: ⛔ an honest "cannot read"/unknown declaration is
+#    allowed by MODEL_IDENTITY §3.4/§3.6.3. FAILing it would push the next model back to a
+#    platform name or an invented version, and a platform is not a model (§3.6.3).
 #    **The direction of degradation must be "I do not know", not "a vaguer name".**
 expect("a correct 'cannot read' declaration is not a defect", 0, "sensor_model_attribution.py",
        "attrib_unreadable", "MODEL_UNREADABLE_DECLARED",
        forbid=("MODEL_ATTRIBUTION_VAGUE", "MODEL_ATTRIBUTION_MISSING"))
+
+# Source-aware attribution: fixed CLI oracle, independent of the sensor parser.
+from selftest_attribution import run_cases as run_attribution_cases
+attribution_ok, attribution_bad = run_attribution_cases(HERE)
+ok += attribution_ok
+bad += attribution_bad
+
 
 
 # -- Reference integrity (decision 14: new sensor) -------------------------------
@@ -2608,6 +2629,55 @@ def checkpoint_same_stat_case():
         print("  ❌ " + label + ": " + str(exc)); bad += 1
 
 checkpoint_same_stat_case()
+
+
+def checkpoint_model_cases():
+    """Real checkpoints in disposable repositories, never in the product repo."""
+    global ok, bad
+    import tempfile, time, json
+    cases=[('claude',0),('gemini',0),('gpt',0),('Sol',0),('unknown',0),
+           ('ChatGPT',1),('Codex',1),('...',1),('Sol]injected',1),('Sol\nother',1),(None,1)]
+    executed=passed=0
+    for label,want in cases:
+        started=time.time();print('CHECKPOINT_MODEL_START '+repr(label),flush=True)
+        p=None
+        try:
+            with tempfile.TemporaryDirectory(prefix='s2g_cp_model_') as temp:
+                root=pathlib.Path(temp)
+                def git(*args):
+                    result=subprocess.run(['git','-C',str(root),*args],capture_output=True,text=True,
+                        encoding='utf-8',errors='replace',timeout=30)
+                    if result.returncode:raise RuntimeError(result.stderr)
+                    return result.stdout.strip()
+                git('init','-q');git('config','user.name','selftest');git('config','user.email','selftest@local')
+                (root/'governance').mkdir()
+                for name in ('AGENTS.md','WORKFLOW_CONSTITUTION.md'):
+                    (root/'governance'/name).write_text('fixture\n',encoding='utf-8')
+                (root/'.gitignore').write_text('git-checkpoint.log\n',encoding='utf-8')
+                (root/'sample.txt').write_bytes(b'old\n')
+                git('add','.');git('commit','-qm','fixture');git('tag','reviewed')
+                before=git('rev-parse','HEAD');reviewed=git('rev-parse','reviewed')
+                (root/'sample.txt').write_bytes(b'new\n')
+                args=[PY,'-B',str(HERE/'checkpoint.py'),'--root',str(root),'--mode','ai','--role','agent','--topic','label']
+                if label is not None:args.extend(['--model',label])
+                p=subprocess.run(args,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=30,
+                    env=dict(os.environ,PYTHONIOENCODING='utf-8',PYTHONDONTWRITEBYTECODE='1'))
+                head=git('rev-parse','HEAD');after_reviewed=git('rev-parse','reviewed')
+                good=p.returncode==want and reviewed==after_reviewed
+                if want==0:
+                    message=git('log','-1','--format=%B')
+                    good=good and head!=before and git('show','HEAD:sample.txt')=='new'
+                    good=good and 'NOT human-reviewed' in message and f'/'+label+'-' in message
+                else:good=good and head==before and not (root/'git-checkpoint.log').exists()
+                item=dict(model=label,exit=p.returncode,expected=want,passed=good,head_before=before,head_after=head,reviewed_before=reviewed,reviewed_after=after_reviewed,stdout=p.stdout,stderr=p.stderr)
+        except Exception as exc:
+            good=False;item=dict(model=label,passed=False,error=repr(exc),stdout=p.stdout if p else None,stderr=p.stderr if p else None)
+        item.update(started_unix=started,ended_unix=time.time(),seconds=time.time()-started)
+        print('CHECKPOINT_MODEL_RESULT '+json.dumps(item,ensure_ascii=True),flush=True)
+        executed+=1;passed+=int(good);ok+=int(good);bad+=int(not good)
+    print('CHECKPOINT_MODEL_COLLECTION '+json.dumps(dict(expected=len(cases),executed=executed,passed=passed,failed=executed-passed,skipped=len(cases)-executed)),flush=True)
+
+checkpoint_model_cases()
 
 print("\n" + "=" * 48)
 print(f"  passed {ok} | failed {bad}")

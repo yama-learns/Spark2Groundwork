@@ -38,7 +38,8 @@ compares against lives.
    "For every sentence with a number in it, give me the exact wording from the
     source and the page number."
 ④ After the AI replies, YOU write the new claims into the ledger
-⑤ Every five to ten rounds, paste the ledger to a DIFFERENT company's model and ask:
+⑤ Every five to ten rounds, paste the ledger to another AI that did not produce it
+   (a different company's model is optional) and ask:
    "Which of these quotations is most likely to have been invented?"
 ```
 

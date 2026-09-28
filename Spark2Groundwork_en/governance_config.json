@@ -12,40 +12,15 @@
     "⛔ A misspelled key is not skipped — the sensor FAILs and names the closest valid key."
   ],
   "_what deny is": [
-    "Where the AI does not write by default. ⚠️ A default, ⛔ not a prohibition —",
-    "clear it and you have granted full authorisation.",
-    "",
-    "🔴 Why these five: the criterion is 'can it be restored if it breaks'.",
-    "   ledgers/ corpus/ corpus_md/ can be restored from nowhere.",
-    "   governance/AGENTS.md and WORKFLOW_CONSTITUTION.md are T0; break them and the",
-    "   whole rule set bends with them.",
-    "",
-    "⚠️ To let a governance AI maintain T0, delete the last two entries. That is your call.",
-    "⛔ The framework sets no prohibition you cannot lift (constitution §6.3)."
+    "New v1.5 projects use deny: [] with no blanket path bans. Constitution §6 still governs task authorization, original-data protection and human decisions; empty deny does not authorize arbitrary actions.",
+    "With empty write_scopes, a deny hit produces DENIED_PATH_TOUCHED_UNATTRIBUTED as a warning, not a failure by itself. With nonempty scopes, deny hits outside the existing _human exception produce WRITE_TO_DENIED_PATH/FAIL. Other checks may still fail or be incomplete. This is an after-the-fact check, not OS enforcement; user restrictions still bind the AI.",
+    "Upgrades preserve custom settings. AI applies only user-authorized minimal changes, never silently clears restrictions."
   ],
-  "deny": [
-    "ledgers",
-    "corpus",
-    "corpus_md",
-    "governance/AGENTS.md",
-    "governance/WORKFLOW_CONSTITUTION.md"
-  ],
+  "deny": [],
   "_what write_scopes is": [
-    "Only multi-role projects need this: which paths each role may write.",
-    "A solo project leaves it as {}.",
-    "",
-    "⚠️ Empty ⛔ does not mean the check is off (from v1.4.1).",
-    "   With it empty, changes inside the deny scope are still listed — there is just no",
-    "   out-of-scope verdict, because the sensor reads git status and ⛔ cannot tell your",
-    "   edit from the AI's.",
-    "",
-    "Example (three roles):",
-    "  \"write_scopes\": {",
-    "    \"governance\": [\"governance\", \"scripts\", \"my\", \"file_index.md\"],",
-    "    \"research\":   [\"corpus_md\", \"RESEARCH_MEMO.md\"],",
-    "    \"audit\":      [\"scratch\"],",
-    "    \"_shared\":    [\"handoffs\"]",
-    "  }"
+    "write_scopes may be {}. When nonempty, only the union of all role paths is checked, not actual authorship or per-role isolation. If configured, include my/research and shared work files under Constitution §6.",
+    "With empty write_scopes, a deny hit produces DENIED_PATH_TOUCHED_UNATTRIBUTED as a warning, not a failure by itself. With nonempty scopes, deny hits outside the existing _human exception produce WRITE_TO_DENIED_PATH/FAIL. Other checks may still fail or be incomplete. This is an after-the-fact check, not OS enforcement; user restrictions still bind the AI.",
+    "Upgrades preserve custom settings. AI applies only user-authorized minimal changes, never silently clears restrictions."
   ],
   "write_scopes": {}
 }

@@ -104,7 +104,7 @@ stays green** — and a sensor can only catch the latter.
 
 ### 4.1 Session start
 
-1. **Declare your model** (`governance/MODEL_IDENTITY.md`)
+1. **Confirm your model and its source once** (no repeat without a switch or new conflict in the same conversation; `governance/MODEL_IDENTITY.md`)
 2. Read the state document (`NEXT_SESSION_MEMO.md`)
 3. Read both T0 files
 4. First-time participants also read `Incident_Log.md`
@@ -137,6 +137,8 @@ A predecessor project's governance role wrote only its own memo for a long time;
 **the result was that other roles only discovered a rule had changed the next time they violated it.**
 
 ### 4.3 🔴 When an instruction conflicts with T0 (**the most commonly missing rule**)
+
+This section does not block user changes to role defaults under §6.3. Proceed with explicitly authorized ordinary writes instead of refusing because of the factory role split.
 
 **"Decision requests" propose rule changes; they do not answer "what do I do right now".**
 
@@ -179,47 +181,26 @@ The pending list in the state document **must carry a "rounds waited" column**.
 
 ---
 
-## 6. Write scope
+## 6. Write scopes
 
-**Set per your chosen profile, registered in `file_index.md`.**
+### 6.1 Default role permissions
 
-### 6.1 What "output area" means
+Roles divide work; they are not directory barriers to everyday tasks. A user-assigned task includes the reading, directory creation, writing and editing of ordinary work products needed to complete it. Do not ask again for every file. This table applies to solo and multi-role work. A solo AI may combine jobs, but self-checks are not independent review.
 
-**Output area ＝ the directory where this role's work for the round should land.**
+| Role | Allowed by default | Actions needing a specific instruction |
+|---|---|---|
+| Research | Reading, translations, notes, analysis, code and manuscript drafts; `my/research/`, user-designated research folders, `corpus_md/`, research memos and ledger working records; adding acquired papers to `corpus/` | Deleting or overwriting original papers/data; changing user-decided goals or ethical limits; modifying framework governance or shared tools |
+| Governance | `governance/` including both T0 files, `profiles/`, `prompts/`, `scripts/`, indexes, settings and rules/incidents in `my/`; recording actual user decisions and organizing ledgers | Changing explicit user permissions, research goals or ethical limits; deleting/revising research under the guise of housekeeping; external publication |
+| Audit | Reading task-relevant files; creating `my/audit/`, reports, tests, reproduction copies, memos and handoffs; creating its own sandbox | Changes to reviewed artifacts must be within an assigned repair task; the auditor becomes a repair author for those changes and cannot call their review independent |
+| All roles | Their working folders, `scratch/`, `handoffs/`, `NEXT_SESSION_MEMO.md`; maintaining factual descriptions/status in `PROJECT.md` | Coordinate or merge before sharing a file; never overwrite another worker's unmerged work |
 
-| Situation | Output area |
-|---|---|
-| Single AI | Project root, **minus** ledgers, T0, and `scripts/` |
-| Multiple roles | Whatever `write_scopes` lists in `framework_config.py` |
+Ledgers may contain candidate claims, sources, notes, open questions and check results. Record "user confirmed/reviewed/accepted" only from an actual user instruction, never by inference. The falsification-condition adjudication remains the user's decision; an AI may transcribe explicit words with their source, but cannot decide on the user's behalf. Changing roles does not reset review independence.
 
-⚠️ **The following three are ⛔ by default in no AI's output area:**
-`ledgers/`, `governance/AGENTS.md`, `governance/WORKFLOW_CONSTITUTION.md`
+Reuse existing research tools where suitable; create needed task tools in `my/research/tools/` or a task folder without stopping research for lack of a bundled tool. Never silently weaken framework checks to obtain a pass. Drafting is not formal adoption; source and research-integrity requirements remain.
 
-🔴 **⛔ That is a default, ⛔ not a prohibition by this framework** — per §6.3 the user decides
-authorisation, and its mechanical counterpart is `deny` in `governance_config.json`.
-**⇒ Where the two disagree, `deny` governs.**
+After adding, renaming or moving project-owned files, run `python scripts/harness/tool_my_index.py` before closing to refresh `my/MY_INDEX.md`; otherwise the sensor reports `MY_INDEX_STALE`. This is index maintenance, not a permission refusal.
 
-⚠️ **Before v1.4.4 this line read "In every situation ... in no AI's output area"** — **⇒ it
-contradicted general rule 2 nine lines below it ("that is a default, ⛔ not a prohibition")
-and §6.3, ⛔ all three in the same document.**
-🔴 **Measured case: a real project's AI edited this section under its principal's ruling, and
-the next upgrade replaced the whole constitution, taking the edit with it.**
-⚠️ **⛔ A project's ruling on a framework clause still has ⛔ nowhere to live that an upgrade
-will not overwrite** — **⇒ that is a design gap, ⛔ not a defect in the upgrader (the
-constitution sits in the "pure framework content ⇒ replaced wholesale" row). Deferred to v1.5.0.**
-
-✅ **`NEXT_SESSION_MEMO.md` is part of every role's output area** —
-the end-of-session ritual requires overwriting it (§4.2); leave it out and **§4 and §6 contradict each other**.
-⚠️ Found by the framework's own live test: the tested agent, faced with that contradiction,
-chose not to overwrite it. **The file was left containing three spaces.**
-
-**Three general rules:**
-
-1. **A role writes only to its own output area ＋ `handoffs/`.**
-2. **Ledgers are by default in no AI role's write scope** — ⚠️ **that is a default, ⛔ not a
-   prohibition. See §6.3.**
-3. **Every exception must have its cost written down.**
-   ⚠️ One exemption is fine, but **an exemption should be visible rather than quiet**.
+These are permissive v1.5 defaults. Detailed role design belongs to later v2 work. Paths are suggestions, not a requirement to move existing user data.
 
 
 ### 6.2 Operational directories (**they are not output areas**)
@@ -264,37 +245,18 @@ protected ones.**
 🔴 **The latter exists only to produce a clearer error message** —
 **⛔ treated as the primary defence, it makes any folder not on it look unprotected.**
 
-### 6.3 🔴 Authorisation is the user's decision, ⛔ not the framework's
+### 6.3 User instructions and configuration
 
-**A user may authorise the AI to write anything in their project, ledgers included.**
-⛔ **This framework has no standing to forbid that** — **each project is the responsibility of
-its principal, and this framework takes no responsibility for any project's final product.**
+Users may change these defaults; explicit task instructions take precedence over the factory division of work. Preserve existing user restrictions. Ordinary work needs no separate directory permission; clarify only a genuinely ambiguous scope, destructive original-data change, change to a settled decision, external disclosure or publication.
 
-⚠️ **Reason: a prohibition the user cannot lift gets routed around entirely the moment they
-genuinely need it lifted, and routing around leaves no record. ⛔ A gate that can be switched
-off in a config is safer than a gate that gets bypassed.**
+New projects use `deny: []` and `write_scopes: {}` in `governance_config.json`. Empty deny means no blanket path ban; it does not authorize arbitrary tasks, decisions on behalf of the user or publication. With nonempty write_scopes, the current sensor checks the union of all roles' paths, not actual authorship or per-role enforcement. It is an after-the-fact check, not an operating-system permission boundary.
 
-**Mechanical counterpart:** `deny` in `governance_config.json`.
-**Empty it and authorisation is complete.**
+With empty write_scopes, a deny hit produces DENIED_PATH_TOUCHED_UNATTRIBUTED as a warning, not a failure by itself. With nonempty scopes, deny hits outside the existing _human exception produce WRITE_TO_DENIED_PATH/FAIL. Other checks may still fail or be incomplete. This is an after-the-fact check, not OS enforcement; user restrictions still bind the AI.
 
-#### One thing worth knowing when you decide (⛔ information, not persuasion)
+Upgrades never overwrite existing project settings. If a user chooses the new defaults, read their settings first, show and apply the smallest necessary changes, and retain custom restrictions. An explicit task authorization also permits aligning the settings needed for that task; do not require users to edit JSON or repeat the same approval. Clarify a conflicting custom restriction only where necessary; never silently clear it.
 
-| | After it breaks |
-|---|---|
-| **Framework documents** (`governance/` `profiles/` `prompts/` `scripts/` …) | ✅ **Re-download from GitHub and overwrite** |
-| **`ledgers/` `corpus/` `corpus_md/` `handoffs/` `my/` `PROJECT.md` `FIRST_IDEA.md`** | 🔴 **Nothing anywhere can restore them** |
+Protect data by action: routine additions and editing may proceed; deleting or irreversibly overwriting original data, erasing history, external private-data disclosure and publication need corresponding authorization. Saving is not human review; writable ledgers do not confer acceptance authority. Report actual changes without creating a separate exception record for every ordinary write.
 
-**The default `deny` blocks only the second kind, ⛔ never the first** — so a governance agent
-can fully maintain the governance documents, **which is the precondition for a user being able
-to keep this framework alive on their own.**
-
-#### ⚠️ Two things full authorisation does not change
-
-1. **The AI still declares "which files I wrote" in `handoffs/`** (`governance/HANDOFF.md` §3.3).
-   **Authorisation changes what may be written, ⛔ not whether it must be reported.**
-2. The **falsification-adjudicated column** in `ledgers/Conjecture_Ledger.md` is still ⛔
-   human-only. 🔴 **That column is the only record that a human adjudicated — if the AI can
-   fill it, adjudication is just a string.**
 
 ### 6.4 🔴 A file may have exactly one owner (v1.4.1)
 
@@ -396,10 +358,10 @@ immediately collided with T0 uniqueness.
 
 **Spec in `governance/Audit_Protocol.md`. This section fixes only four non-negotiables:**
 
-1. The auditor **must not be the same model as the audited**
+1. Independent reviewers must not have authored or repaired the material they review. Changing models, vendors, roles or conversations does not reset authorship. Diverse models may add perspectives but do not establish independence.
 2. The report must carry **"what I tested / what I did not test"**, and **the latter must not be empty**
 3. The conclusion's scope **must not exceed the test matrix**
-4. ⛔ **The auditor does not fix things**
+4. Do not modify reviewed artifacts without an assigned repair task. Carry out user-assigned repairs, preserve the original candidate and findings, and disclose repair authorship; do not claim independent review of those changes (Constitution §6).
 
 ---
 

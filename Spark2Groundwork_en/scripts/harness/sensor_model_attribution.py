@@ -1,144 +1,129 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Sensor: model attribution (on demand)
+"""Model attribution: record consistency, not backend authentication.
 
-**Rule source:** `governance/MODEL_IDENTITY.md` §3.4 (an artefact's author field must name the
-concrete model) and §3.6 rule 2 (a platform name is not a model); `governance/HANDOFF.md` §3
-(the first of the five required items in a handoff packet).
-
-## Checks
-
-    MODEL_ATTRIBUTION_MISSING     No model field in the artefact's header          FAIL
-    MODEL_ATTRIBUTION_VAGUE       Only a family or platform name, no concrete model FAIL
-    MODEL_UNREADABLE_DECLARED     Correctly declared "cannot read"                  WARN
-    SCAN_GLOB_MATCHES_NOTHING     The scan matched zero files                       WARN
-
-## 🔴 This sensor was rewritten from scratch, and the reason belongs here
-
-**The old version carried two hard-coded whitelists** (`GRANDFATHERED`, 13 entries;
-`FROZEN_HANDOFFS`, 12), every one of them **a filename from another project** — one under an `mve/` directory, one a
-git-policy document under another directory, and so on — **none of which exists in this framework.**
-⚠️ **Those filenames are deliberately not written out here**: writing them would make them
-dangling references in this very file. **"Do not instantiate a defect while describing it"**
-(predecessor projects hit this same mechanism three times).
-It also carried five dangling section citations (⚠️ **same reason as above: the section
-numbers are deliberately not written out here** — none of them exist in this framework's
-constitution, and writing them would make them this file's own dangling references), and **it emitted three WARNs on a brand-new
-clean template the very first time it ran.**
-
-> ⛔ `R-21`: whitelists and hard-coded lists **must not** define scan scope.
-> ⛔ `R-19`: a sensor that fires on correct text teaches people to ignore it.
-
-### 🔴 But the root cause was not the whitelist. **The scan scope was wrong.**
-
-The old version scanned every `.md` in the project root. **Those files are the framework's own
-templates** (`README.md`, `SETUP.md`, `file_index.md`, ...) — **not AI output, and they were
-never supposed to carry an author field.** So it needed an ever-growing exemption list to
-suppress the alarms it created for itself.
-
-> **That whitelist existed to compensate for a wrong scan scope.**
-> **Fix the scope and the whitelist is unnecessary — this version contains no hard-coded
-> filename at all.**
-
-**The scope now: `attribution_globs` in `framework_config.py` (discovery-based, default
-`handoffs/*.md`) — only what an AI actually produced.**
-
-## ⚠️ How "concrete model" is decided mechanically
-
-⛔ **No list of model names** — that is just another whitelist, and it will go stale.
-**The test is structural: a concrete model almost always carries a version number**
-(`opus-5`, `sonnet-5`, `gemini-3.7-flash`, `o4-mini`, `haiku-4.5`), **while a family or
-platform name does not** (`Claude`, `Gemini`, `Antigravity`, `Cowork`).
-
-⚠️ A platform-name list assists as a **value domain** (⛔ a value domain, not a scan scope,
-so `R-21` is not violated — same as the role whitelist in `ai_checkpoint.sh`).
-
-## ✅ "Cannot read" is the correct answer, ⛔ not a defect
-
-`governance/MODEL_IDENTITY.md` §3.6.3 rule 1 says verbatim that when the marker is not in visible
-context, **the only correct output** is `[Model: cannot read -- ...]`.
-⛔ **FAILing it would push the next model back to writing a platform name, and §3.6 rule 2
-says that is worse than leaving it blank.**
-→ WARN instead, with a reminder to have the human backfill it per §3.6 rule 3.
-
-Exit codes: 0 PASS | 1 FAIL | 2 INCOMPLETE (**⛔ not a pass**)
+Contract: governance/MODEL_IDENTITY.md §3.4 and governance/HANDOFF.md §3.
+Scope remains attribution_globs (default handoffs/*.md). No model allowlist.
+New records pair source/status with a model name or explicit unknown. Legacy
+version-bearing headers remain readable with a missing-source notice; a digit
+does not authenticate a model. Unknown and honestly declared conflicts are
+not document failures. Notices do not require repeated user confirmation.
+Exit: 0 no failure, 1 invalid record, 2 incomplete check. Warnings remain visible.
 """
-
 import pathlib
 import re
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from _common import cli, emit, dead_glob_findings            # noqa: E402
-from framework_config import resolve_globs                   # noqa: E402
+from _common import cli, emit, dead_glob_findings  # noqa: E402
+from framework_config import resolve_globs  # noqa: E402
 
-# Two accepted forms: `[Model: X]` and `**Created:** X, date`
-MODEL_TAG = re.compile(r"\[Model:\s*([^\]]+)\]", re.I)
+FIELD = re.compile(r"^\s*\[Model(?P<kind> source| status)?:\s*(?P<value>[^\]\r\n]*)\]\s*$", re.I)
 AUTHOR_FIELD = re.compile(r"^\*{0,2}(?:建立|作者|撰寫|執行模型|Created|Author|Model)"
-                          r"\*{0,2}\s*[:：]\s*\*{0,2}\s*([^\n，,]+)", re.M)
-# ✅ The correct "could not read it" declaration -- ⛔ not a defect
-UNREADABLE = re.compile(r"無法讀取|cannot read|unreadable|not in the visible context")
-# ⚠️ A value domain, not a scan scope (so R-21 holds). One platform runs many models,
-#    so writing the platform name says nothing.
-PLATFORMS = ("antigravity", "cowork", "claude code", "ai studio", "gemini app",
-             "chatgpt", "copilot", "openai", "anthropic", "google")
-# A concrete model almost always carries a version number; a family/platform name does not.
-HAS_VERSION = re.compile(r"\d")
+                          r"\*{0,2}\s*[:：]\s*\*{0,2}\s*([^\n，,]+)", re.I)
+UNREADABLE = re.compile(r"^(?:unknown|未知|無法讀取|cannot read|unreadable|not in the visible context)(?:$|\s|[—–:：-])", re.I)
+PLATFORMS = {"antigravity", "cowork", "claude code", "ai studio", "gemini app",
+             "chatgpt", "copilot", "openai", "anthropic", "google"}
+PAIRS = {"environment": "read", "user": "reported", "ui": "reported",
+         "unknown": "unknown", "conflict": "conflict"}
 HEAD_LINES = 15
 
 
-def attribution(text):
-    """Return the model string declared in the header, or None."""
-    head = "\n".join(text.splitlines()[:HEAD_LINES])
-    m = MODEL_TAG.search(head)
-    if m:
-        return m.group(1).strip()
-    m = AUTHOR_FIELD.search(head)
-    return m.group(1).strip() if m else None
+def header_fields(text):
+    """Read whole-line headers only; ignore code examples within the header."""
+    values = {"model": [], "source": [], "status": []}
+    fence = None
+    for line in text.splitlines()[:HEAD_LINES]:
+        mark = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if mark:
+            token = mark[1]
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+            continue
+        if fence is not None:
+            continue
+        m = FIELD.fullmatch(line)
+        if m:
+            key = (m['kind'] or 'model').strip().lower()
+            values[key].append(m['value'].strip())
+        else:
+            m = AUTHOR_FIELD.match(line)
+            if m:
+                values['model'].append(m[1].strip())
+    return values
+
+
+def inspect_record(text):
+    fields = header_fields(text)
+    if not fields['model'] or any(not v or v == '...' for items in fields.values() for v in items):
+        return 'FAIL', 'MODEL_ATTRIBUTION_MISSING', 'A required model value is absent or a placeholder.'
+    if any(len({v.casefold() for v in items}) > 1 for items in fields.values()):
+        return 'FAIL', 'MODEL_ATTRIBUTION_CONFLICT', 'Header values disagree; retain and clarify the sources.'
+    who = fields['model'][0]
+    source = fields['source'][0].lower() if fields['source'] else None
+    status = fields['status'][0].lower() if fields['status'] else None
+    unknown = bool(UNREADABLE.search(who))
+    if source is not None or status is not None:
+        if source not in PAIRS or PAIRS[source] != status:
+            return 'FAIL', 'MODEL_ATTRIBUTION_STATE_INVALID', 'Source/status is missing, unsupported or incompatible.'
+        if source in ('unknown', 'conflict'):
+            if not unknown:
+                return 'FAIL', 'MODEL_ATTRIBUTION_STATE_INVALID', 'Unknown/conflicting identity must not name a confirmed model.'
+            if source == 'conflict':
+                return 'WARN', 'MODEL_IDENTITY_CONFLICT_DECLARED', 'Conflicting sources declared; clarify only where task eligibility requires it.'
+            return 'WARN', 'MODEL_UNREADABLE_DECLARED', 'Identity is unknown; ordinary work may continue without repeated questions.'
+        if unknown:
+            return 'FAIL', 'MODEL_ATTRIBUTION_STATE_INVALID', 'An unknown value cannot be marked read or reported as a model.'
+        if who.casefold() in PLATFORMS:
+            return 'FAIL', 'MODEL_ATTRIBUTION_VAGUE', 'A platform name is not a model; record the known model or unknown.'
+        return None
+    # Historical compatibility, explicitly not evidence of a source or backend.
+    if unknown:
+        return 'WARN', 'MODEL_UNREADABLE_DECLARED', 'Legacy unknown declaration; no repeated confirmation is required.'
+    if who.casefold() in PLATFORMS or not re.search(r'\d', who):
+        return 'FAIL', 'MODEL_ATTRIBUTION_VAGUE', 'A legacy name without a version needs its actual source/status recorded.'
+    return 'WARN', 'MODEL_SOURCE_UNRECORDED', 'Legacy attribution is readable; its source was not recorded or authenticated.'
+
+
+def human_findings(findings):
+    """Summarise only legacy source notices after the complete scan."""
+    count = sum(level == 'WARN' and code == 'MODEL_SOURCE_UNRECORDED'
+                for level, code, _ in findings)
+    if not count:
+        return findings
+    result, shown = [], False
+    for item in findings:
+        if item[:2] == ('WARN', 'MODEL_SOURCE_UNRECORDED'):
+            if not shown:
+                message = ('{count} historical records have no recorded source; this is not a new error. ' 'No per-file backfill is required. Use --json for the full path/detail list.').format(count=count)
+                result.append(('WARN', 'MODEL_SOURCE_UNRECORDED_SUMMARY', message))
+                shown = True
+        else:
+            result.append(item)
+    return result
 
 
 def main():
-    root, cfg, as_json, name = cli("model_attribution")
-    globs = cfg.get("attribution_globs", ["handoffs/*.md"])
-    files, dead = resolve_globs(globs, root, cfg)
-    findings = dead_glob_findings(dead, "attribution_globs", root)
-    vague = missing = unread = 0
-
+    root, cfg, as_json, name = cli('model_attribution')
+    files, dead = resolve_globs(cfg.get('attribution_globs', ['handoffs/*.md']), root, cfg)
+    findings = dead_glob_findings(dead, 'attribution_globs', root)
+    checked = 0
     for p in files:
         try:
-            text = p.read_text(encoding="utf-8")
+            text = p.read_text(encoding='utf-8')
         except (UnicodeDecodeError, OSError):
-            findings.append(("INCOMPLETE", "FILE_NOT_DECODABLE",
-                             f"{p.relative_to(root)} is not UTF-8; not checked "
-                             f"-- **and that is not a pass**"))
+            findings.append(('INCOMPLETE', 'FILE_NOT_DECODABLE', f'{p.relative_to(root)}: cannot read UTF-8; not checked.'))
             continue
-        who = attribution(text)
-        if who is None:
-            missing += 1
-            findings.append(("FAIL", "MODEL_ATTRIBUTION_MISSING",
-                             f"{p.relative_to(root)} has no model field in its header "
-                             f"-- `governance/HANDOFF.md` §3: a missing item means not delivered"))
-            continue
-        if UNREADABLE.search(who):
-            # ✅ This is the only correct output per MODEL_IDENTITY §3.6.3 rule 1
-            unread += 1
-            findings.append(("WARN", "MODEL_UNREADABLE_DECLARED",
-                             f"{p.relative_to(root)} correctly declared 'cannot read' "
-                             f"-- ⛔ not a defect. Per §3.6 rule 3, ask the human to backfill"))
-            continue
-        low = who.lower()
-        if any(pf in low for pf in PLATFORMS) or not HAS_VERSION.search(who):
-            vague += 1
-            findings.append(("FAIL", "MODEL_ATTRIBUTION_VAGUE",
-                             f"{p.relative_to(root)}: '{who[:40]}' is not a concrete model "
-                             f"-- **a platform or family name is worse than a blank: it reads "
-                             f"like an answer and stops the next reader from asking** "
-                             f"(`governance/MODEL_IDENTITY.md` §3.6.3 rule 2)"))
-
-    stats = {"artefacts scanned": len(files), "no model field": missing,
-             "family/platform only": vague, "declared unreadable": unread}
-    return emit("Model attribution sensor", findings, stats, as_json, name)
+        checked += 1
+        result = inspect_record(text)
+        if result:
+            level, code, message = result
+            findings.append((level, code, f'{p.relative_to(root)}: {message}'))
+    display = findings if as_json else human_findings(findings)
+    return emit('Model attribution', display, {'files_found': len(files), 'files_checked': checked}, as_json, name)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

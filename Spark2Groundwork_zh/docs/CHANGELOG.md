@@ -14,7 +14,7 @@ v1.4.5 的 Mac 自動化程序由 GitHub Actions 驗證；Finder／Gatekeeper／
 
 ### E2b 修復：自動產生的檔案與解除方式
 
-scope感測器實際以 `git ls-files --others --ignored --exclude-standard -z` 讀取被忽略路徑。固定豁免僅包含 Finder 的 `.DS_Store`、精確的 `scripts/harness/harness_status.json` 報告與根目錄 `git-checkpoint.log`，並回報豁免數量；在保護資料夾內的系統中繼檔亦適用。若deny直接指名該檔案，仍尊重此明確設定，不豁免。相似檔名、其他JSON／log、使用者任意新增的.gitignore规则不會因此獲得豁免。已追蹤變更與tracked隱藏旗標仍正常檢查。
+scope感測器實際以 `git ls-files --others --ignored --exclude-standard -z` 讀取被忽略路徑。固定豁免僅包含 Finder 的 `.DS_Store`、精確的 `scripts/harness/harness_status.json` 報告與根目錄 `git-checkpoint.log`，並回報豁免數量；在保護資料夾內的系統中繼檔亦適用。若deny直接指名該檔案，仍尊重此明確設定，不豁免。相似檔名、其他JSON／log、使用者任意新增的.gitignore規則不會因此獲得豁免。已追蹤變更與tracked隱藏旗標仍正常檢查。
 
 受保護而被Git忽略的研究檔確實缺乏版本證據：單純推進reviewed不能補出它的內容或歷史。這時INCOMPLETE不是指控AI違規。請AI列出路徑與選項，你不必貼終端指令。經你同意後，AI可將需要保護的檔案納入**本機**版本追蹤（不等於上傳），確認內容後依正常人工覆核流程處理。若確定要保持不追蹤，AI可提議移至保護範圍外並更新引用，待你同意再操作。不要刪研究資料、清空deny或只推進reviewed來消除警告；大型／私有資料的上傳仍須另行同意。
 

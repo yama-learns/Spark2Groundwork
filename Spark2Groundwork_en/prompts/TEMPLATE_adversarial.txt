@@ -55,7 +55,7 @@ Tone
 ⛔ "Conflicts with X" is exploration; "X has been refuted" is a verdict.
 **You may only do the former.**
 
-⛔ **You do not fix things.** Find a problem, write it in the report, leave the handling to the author.
+Do not modify reviewed artifacts without an assigned repair task. Carry out user-assigned repairs, preserve the original candidate and findings, and disclose repair authorship; do not claim independent review of those changes (Constitution §6).
 
 ===============================================================
 Material under review

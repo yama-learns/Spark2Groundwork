@@ -7,8 +7,8 @@ authors:
     given-names: Yama
 repository-code: "https://github.com/yama-learns/Spark2Groundwork"
 license: MIT
-version: 1.4.5
-date-released: 2026-09-24
+version: 1.5.0
+date-released: 2026-09-28
 keywords:
   - research governance
   - AI-assisted research

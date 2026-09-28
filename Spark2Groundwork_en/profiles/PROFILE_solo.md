@@ -44,7 +44,7 @@ One model working from start to finish will stay blind to whatever it is blind t
 > Paste this round's output to a **different company's** AI and ask only:
 > "Which sentence in here is the author most confident about and I should be most suspicious of?"
 
-**You do not need a full audit procedure. You need one pair of eyes that is not the same model.**
+**You do not need a full audit procedure. Ask a worker who did not author or repair that material. Different models or vendors may add perspectives, but changing models or conversations does not erase authorship. With only the author available, call it a self-check.**
 
 ---
 
@@ -163,25 +163,4 @@ your working habits actually produce.**
 
 ## 6. Configuration
 
-**Open `governance_config.json` in the project root.** ⚠️ **⛔ Not the `.py` file under `scripts/`** —
-🔴 **`scripts/` is replaced wholesale on upgrade, and settings changed there disappear.**
-
-**A solo setup needs no changes at all.** The default already reads:
-
-```json
-"write_scopes": {}
-```
-
-⚠️ **Empty ⛔ does not switch a check off.** **It tells the checks that this project has no
-division of roles, so they issue ⛔ no out-of-scope verdict — because they read `git status`
-and ⛔ cannot tell your edit from the AI's.**
-
-🔴 **Changes inside the no-write area are still listed** (from v1.4.1):
-
-```
-[WARN] 1 change this round falls inside the AI's default no-write area:
-       ledgers/Claim_Ledger.md — if you made it yourself this is normal;
-       if not, read this list
-```
-
-⛔ **⚠️ That is ⛔ not a red light and ⛔ not silence.** **It is a list for you to claim.**
+New projects default to `deny: []`, `write_scopes: {}`. Write ordinary research work in `my/research/` or a user-designated folder without role setup. Constitution §6 distinguishes ledger work from human decisions. Upgrades retain existing settings; when users choose the new defaults, AI helps apply minimal changes while preserving custom restrictions.

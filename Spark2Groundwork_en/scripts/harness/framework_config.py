@@ -120,13 +120,12 @@ DEFAULTS = {
     # ⚠️ **v1.4.1: the `outputs/` and `reports/` globs have been removed.**
     #    🔴 **They matched 0 files from v1.0.0 onward — neither directory ever existed,
     #    and neither was ever defined by any document.**
-    #    ⛔ **The directories are NOT being created**: where research output lands is
-    #    defined by `research/` in v1.5.0. **Creating two undefined directories now
-    #    would only manufacture a migration later.**
-    # 🔴 **Known gap (⛔ left visible on purpose): `MODEL_IDENTITY.md` §3.4 requires the
-    #    author field of the "main text" to carry a specific model identifier,
-    #    ⛔ and no main text can possibly fall inside this scan scope.**
-    #    **That section now says so. The scope is completed once `research/` exists.**
+    #    ⛔ **The directories are NOT being created**: v1.5.0 adds no `research/`
+    #    directory. **Creating two undefined directories now would only manufacture a
+    #    migration later.**
+    # 🔴 **Scope boundary (v1.5.0): `MODEL_IDENTITY.md` §3.4 asks only collaboration and
+    #    handoff records to keep the model source; ⛔ research prose needs no model header
+    #    and this scan scope is not promised to grow.**
     "attribution_globs": ["handoffs/*.md"],
 
     # 🔴 **Scan scope for code** (`sensor_reference_integrity.py`).
@@ -202,33 +201,8 @@ DEFAULTS = {
     "excluded_dirs": ["archive", ".git", "__pycache__", "selftest", "scratch",
                       "_to_delete", "_upgrade", "node_modules", ".venv"],
 
-    # 🔴 **Paths the AI does not write to — ⚠️ a DEFAULT, ⛔ not a prohibition.**
-    #
-    # **A user may empty it; that is full authorisation** (constitution §6.3).
-    # ⛔ **This framework has no standing to forbid that** — each project is the
-    #    responsibility of its principal.
-    #
-    # ⚠️ **Why these three and not the governance documents:** the criterion is
-    #    **restorability**. `governance/` `prompts/` `scripts/` can be
-    #    re-downloaded from GitHub and overwritten;
-    #    🔴 **a broken ledger or corpus can be restored from nowhere.**
-    # ⛔ Information, not persuasion — **what to do with it is the user's decision.**
-    #
-    # 🔴 **v1.4.1: the two T0 files are now listed here verbatim.**
-    #    ⚠️ **They used to be deliberately absent while the sensor folded them in
-    #    unconditionally in code — ⛔ so no configuration could turn it off, even though
-    #    this comment said "a governance agent may maintain them". Opposite intents.**
-    #    ✅ **With them listed, "clear `deny` and you have full authorisation"
-    #    (constitution §6.3) is true for the first time.**
-    #    ⛔ **To let a governance AI maintain T0, delete these two entries — that is your
-    #    decision, ⛔ not a prohibition by the framework.**
-    #
-    # ⚠️ **From v1.4.1 this no longer depends on whether `write_scopes` is set.**
-    #    **A solo project (empty `write_scopes`) gets a WARN that names the files —
-    #    ⛔ not silence and ⛔ not a red light** — because the sensor reads `git status`
-    #    and ⛔ cannot tell a human's edit from an AI's.
-    "deny": ["ledgers", "corpus", "corpus_md",
-             "governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md"],
+    # v1.5 permissive path defaults; preserve explicit project overrides.
+    "deny": [],
 
     # Only needed for multi-role projects: each role's write scope.
     # Solo projects: leave as {} and the sensor will skip the check explicitly.

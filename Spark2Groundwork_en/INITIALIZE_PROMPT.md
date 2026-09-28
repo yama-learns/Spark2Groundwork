@@ -13,8 +13,9 @@ This project uses a file-based governance framework.
 
 Read the following files in order, then do three things in your first reply:
 
-  1. Declare your model (read verbatim from the authoritative source; if you cannot
-     read it, write "cannot read" -- ⛔ do not substitute a platform name)
+  1. Confirm your model and its source once (copy a readable environment field verbatim;
+     otherwise use my statement or an interface screenshot and record that source, or
+     record unknown; ⛔ a platform name is not a model. See governance/MODEL_IDENTITY.md)
   2. Restate your write scope (see governance/WORKFLOW_CONSTITUTION.md §6 and the
      profiles/PROFILE_*.md I have chosen)
   3. In your own words, explain what this project's verification-level tags are
@@ -45,7 +46,7 @@ evidence for the wrong thing.
 
 === Step 3: stop and wait ===
 
-Stop when the decomposition is done. ⛔ Do not write to any ledger.
+Ledger working records may be written; do not invent human confirmation or acceptance. Follow Constitution §6.
 
 Report back in decision-request format (constitution §5):
   - how many conjectures you produced
@@ -64,9 +65,11 @@ After finishing the decomposition and organizing decision requests, close out fo
 === Three things you need to know ===
 
 1. I am the sole adjudicator. You raise decision requests, I adjudicate, you execute.
-   ⛔ Ledgers are maintained by the user by default (protected by deny in governance_config.json); unless I explicitly authorize it and lift deny, you may not write to any ledger.
+   Ledger working records may be written; do not invent human confirmation or acceptance. Follow Constitution §6.
 
-2. Every sentence carrying a number or an assertion needs a verification-level tag.
+2. Use natural prose for ordinary discussion and reading advice; no sentence-by-sentence
+   tags. Claims that affect conclusions still state what was actually read, source
+   locators and limitations (governance/AGENTS.md §2.1).
    ⛔ [checked]-level material must not be used to judge a claim false,
    nor to build a new hypothesis.
 

@@ -524,8 +524,9 @@ def test_disposable_projects_catches_all_tampering_forms():
         # 7. Exact registry fake runner with zero execution -> caught by controlled fault injection (kills B2)
         exact_zh_cases = "\n".join([f"print({('✅ ' + case)!r})" for case in check_repo_hygiene.EXPECTED_ZH_TEST_CASES])
         exact_en_cases = "\n".join([f"print({('✅ ' + case)!r})" for case in check_repo_hygiene.EXPECTED_EN_TEST_CASES])
-        fake_runner_zh = f"{exact_zh_cases}\nprint('通過 186 項｜失敗 0 項\\n結果：自測全數通過')\n"
-        fake_runner_en = f"{exact_en_cases}\nprint('passed 186 | failed 0\\nResult: all self-tests passed')\n"
+        from test_selftest_contract import contract_output
+        fake_runner_zh = 'print(' + repr(contract_output('zh')) + ')\n'
+        fake_runner_en = 'print(' + repr(contract_output('en')) + ')\n'
         (zh_harness / "run_selftest.py").write_text(fake_runner_zh, encoding="utf-8")
         (en_harness / "run_selftest.py").write_text(fake_runner_en, encoding="utf-8")
         (zh_harness / "sensor_claim_ledger.py").write_text("print('genuine')\n", encoding="utf-8")

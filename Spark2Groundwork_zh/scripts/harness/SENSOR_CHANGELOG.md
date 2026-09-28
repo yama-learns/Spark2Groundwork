@@ -1,3 +1,7 @@
+# v1.5.0 角色修復與必要文件檢查
+
+必要 T0 文件遺失或變成目錄時，scope 感測器回報 T0_REQUIRED_FILE_MISSING／FAIL；正常授權維護仍允許。使用相符版本／可信備份還原，不建立空白檔冒充。
+
 # 感測器變更記錄
 
 **⛔ 每一次感測器變更都要在這裡登錄觸發個案**（憲章 §7.1 第三關）。
@@ -1892,3 +1896,15 @@ Ordinary stderr quoting `SyntaxError:` was classified as a crash. Runner and but
 
 - 依 r2 Solo 指南刪除其他三份 profile 後，雙語 `run_all_sensors.py` 均以 exit 1 結束；`sensor_reference_integrity.py` 指出治理文件及檢查程式的懸空引用。逐一刪除時，外部工具及多代理 profile 也各自觸發該感測器失敗。聊天模式 profile 雖未觸發該感測器，`SETUP.md` 仍引用它。
 - r3 修訂雙語 Solo 指南，要求保留全部隨附 profile 並補列 `檢查專案.bat`／`.command` 啟動器。感測器程式碼未改動。
+
+## 31｜2026-09-28 — 歷史型號來源顯示
+
+觸發：三份可讀舊交接各自產生未載來源警告。人類輸出改成一則計數摘要；這是歷史來源未載，不是新增錯誤，也不要求逐份追補。JSON 保留全部逐筆 findings 與路徑。全掃描、新紀錄缺陷、未知／衝突提醒與不可讀檔的 INCOMPLETE 結果不變。
+
+驗證：`selftest_attribution.py` 的真 CLI 摘要／JSON／混合紀錄／新增檔重掃；`run_selftest.py` 的 checkpoint 已知稱呼／unknown 與拒絕案例。checkpoint 只驗紀錄結構，不認證型號、不移動真人覆核標籤。
+
+
+本版範圍補正：歷史條目曾預告在 v1.5.0 完成的研究目錄、權限模型、跨工具收據、版別欄位與模式必填，並未納入本次有界閱讀改善版；歷史原文保留，不是現行功能承諾。
+
+
+v1.5 角色預設調整：移除整目錄deny預設，保留使用者明示設定與現行感測器檢查。研究my/research、台帳工作紀錄與治理T0維護可依任務直接做；不是人類裁決／發布授權。

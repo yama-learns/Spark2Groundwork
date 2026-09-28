@@ -36,7 +36,7 @@ jobs:
 
       - name: Run workflow self-tests
         run: |
-          python -B -m pytest -p no:cacheprovider tests/test_ci_workflow.py -v
+          python -B -m pytest -p no:cacheprovider tests/test_ci_workflow.py tests/test_selftest_contract.py -v
 
   selftest-matrix-lean:
     name: Selftest Lean Matrix (${{ matrix.os }}, Python ${{ matrix.python-version }})

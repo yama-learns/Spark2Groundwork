@@ -58,7 +58,7 @@ MSG = {
 
   <角色>  單一 AI：agent ｜ 多角色：governance ｜ research ｜ audit
           ⛔ 不得自創。取值定義處：governance/HANDOFF.md §2
-  <型號>  具體型號，⛔ 不得寫平台名或家族名
+  <型號>  已知稱呼（可用家族名）或 unknown，不編造版本
           定義處：governance/MODEL_IDENTITY.md
   <主題>  一個詞，本輪做了什麼""",
  "wrong_folder": """[FAIL] 這不是專案根目錄，⛔ 未寫入任何東西。
@@ -71,8 +71,9 @@ MSG = {
  "need_args": "[FAIL] 參數不足——⛔ 角色、型號、主題三者缺一不可。",
  "bad_role": """[FAIL] 角色「{role}」不在取值域內（{valid}）。
        ⚠️ 自創分類名是「必填欄位誘發捏造」家族的入口。""",
- "bad_model": """[FAIL] 「{model}」是平台名或家族名，不是型號。
-       ⚠️ 寫平台名比留空更糟——它讀起來像有答案，會讓下游停止追問。""",
+ "bad_model": """[FAIL] 「{model}」不是可用的型號稱呼。
+       請用已知稱呼或 unknown；不接受平台名、空值、佔位字、
+       控制字元或欄位分隔符。來源仍記在交接。""",
  "lock_stuck": """[FAIL] 以下鎖檔既刪不掉也移不走：
        {locks}
        ⚠️ 本環境對 .git 既無 unlink 也無 rename 權限。
@@ -112,9 +113,22 @@ MSG = {
 
 VALID_ROLES = ("governance", "research", "audit", "agent")
 # ⚠️ 白名單在這裡是正確用法：它定義**取值域**，不是掃描範圍（`R-21` 管的是後者）。
-PLATFORM_NAMES = ("claude", "gemini", "gpt", "openai", "antigravity",
-                  "cowork", "codex", "copilot", "ai", "agent", "llm")
+PLATFORM_NAMES = ("openai", "anthropic", "google", "antigravity", "cowork",
+                  "codex", "copilot", "chatgpt", "claude code", "gemini app",
+                  "ai studio", "ai", "agent", "llm")
 SENTINELS = ("governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md")
+
+
+def valid_model_value(value):
+    """Validate a record label, not the backend or a model allowlist."""
+    # Check before stripping: do not hide newlines or controls as whitespace.
+    if not value or any(not ch.isprintable() for ch in value):
+        return False
+    label = value.strip()
+    return (bool(label) and label not in ("...", "…")
+            and label.casefold() not in PLATFORM_NAMES
+            and not any(ch in label for ch in "[]|")
+            and any(ch.isalnum() for ch in label))
 
 
 def utcstamp(fmt):
@@ -237,7 +251,7 @@ def main(MSG):
     #
     #    ⚠️ **`--mode` 目前仍有預設值 `human`，⛔ 這是已知代價：**
     #    **改成必填會讓舊專案的 `.bat`／`.command` 立刻壞掉。**
-    #    🔴 **⇒ 必填留到 v1.5.0，與啟動器同輪改。**
+    #    🔴 **⇒ 必填屬後續相容性設計；v1.5.0 保留既有預設，不在本版改啟動器。**
     ap.add_argument("--mode", choices=("human", "ai", "tool"), default="human")
     ap.add_argument("--tool-id", default=None,
                     help="tool 模式必填：哪一支工具（例如 upgrade）")
@@ -288,8 +302,9 @@ def main(MSG):
             print(MSG["bad_role"].format(role=a.role,
                                          valid=" ".join(VALID_ROLES)))
             return 1
-        if a.model.lower() in PLATFORM_NAMES:
+        if not valid_model_value(a.model):
             print(MSG["bad_model"].format(model=a.model)); return 1
+        a.model = a.model.strip()
 
     with log.open("a", encoding="utf-8") as f:
         f.write(f"\n[{utcstamp('%Y-%m-%dT%H:%M:%SZ')}] ---- start mode={a.mode} ----\n")

@@ -13,21 +13,9 @@
 
 ---
 
-## 1. What may be used
+## 1. Audit work permissions
 
-| Allowed | Forbidden |
-|---|---|
-| Read-only access to the whole project | ⛔ Writing anywhere except `handoffs/` and the sandbox |
-| Running existing sensors | ⛔ Any git command that rewrites the working tree |
-| Sandbox testing in `scratch/<topic>_sandbox/` (defined in constitution §6.2) | ⛔ Writing to or proposing edits inside ledgers |
-| Writing one-off check scripts (inside the sandbox) | ⛔ **Fixing the defects it finds** |
-
-⛔ **The auditor does not fix things.** Find a defect → write it in the report → the principal
-adjudicates → the governance role fixes it.
-**An auditor that starts fixing is simultaneously the generator and the checker.**
-
-⚠️ **The auditor must be given a sandbox.** A spec that demands adversarial audit but provides
-nowhere to run tests **asks the auditor either not to test or to go out of scope.**
+Under Constitution §6, auditors may read task materials and create sandboxes, checking scripts and persistent reports, including proposed ledger corrections. Do not change reviewed artifacts without an assigned repair task. When assigned repairs, perform them and disclose authorship; do not claim independent review of your changes. Never invent human decisions or destroy original data.
 
 ---
 
@@ -59,6 +47,8 @@ nowhere to run tests **asks the auditor either not to test or to go out of scope
 ---
 
 ## 3. Tone
+
+This section applies to audit reports. Distinguish executed tests, static reading and inference in natural sentences or report fields; a label on every sentence is unnecessary. Do not impose audit presentation on ordinary reading guides or research discussions.
 
 | Register | Use |
 |---|---|
@@ -97,6 +87,8 @@ nowhere to run tests **asks the auditor either not to test or to go out of scope
 
 ```
 [Model: ...]
+[Model source: ...]
+[Model status: ...]
 1. Audit target and trigger
 2. Test coverage           ← §2, both columns
 3. Findings, separated by the three registers
@@ -112,8 +104,7 @@ nothing** (`governance/RULES.md` R-35 ②).
 
 ## 6. 🔴 Cross-family is not independence (**an open question, ⛔ not a new rule**)
 
-**Constitution §8 item 1 requires the auditor not to be the same model as the auditee,
-on the grounds that "two model families have different blind spots."**
+**Constitution §8 item 1 bases independent-review eligibility on non-participation in authoring or repairing that material. Different models or vendors are optional sources of perspective, not protection against shared blind spots. The research below provides context and limitations, not additional eligibility conditions.**
 **⚠️ One source-verified data point suggests the problem may not be different blind spots
 but a shared, directional preference.**
 

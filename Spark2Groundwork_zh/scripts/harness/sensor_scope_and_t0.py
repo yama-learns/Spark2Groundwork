@@ -335,6 +335,12 @@ def main():
     findings = []
 
     # ① T0 唯一性
+    # Required T0 presence is independent of write permission or scan exclusions.
+    for rel in cfg["t0_docs"]:
+        if not (root / rel).is_file():
+            findings.append(("FAIL", "T0_REQUIRED_FILE_MISSING",
+                             f"{rel} — 必要治理文件不存在或不是檔案；請從可信備份或相符版本還原，不要建立空白檔冒充。"))
+
     t0_names = {pathlib.Path(t).name for t in cfg["t0_docs"]}
     t0_paths = {(root / t).resolve() for t in cfg["t0_docs"]}
     for p in root.rglob("*.md"):
@@ -356,13 +362,8 @@ def main():
     scopes = cfg.get("write_scopes") or {}
     stats = {"T0 份數": len(cfg["t0_docs"])}
 
-    # 🔴 **`deny` 就是 `deny`，⛔ 不在這裡追加任何東西（v1.4.1）。**
-    # ⚠️ **舊版把 `t0_docs` 無條件併進來，於是設定關不掉 T0 的保護——
-    #    而 `framework_config.py` 的註解同時寫著「T0 刻意不列在 deny，治理 Agent 可以維護它們」。**
-    #    🔴 **同一個人寫的兩段註解，意圖相反：`deny` 裡「沒有 T0」是一個空缺，
-    #    而空缺本身不帶意圖，於是兩處各自賦予了它相反的意思。**
-    # ✅ **現在 T0 逐字列在 `deny` 的預設值裡。⚠️ 那⛔ 不是「同一條規則寫兩遍」——
-    #    `t0_docs` 講的是「T0 全專案只有一份」，`deny` 講的是「誰可以寫」。⛔ 兩個不同的事實。**
+    # v1.5 預設 deny 為空；僅使用明示自訂限制，不從 t0_docs 追加禁寫路徑。
+    # t0_docs 檢查必要文件與唯一性；治理角色仍可依授權維護 T0。
     denied = [d.rstrip("/") for d in cfg.get("deny", [])]
 
     def under(path, tops):
@@ -390,7 +391,7 @@ def main():
                         continue
                     findings.append(("FAIL", "WRITE_TO_DENIED_PATH",
                                      f"{c} 落在 deny 範圍內——**⛔ 任何 AI 角色皆不得寫**"
-                                     f"（憲章 §6 通則 2）"))
+                                     f"（憲章 §6.3）"))
                     continue
                 if not under(c, allowed):
                     findings.append(("FAIL", "WRITE_OUT_OF_SCOPE",
@@ -408,7 +409,7 @@ def main():
                                  "⛔ 本輪不判越界，只列出落在 deny 範圍內的變更")
             if hits:
                 findings.append(("WARN", "DENIED_PATH_TOUCHED_UNATTRIBUTED",
-                                 f"本輪有 {len(hits)} 筆變更落在 AI 的預設禁區："
+                                 f"本輪有 {len(hits)} 筆變更落在 governance_config.json 的 deny 範圍："
                                  + "、".join(hits[:8])
                                  + ("…" if len(hits) > 8 else "")
                                  + "——**⚠️ 若那是你自己改的，這是正常的；"

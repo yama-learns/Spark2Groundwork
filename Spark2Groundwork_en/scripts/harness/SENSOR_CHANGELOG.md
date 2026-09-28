@@ -1,3 +1,7 @@
+# v1.5.0 role repair and required files
+
+Missing T0 files or directory replacements now produce T0_REQUIRED_FILE_MISSING/FAIL. Authorized edits remain allowed. Restore trusted matching contents, not empty placeholders.
+
 # Sensor Changelog
 
 **⛔ Every sensor change must log its triggering case here** (constitution §7.1, gate three).
@@ -2154,3 +2158,15 @@ Ordinary stderr quoting `SyntaxError:` was classified as a crash. Runner and but
 - Deleting the other three profiles as instructed by the r2 Solo guide made `run_all_sensors.py` exit 1 in both editions; `sensor_reference_integrity.py` reported dangling references from governance documents and checker code. Deleting the external-tools or multi-agent profile individually also failed that sensor. Deleting the chat-only profile did not fail this sensor, but `SETUP.md` still references it.
 - r3 corrects both Solo guides to retain all supplied profiles and list the `check_project` launcher. Sensor code is unchanged.
 
+
+## 31 | 2026-09-28 — Historical model source display
+
+Trigger: three readable legacy handoffs produced three missing-source warnings. Human output now shows one count summary; this is historical missing provenance, not a new error or a demand to backfill every file. JSON keeps all individual findings and paths. Full scans, new-record failures, unknown/conflict notices and unreadable-file INCOMPLETE results remain unchanged.
+
+Verification: actual CLI summary/JSON/mixed-record/new-file rescan cases in `selftest_attribution.py`; checkpoint known-name/unknown and rejected-label cases in `run_selftest.py`. The checkpoint change validates record structure and does not authenticate models or move human review tags.
+
+
+Scope correction: historical entries assigned research directories, permission models, shared receipts, edition fields and mandatory modes to v1.5.0. They are outside this bounded reading/interaction release. Historical text is retained, not a current feature promise.
+
+
+v1.5 role defaults: remove blanket default deny entries while retaining explicit project settings and existing sensor behavior. Research work in my/research, ledger working records and governance T0 maintenance may proceed within assigned tasks; this grants no human-decision or publication authority.

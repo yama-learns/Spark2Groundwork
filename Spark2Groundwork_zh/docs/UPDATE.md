@@ -17,7 +17,7 @@ Windows 雙擊 .bat，Mac 雙擊同名 .command。只閱讀結果，最後按鍵
 ## 不寫程式的更新流程
 
 1. 暫停各 AI 寫入、關閉正在編輯的文件。把**整個專案（包含隱藏的 .git 與設定）**複製到專案外的備份資料夾，確認研究檔可開。備份不要放在專案內；有未讀工作只按「儲存進度」，不要按人工已閱。
-2. 從原 GitHub 庫下載新 ZIP，解壓縮。只取与你專案相同語言的完整資料夾。將它放到專案根目錄的 `_upgrade/` 中；保留完整的 Spark2Groundwork_zh 或 Spark2Groundwork_en 資料夾，不混語言。
+2. 從原 GitHub 庫下載新 ZIP，解壓縮。只取與你專案相同語言的完整資料夾。將它放到專案根目錄的 `_upgrade/` 中；保留完整的 Spark2Groundwork_zh 或 Spark2Groundwork_en 資料夾，不混語言。
 3. 按「檢查更新」。讀版本與差異；只看得到版本號並不證明下載完整。網路不通時本機差異仍可做；查不到最新版不能稱已是最新。
 4. **一次只換一包**：governance、profiles、prompts、scripts、docs。先請 AI 或自己比較清單，把舊包內任何自建研究檔／工具移到專案自有位置（例如 my/tools）並修正引用；不確定歸屬就先停。把舊包移到專案外備份處，再將新版同名完整資料夾放進來；不要直接合併覆蓋而留下已退役舊檔。每包更換後讀差異；有問題先停，其餘包不要繼續。
 5. 根目錄只替換 README.md、SETUP.md、INITIALIZE_PROMPT.md、file_index.md 與本語的框架按鈕。舊版根指引若有自訂文字，先移到專案自有文件並保留連結。自己的 PROJECT.md、第一個想法.md／FIRST_IDEA.md、my、ledgers、corpus、corpus_md、governance_config.json 與任意自建檔案都保留原位。不要把整個專案換成新下載資料夾。
@@ -29,7 +29,7 @@ Windows 雙擊 .bat，Mac 雙擊同名 .command。只閱讀結果，最後按鍵
 
 ## 舊專案要另外看三件事
 
-- v1.4.2以前放在prompts/TEMPLATE_decompose.txt的構想，先保存到根目錄第一個想法.md（英文FIRST_IDEA.md）；自建工具移至my/tools，保留引用。多AI專案若授權治理角色维护my，請AI在你的governance_config.json只補該角色必要write_scopes，不覆蓋設定。
+- v1.4.2以前放在prompts/TEMPLATE_decompose.txt的構想，先保存到根目錄第一個想法.md（英文FIRST_IDEA.md）；自建工具移至my/tools，保留引用。多AI專案若授權治理角色維護my，請AI在你的governance_config.json只補該角色必要write_scopes，不覆蓋設定。
 - v1.4.4已退役policy/，新版改放governance/。先確認SOURCES.md、MODEL_IDENTITY.md、HANDOFF.md、EXTERNAL_TOOLS.md都在新版governance，再把舊policy移到專案外保存。手動替換不會自動找出或移走這個舊資料夾。
 - v1.4.1／1.4.2更新可能曾不當移動「已閱」標記。若不確定目前基準可信，不用該標記保證未讀工作已被列出，也不猜測回退位置。先保存完整備份，請AI協助盤點並完整重讀需負責的研究內容，確認後你再按人工已閱按鈕。需要精確歷史調查時，由具本機執行能力的AI處理；不要讓使用者貼Git命令。
 

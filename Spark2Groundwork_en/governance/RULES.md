@@ -31,11 +31,11 @@ number of bottom lines to the `R-xx` series from then on.
 
 ## B. Verification and the limits of competence
 
-**R-05** Every sentence carrying a number or an assertion must carry a verification-level tag (`AGENTS.md` §2.1).
+**R-05** Use natural prose for ordinary research. Key claims still need source locators, actual verification scope and limitations; no sentence-by-sentence labels are required (`AGENTS.md` §2.1).
 **R-06** ⛔ `[checked]`-level material must not be used to judge a claim false, nor to build a new hypothesis.
 **R-07** ⛔ No assertion from an external AI tool may be cited without verification against the original.
 **R-08** Verdict vocabulary may only be used when quoting a ledger's recorded state, with the ID.
-**R-09** Where the system provides an authoritative field (model, timestamp), read it verbatim. ⛔ Never infer it from context.
+**R-09** Where the system provides an authoritative field (model, timestamp), read it verbatim. ⛔ Never infer it from context. If no model field is readable, use `MODEL_IDENTITY.md` to record a user/UI source or unknown; a report is not backend verification.
 **R-34** 🔴 **The authority on what you can do is your tool list — ⛔ not one failure's error message.**
 　　**Before declaring "I cannot do X", list which tools you checked and why each one cannot.**
 　　⚠️ **What this blocks is not guessing wrong. It is turning one channel's limit into a
@@ -158,7 +158,7 @@ number of bottom lines to the `R-xx` series from then on.
 **R-30** A handoff packet must separate **"what I independently verified / what I only restated / what is my inference"**.
 **R-31** The recipient **spot-checks the most confident claims first**, not the least confident.
 　　⚠️ **Why: across two projects, forty-odd incidents almost all occurred where the author was most certain.**
-**R-32** ⛔ The auditor does not fix the defects it finds.
+**R-32** Auditors do not modify reviewed artifacts without an assigned repair task. User-assigned repairs may proceed; retain the original candidate and findings, disclose repair authorship, and do not claim independent review of those changes (Constitution §6 and §8).
 
 ---
 

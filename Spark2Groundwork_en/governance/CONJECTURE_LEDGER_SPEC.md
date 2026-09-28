@@ -57,7 +57,7 @@ filling a field is easier than splitting a claim, and deleting is easier than ei
 **Statement:**        One sentence, readable standalone, context-independent
 **Origin:**           Where this conjecture came from
 **Falsification:**    Which observable result would refute it. If you cannot say, write "—"
-**Falsification adjudicated:** `pending` / `adjudicated` — ⛔ only a human may set `adjudicated`
+**Falsification adjudicated:** `pending` / `adjudicated` — ⛔ only the user may decide `adjudicated`; an AI may transcribe explicit instructions with their source, never decide on the user’s behalf
 **Why I could not fill this:** **Optional.** When Falsification is "-", say here why
                       ⚠️ **Same wording as root `FIRST_IDEA.md` rule 3.**
                       ⛔ Field names are rules too, and a rule has one home
@@ -82,7 +82,7 @@ filling a field is easier than splitting a claim, and deleting is easier than ei
    **honest blankness gets a warning while a plausible-sounding fake condition does not** —
    **and nobody, human or sensor, can tell the fake from the real one. The incentives run backwards.**
    → **The warning condition is "not yet adjudicated by a human", not "field is empty".**
-   **Filling in text does not clear the warning; only a human marking it `adjudicated` does.**
+   **Filling in text does not clear the warning; only a recorded actual human adjudication does.**
    ⛔ **AI must not set `Falsification adjudicated` to `adjudicated` on its own.**
 2. Rival hypotheses must be specific enough to yield a **different observable result**.
    **A decorative rival is worse than none.**

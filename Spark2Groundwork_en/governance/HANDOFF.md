@@ -35,7 +35,9 @@ except what gets fabricated is a category rather than a number.**
 ## 3. Five required sections (**missing one ＝ not delivered**)
 
 ```
-[Model: ...]            ← read verbatim; ⛔ never a platform name
+[Model: ...]
+[Model source: ...]
+[Model status: ...]
 
 ## 1. What I claimed this round
 ## 2. What I independently verified / what I only restated / what is my inference
@@ -101,3 +103,5 @@ move the packet to `archive/handoffs/`.**
 
 ⛔ **The criterion is "the adjudication has landed", not "time has passed".**
 Archiving by age sweeps away packets that were never handled, **and that loss is silent.**
+
+For model metadata, follow `MODEL_IDENTITY.md` §3.4. Retain the confirmation event and conversation scope; an unknown full version does not justify repeated questions. Replace template ellipses with known values or explicit unknown at delivery. Renaming does not erase authorship.

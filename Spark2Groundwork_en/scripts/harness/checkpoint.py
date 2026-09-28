@@ -58,7 +58,7 @@ MSG = {
 
   <role>   single AI: agent | multi-role: governance | research | audit
            ⛔ Do not invent values. Defined in governance/HANDOFF.md §2
-  <model>  a concrete model; ⛔ never a platform or family name
+  <model>  the known model name (family names allowed), or unknown
            Defined in governance/MODEL_IDENTITY.md
   <topic>  one word: what this round did""",
  "wrong_folder": """[FAIL] This is not the project root; ⛔ nothing was written.
@@ -72,9 +72,9 @@ MSG = {
  "bad_role": """[FAIL] Role "{role}" is not in the value domain ({valid}).
        ⚠️ Inventing a category name is the entry point of the
           "required fields induce fabrication" family.""",
- "bad_model": """[FAIL] "{model}" is a platform or family name, not a model.
-       ⚠️ A platform name is worse than a blank — it reads like an answer
-          and stops the next reader from asking.""",
+ "bad_model": """[FAIL] "{model}" is not a usable model label.
+       Use the known name or unknown, not a platform, blank, placeholder,
+       control character or header delimiter. Source stays in the handoff.""",
  "lock_stuck": """[FAIL] These lock files could be neither deleted nor moved:
        {locks}
        ⚠️ This environment grants neither unlink nor rename on .git.
@@ -117,9 +117,22 @@ MSG = {
 
 VALID_ROLES = ("governance", "research", "audit", "agent")
 # ⚠️ 白名單在這裡是正確用法：它定義**取值域**，不是掃描範圍（`R-21` 管的是後者）。
-PLATFORM_NAMES = ("claude", "gemini", "gpt", "openai", "antigravity",
-                  "cowork", "codex", "copilot", "ai", "agent", "llm")
+PLATFORM_NAMES = ("openai", "anthropic", "google", "antigravity", "cowork",
+                  "codex", "copilot", "chatgpt", "claude code", "gemini app",
+                  "ai studio", "ai", "agent", "llm")
 SENTINELS = ("governance/AGENTS.md", "governance/WORKFLOW_CONSTITUTION.md")
+
+
+def valid_model_value(value):
+    """Validate a record label, not the backend or a model allowlist."""
+    # Check before stripping: do not hide newlines or controls as whitespace.
+    if not value or any(not ch.isprintable() for ch in value):
+        return False
+    label = value.strip()
+    return (bool(label) and label not in ("...", "…")
+            and label.casefold() not in PLATFORM_NAMES
+            and not any(ch in label for ch in "[]|")
+            and any(ch.isalnum() for ch in label))
 
 
 def utcstamp(fmt):
@@ -236,14 +249,14 @@ def main(MSG):
     #    printed "I have looked at this".**
     #    **⇒ AI work the user had not reviewed vanished from `review_changes.py`'s list.**
     #
-    #    ⛔ **Why a tool must not use `ai` mode:** `ai` requires `--role` and a concrete
+    #    ⛔ **Why a tool must not use `ai` mode:** `ai` requires `--role` and a known
     #    `--model`, **and a local tool is ⛔ none of `VALID_ROLES` and has no model** —
     #    ⚠️ **making it use `ai` means making it invent a model, ⛔ which is the very thing
     #    `MODEL_IDENTITY.md` exists to forbid.**
     #
     #    ⚠️ **`--mode` still defaults to `human`. ⛔ That is a known cost:**
     #    **making it mandatory would immediately break older projects' `.bat`/`.command`.**
-    #    🔴 **⇒ Mandatory is deferred to v1.5.0, in the same round as the launchers.**
+    #    🔴 **⇒ Mandatory mode is future compatibility work; v1.5.0 retains the existing default and launchers.**
     ap.add_argument("--mode", choices=("human", "ai", "tool"), default="human")
     ap.add_argument("--tool-id", default=None,
                     help="required for tool mode: which tool (e.g. upgrade)")
@@ -294,8 +307,9 @@ def main(MSG):
             print(MSG["bad_role"].format(role=a.role,
                                          valid=" ".join(VALID_ROLES)))
             return 1
-        if a.model.lower() in PLATFORM_NAMES:
+        if not valid_model_value(a.model):
             print(MSG["bad_model"].format(model=a.model)); return 1
+        a.model = a.model.strip()
 
     with log.open("a", encoding="utf-8") as f:
         f.write(f"\n[{utcstamp('%Y-%m-%dT%H:%M:%SZ')}] ---- start mode={a.mode} ----\n")
